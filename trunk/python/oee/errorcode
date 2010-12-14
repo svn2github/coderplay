@@ -1,0 +1,20 @@
+0   OK
+1   OEE Error: Row RecordID not on Master table.
+3   OEE Error: RowTime Stamp is in the future.
+4   OEE Error: Row File Time Stamp is less than the prior record.
+5   OEE Error: Row File First record on file has a blank Job Number.
+6   OEE Error: Row EquipmentID not on master table.
+7   OEE Error: Row ActivityNo not on Master table.
+8   OEE Error: Row ImpressionTotal outside range 1m - 999m.
+9   OEE Error: Row ImpressionTotal < last value in Reporting database.
+10  OEE Error: Row ImpressionTotal is less than the prior record.
+11  OEE Error: Row EquipmentID differs from file header.
+12  OEE Error: Row Invalide Activity Number.
+13  OEE Error: Row Invalid Job Start/End sequence
+14  OEE Error: Row Job No changes between Job Start/End
+15  OEE Error: Row missing MR or Prod within Job Start/End
+802 OEE Error: File First non-blank Activity on file not MR or @95 (Start Job)
+803 OEE Error: File EquipmentID is missing.
+804 OEE Error: File EquipmentID is invalid.
+805 OEE Error: File contains less then 500 records
+806 OEE Error: File contains no @95
