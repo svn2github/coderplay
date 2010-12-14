@@ -79,7 +79,11 @@ class oeebde():
         self.code_Prod = [item[0] for item in lines]
         lines = c.execute("SELECT code, oeepoint FROM activitycode WHERE item='W-up'")
         lookup = {'ON': 1, 'OFF': -1, '': 0}
-        self.code_Wup = [(item[0], lookup[item[1]]) for item in lines]
+        self.code_Wup = dict([(item[0], lookup[item[1]]) for item in lines])
+        lines = c.execute("SELECT code FROM activitycode WHERE oeepoint='Process'")
+        self.code_Process = [item[0] for item in lines]
+        lines = c.execute("SELECT code FROM activitycode WHERE oeepoint LIKE 'Maintenance%'")
+        self.code_Maintenance = [item[0] for item in lines]
 
         return conn, c
 
@@ -335,16 +339,19 @@ class oeebde():
         return self.c.fetchone()[1]
 
 
-    def sum_up_records(self):
+    def process_content(self):
         """
         Process the records line by line.
         """
 
-        output = {}
+        staging = {}
 
         wup_state = 0
         readying = ()
         producting = ()
+        washing = ()
+        processing = ()
+        maintening = ()
         for ii, line in enumerate(self.content):
             if line[0] == 'REC020':
                 # @17 is useless, we process the next line
@@ -356,20 +363,35 @@ class oeebde():
                     # it is a valid MR 
                     if not readying: 
                         readying = (ii, line[4], 'MR')
-                        output[readying] = line
+                        staging[readying] = line
+                        if producting:
+                            staging[producting] = [staging[producting], line]
+                            producting = ()
+                        if maintening:
+                            staging[maintening] = [staging[maintening], line]
+                            maintening = ()
 
                 # Looking for Prod
                 if line[6] in self.code_Prod:
                     if not producting:
                         producting = (ii, line[4], 'Prod')
-                        output[producting] = line
+                        staging[producting] = line
                         if readying:
-                            output[readying] = [output[readying], line]
+                            staging[readying] = [staging[readying], line]
                             readying = ()
                         else:
                             print "Error: Production without Make Reday"
                             print line
                             break
+                        if washing:
+                            staging[washing] = [staging[washing], line]
+                            washing = ()
+                        if processing:
+                            staging[processing] = [staging[processing], line]
+                            processing = ()
+                        if maintening:
+                            staging[maintening] = [staging[maintening], line]
+                            maintening = ()
 
                 # Looking for Job End
                 if line[6] in self.code_JobEnd:
@@ -378,12 +400,101 @@ class oeebde():
                         print line
                         break
                     else:
-                        producting = ()
-                        readying = ()
+                        if readying:
+                            staging[readying] = [staging[readying], line]
+                            readying = ()
+                        if producting:
+                            staging[producting] = [staging[producting], line]
+                            producting = ()
+                        if washing:
+                            staging[washing] = [staging[washing], line]
+                            washing = ()
+                        if processing:
+                            staging[processing] = [staging[processing], line]
+                            processing = ()
+                        if maintening:
+                            staging[maintening] = [staging[maintening], line]
+                            maintening = ()
 
+                # Looking for Wash up
+                if line[6] in self.code_Wup:
+                    wup_state += self.code_Wup[line[6]]
+                    if not washing:
+                        washing = (ii, line[4], 'W-up')
+                        staging[washing] = line
+                    else:
+                        if wup_state == 0:
+                            staging[washing] = [staging[washing], line]
+                            washing = ()
                         
+                # Looking for Process
+                if line[6] in self.code_Process:
+                    if not washing:
+                        if not processing:
+                            processing = (ii, line[4], 'Process')
+                            staging[processing] = [[ii,], line]
+                            if washing: 
+                                staging[washing] = [staging[washing], line]
+                                washing = ()
+                        else:
+                            if ii-1 != staging[processing][0][0]:
+                                staging[processing] = [staging[processing], line]
+                                processing = (ii, line[4], 'Process')
+                                staging[processing] = [[ii,], line]
+                            else:
+                                staging[processing][0][0] = ii
+
+                # Looking for Maintenance
+                if line[6] in self.code_Maintenance:
+                    maintening = (ii, line[4], 'Maintenance')
+                    staging[maintening] = line
+
+        self.staging = staging
+
+        return staging
+
+    # Find valid MR and Prod and calculate durations
+    def calc_duration(self):
+
+        output = []
+
+        lastmr = -1
+        lastprod = -1
+        keys = staging.keys()
+        keys.sort()
+        for key in keys:
+            if key[2] == 'MR':
+                sline = self.staging[key][0]
+                eline = self.staging[key][1]
+                stime = oeeutil.convert_f2_to_datetime(sline[1])
+                etime = oeeutil.convert_f2_to_datetime(eline[1])
+                duration = (etime-stime).seconds/3600.0
+                impress = int(eline[10]) - int(sline[10])
+                if duration >= 5.0/60.0 and impress >= 20:
+                    output.append([str(stime), sline[4], 'MR', "%.2f" % duration, impress])
+                    lastmr = len(output) - 1
+                else:
+                    output[lastmr][3] = "%.2f" % (float(output[lastmr][3]) + duration)
+                    output[lastmr][4] += impress
+
+            if key[2] == 'Prod':
+                sline = self.staging[key][0]
+                eline = self.staging[key][1]
+                stime = oeeutil.convert_f2_to_datetime(sline[1])
+                etime = oeeutil.convert_f2_to_datetime(eline[1])
+                duration = (etime-stime).seconds/3600.0
+                impress = int(eline[10]) - int(sline[10])
+                if duration >= 5.0/60.0 and (impress >=20 or output[lastmr][3] >=20):
+                    output += [[str(stime), sline[4], 'Prod', "%.2f" % duration, impress]]
+                    lastprod = len(output) - 1
+                else:
+                    output[lastprod][3] = "%.2f" % (float(output[lastprod][3]) + duration)
+                    output[lastprod][4] += impress
+
+        self.output = output
 
         return output
+                
 
 
 
@@ -396,8 +507,11 @@ if __name__ == '__main__':
     if not bde.data_validation():
         print 'Error: Data validation fails.'
         sys.exit()
-    output = bde.sum_up_records()
+    staging = bde.process_content()
+    output = bde.calc_duration()
     bde.disconnect_db()
+    keys = staging.keys()
+    keys.sort()
 
 
 

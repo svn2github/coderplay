@@ -55,3 +55,10 @@ def convert_f2_to_datetime(f2):
 
 def convert_datetime_to_f2(thistime):
     return int(str(thistime)[:-4].replace('-','').replace(' ','').replace(':','').replace('.',''))
+
+
+def get_output_by_jobid(jobid, output):
+    keys = output.keys()
+    keys.sort()
+    return [key for key in keys if key[1]==str(jobid)]
+
