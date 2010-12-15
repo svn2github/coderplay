@@ -1,6 +1,6 @@
-= CoderPlay =
+= Coder Play =
 _A playground for trying out my programming skills on trivial (or maybe non-trivial) projects_
 
-== List of Projects ==
 
+== List of Projects ==
 * [OeeBde OEE BDE Reporting Tools].
