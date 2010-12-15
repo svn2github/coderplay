@@ -1,13 +1,6 @@
-#A playground for trying out my programming skills on trivial (or maybe non-trivial) projects.
+= CoderPlay =
+_A playground for trying out my programming skills on trivial (or maybe non-trivial) projects_
 
-= Introduction =
+== List of Projects ==
 
-[OeeBde OEE BDE Reporting Tools].
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+* [OeeBde OEE BDE Reporting Tools].
