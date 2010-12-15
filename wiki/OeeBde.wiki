@@ -1,4 +1,4 @@
-#OEE Reporting Tools.
+OEE Reporting Tools.
 
 = Introduction =
 
