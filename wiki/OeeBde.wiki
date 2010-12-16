@@ -17,7 +17,7 @@ The purpose of this project is to have a GUI-driven program to process raw *bde*
 == Development Tools ==
  * Python
  * Tkinter
- * PySQlite
+ * PySqlite
  * Py2exe(?)
 
 
