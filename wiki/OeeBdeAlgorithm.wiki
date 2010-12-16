@@ -1,0 +1,25 @@
+#sidebar OeeBdeToC
+
+=Sum-up Algorithms=
+
+==Terminology==
+ * *Primary entries*:
+ Entries that can trigger or terminate the two primary Sum-ups (Preparation and Production), including _MR_, _Prod_, _@97_, and _Maintenance_ entries.
+
+
+==Algorithm==
+ * Select only the rows that contain a primary entry
+  * Perform the two primary Sum-ups using the selected rows
+   * Ensure Job ID does not change for a Job Sequence
+   * Select all non-zero Job ID from source file
+    * Ensure every non-zero Job ID has at least one Job Sequence
+   * Issue any necessary warnings.
+  * Perform the Maintenance Sum-up
+   * Issue any necessary warnings.
+ * Process entire source file line by line
+  * Perform any minor Sum-ups except Maintenance
+   * If the line contains a primary entry
+    * The minor Sum-ups are terminated
+   * If the line does not contain a primary entry
+    * The minor Sum-ups are processed by their own rules
+   * Issue any necessary warnings
