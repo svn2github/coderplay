@@ -4,7 +4,7 @@ The processing does following two jobs:
  * [OeeBdeDataValidationRules Data Validation]
  * [OeeBdeDataSumUps Records Sum ups]
 
-Both job has a validation purpose. Errors found in any of the jobs terminate the processing.
+Both job has a validation purpose. Errors found in any of the jobs terminate the processing. The data are saved in reporting database if both jobs succeeds. An output report is generated based on the Sum-ups.
 
 ==Terminology==
  * _MR_ entry - can be either @95 or any ActivityCode that belongs to MR category
