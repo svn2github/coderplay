@@ -1,0 +1,38 @@
+#sidebar OeeBdeToC
+Rules for sum-up the entries in input files.
+
+ ==Sum-up Rules==
+  * The Sum-up process has two primary categories, *Preparation* and *Production*, defined by following rules:
+   * *Preparation*
+    * A Preparation Sum-up is triggered by a _MR_ entry when the process is not currently performing a Preparation Sum-up. Otherwise, the _MR_ entry is ignored.
+    * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry (or maybe maintenance, for which we may want issue a warning).
+    * The duration of Preparation is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
+    * A significant Preparation Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
+    * Only significant Preparation Sum-up is reported in the final output.
+   * *Production*
+    * A Production Sum-up is triggered by a _Prod_ entry when the process is not currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
+    * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry (or maybe maintenance, for which we may want issue a warning).
+    * The duration of Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
+    * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
+    * Only significant Production Sum-up is reported in the final output.
+   * A *Job Sequence* is defined by one _Preparation_ Sum-up followed by one _Production_ Sum-up.
+   * *Job ID* cannot change during a Job Sequence. However, multiple Job Sequences can share the same Job ID.
+   * A significant _MR_ entry is a _MR_ entry that triggers a Significant Preparation Sum-up. Similarly, a significant _Prod_ entry is a _Prod_ entry that triggers a Significant Production Sum-up.
+
+  * The Sum-up process has several minor categories, *W-up*, *Process* and *Maintenance*, defined by following rules:
+   * *W-up*
+    * A W-up Sum-up is triggered by a _W-up_ entry when the process is not currently performing a W-up Sum-up.
+    * Status code of a _W-up_ entry is always accumulated whenever the Sum-up process reads the entry. 
+    * A W-up Sum-up is terminated if the value of the accumulation is zero. Otherwise, it proceeds further.
+    * The _W-up_ Sum-up is always terminated by any _MR_, _Prod_, _Job End_ or _Maintenance_ entries. If the accumulation is not zero when it is terminated, the accumulation is reset to zero and a warning is issued.
+   * *Process*
+    * A Process Sum-up is triggered by a _Process_ entry.
+    * A Process Sum-up is terminated by any _MR_, _Prod_, _Job End_ or _Maintenance_(?) entries.
+   * *Maintenance*
+    * A Maintenance Sum-up is triggered by a _Maintenance_ entry.
+    * A Maintenance Sum-up is terminated by any _MR_, _Prod_, _Job End_ entries (In theory, only _MR_ can possibly follow a Maintenance Sum-up and terminate it? Otherwise, we may want issue a warning.) 
+
+ ==Possible Additional Rules==
+  * A _Maintenance_ terminates both _Preparation_ and _Production_ Sum-ups. A warning message is issued if it happens.
+  * Any _Prod_ or _Job End_ terminates a Maintenance Sum-up. A warning message is issued if it happens.
+  * A warning message is issued if a _W-up_ entries is found in during a Production Sum-up.
