@@ -1,6 +1,6 @@
 #sidebar OeeBdeToC
 
-=Sum-up Algorithms=
+=Sum-up Algorithm=
 
 ==Terminology==
  * *Primary entries*:
