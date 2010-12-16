@@ -1,7 +1,7 @@
 #Data validation rules for raw [OeeBdeFile bde files].
 
  ==Terminology==
-  * *{{{MR}}}* - can be either @95 or MR
+  * *_MR_* - can be either @95 or MR
   * *{{{Prod}}}* - Prod
   * *{{{Job End}}}* - @97
   * *non-blank job* - a job that has non-zero job ID
