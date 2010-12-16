@@ -2,7 +2,15 @@ OEE Reporting Tools.
 
 = Introduction =
 
-The purpose of this project is to have a GUI-driven program to process raw bde data.
+The purpose of this project is to have a GUI-driven program to process raw *bde* data. A report is generated for the processed data. The report is further used by other programs for additional analysis, which is out of the scope of this project. 
+
+The functionalities of the program should include following items:
+ * Read a ASCII text based *.bde file.
+ * Reconcile the content of the file and store as Database format.
+ * validate the data using a set of validation rules.
+ * Generate helpful messages for any erroneous/invalid data for user correct the data in the bde file.
+ * Generate a report using a set of sum-up rules based on the validated data.
+ * The program must have a GUI for easy access.
 
 
 = Details =
