@@ -3,4 +3,4 @@ A playground for trying out my programming skills on trivial (or maybe non-trivi
 
 
 == List of Projects ==
-* [OeeBde OEE Reporting Tools].
+* [OeeBde OEE Reporting Tools]
