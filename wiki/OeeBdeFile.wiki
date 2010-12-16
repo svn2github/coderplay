@@ -1,0 +1,9 @@
+#Description of the OEE bde file format.
+
+= File Format =
+
+  # The file name must end with a `*`.bde suffix.
+  # The file must be ASCII based text file.
+  # The file must have no headings.
+  # The file must have 14 columns per row, even when some columns are empty.
+  # The file must use tab to delimiter the columns
