@@ -1,0 +1,9 @@
+#sidebar OeeBdeToC
+
+ ==Terminology==
+  * _MR_ entry - can be either @95 or any ActivityCode that belongs to MR category
+  * _Prod_ entry - any ActivityCode that belongs to Prod category
+  * _Job End_ entry - @97
+  * _W-up_ entry - any ActivityCode that belongs to W-up category
+  * _Process_ entry - 4068
+  * _Maintenance_ entry - 9005 and 9007
