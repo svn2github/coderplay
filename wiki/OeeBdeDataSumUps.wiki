@@ -33,7 +33,7 @@ Rules for sum-up the entries in input files.
     * A Maintenance Sum-up is triggered by a _Maintenance_ entry.
     * A Maintenance Sum-up is terminated by any _MR_, _Prod_, _Job End_ entries (In theory, only _MR_ can possibly follow a Maintenance Sum-up and terminate it? Otherwise, we may want issue a warning.) 
 
- ==Possible Additional Rules==
+==Possible Additional Rules==
   * A _Maintenance_ terminates both Preparation and Production Sum-ups. A warning message is issued if it happens.
   * Any _Prod_ or _Job End_ terminates a Maintenance Sum-up. A warning message is issued if it happens.
   * A warning message is issued if any _W-up_ entries is found in during a Production Sum-up.
