@@ -1,4 +1,5 @@
-#Data validation rules for raw [OeeBdeFile bde files].
+#sidebar OeeBdeToC
+Data validation rules for raw [OeeBdeFile bde files].
 
  ==Terminology==
   * _MR_ entry - can be either @95 or any ActivityCode that belongs to MR category
