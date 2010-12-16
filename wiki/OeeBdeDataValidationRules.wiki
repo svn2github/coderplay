@@ -1,0 +1,1 @@
+#Data validation rules for raw [OeeBdeFile bde files].
