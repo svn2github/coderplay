@@ -1,5 +1,3 @@
-* [OeeBde Introduction]
-
-* [OeeBdeFile Input File Format]
-
-* [OeeBdeDataValidationRules Data Validation and Sum-ups]
+ * [OeeBde Introduction]
+ * [OeeBdeFile Input File Format]
+ * [OeeBdeDataValidationRules Data Validation and Sum-ups]
