@@ -47,7 +47,7 @@
    * *Job ID* cannot change during a Job Sequence. However, multiple Job Sequences can share the same Job ID.
    * A significant _MR_ entry is a _MR_ entry that triggers a Significant Preparation Sum-up. Similarly, a significant _Prod_ entry is a _Prod_ entry that triggers a Significant Production Sum-up.
 
-  * The Sum-up process has several minor categories, *W-up*, *Process*, *Maintenance-H* and *Maintenance-I*, defined by following rules:
+  * The Sum-up process has several minor categories, *W-up*, *Process* and *Maintenance*, defined by following rules:
    * *W-up*
     * A W-up Sum-up is triggered by a _W-up_ entry when the process is not currently performing a W-up Sum-up.
     * Status code of a _W-up_ entry is always accumulated whenever the Sum-up process reads the entry. 
