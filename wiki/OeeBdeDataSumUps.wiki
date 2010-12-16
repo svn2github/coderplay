@@ -5,7 +5,7 @@ Rules for sum-up the entries in input files.
   * The Sum-up process has two primary categories, *Preparation* and *Production*, defined by following rules:
    * *Preparation*
     * A Preparation Sum-up is triggered by a _MR_ entry when the process is not currently performing a Preparation Sum-up. Otherwise, the _MR_ entry is ignored.
-    * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry (and _Maintenance_ entry, see OeeBdeDataSumUps#Possible_Additional_Rules).
+    * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry (and _Maintenance_ entry, see [OeeBdeDataSumUps#Possible_Additional_Rules]).
     * The duration of Preparation is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Preparation Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
     * Only significant Preparation Sum-up is reported in the final output.
