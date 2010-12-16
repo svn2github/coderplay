@@ -1,3 +1,4 @@
+#sidebar OeeBdeToC
 OEE Reporting Tools.
 
 = Introduction =
