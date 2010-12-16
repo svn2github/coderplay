@@ -11,7 +11,7 @@ Rules for sum-up the entries in input files.
     * Only significant Preparation Sum-up is reported in the final output.
    * *Production*
     * A Production Sum-up is triggered by a _Prod_ entry when the process is not currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
-    * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry (or maybe maintenance, for which we may want issue a warning).
+    * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry (and _Maintenance_ entry, see [OeeBdeDataSumUps#Possible_Additional_Rules]).
     * The duration of Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
     * Only significant Production Sum-up is reported in the final output.
@@ -34,6 +34,6 @@ Rules for sum-up the entries in input files.
     * A Maintenance Sum-up is terminated by any _MR_, _Prod_, _Job End_ entries (In theory, only _MR_ can possibly follow a Maintenance Sum-up and terminate it? Otherwise, we may want issue a warning.) 
 
  ==Possible Additional Rules==
-  * A _Maintenance_ terminates both _Preparation_ and _Production_ Sum-ups. A warning message is issued if it happens.
+  * A _Maintenance_ terminates both Preparation and Production Sum-ups. A warning message is issued if it happens.
   * Any _Prod_ or _Job End_ terminates a Maintenance Sum-up. A warning message is issued if it happens.
-  * A warning message is issued if a _W-up_ entries is found in during a Production Sum-up.
+  * A warning message is issued if any _W-up_ entries is found in during a Production Sum-up.
