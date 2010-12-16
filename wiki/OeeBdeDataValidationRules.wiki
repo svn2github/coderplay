@@ -1,1 +1,28 @@
 #Data validation rules for raw [OeeBdeFile bde files].
+
+ * Term Definitions
+  * *MR entry* - can be either @95 or MR
+  * *Prod entry* - Prod
+  * *Job End entry* - @97
+  * *non-blank job* - a job that has non-zero job ID
+
+ * Basic Rules
+  # Process only row with REC020 as its first column.
+  # The records should be processed line by line following the increasing order of timestamp.
+  # Timestamp column must increase monotonically.
+  # Maximum Timestamp must not be in the future.
+  # Minimum Timestamp must not be earlier than the maximum Timestamp in reporting database.
+  # ImpressionTotal Column must increase monotonically.
+  # ImpressionTotal must be larger than the last record in reporting database.
+
+ * Advanced Rules
+  # The validation process has three primary status, *preparation*, *production* and *finishing*.
+   * A status is a sum up of individual entries of the input data. It is triggered and ended by certain entries from the input data.
+  # A non-blank job sequence must undergo the three primary status, *preparation*, *production* and *finishing* for at least once.
+  # A *preparation* status begins when processing a *MR entry* and the process is NOT in a prepration status. Once in *preparation* status, it lasts till it is terminated. If another *MR entry* is found during a preparation status, it is ignored.
+  # A *preparation* status is terminated when a *production* or *finishing* status begins.
+  # A *production* status begins when processing a *Prod entry* and the process is NOT in a production status. Once a production begins, it lasts till it is terminated. If another *Prod entry* is found during a production status, it is ignored.
+  # A *production* status is terminated when a valid *preparation* begins or encounters an *end*.
+  # The duration of *preparation* or *production* is calculated as the time difference between its first entry and the entry where it is terminated.
+  # A valid *preparation* or *production* must last for at least 5 minutes and cost 20 ImpressionTotal.
+  # *prepare* and *production* must be paired.
