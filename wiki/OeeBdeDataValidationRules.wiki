@@ -30,21 +30,24 @@
 
 
  ==Sum-up Rules==
-  # The Sum-up process has two primary categories, *Preparation* and *Production*, defined by following rules:
+  * The Sum-up process has two primary categories, *Preparation* and *Production*, defined by following rules:
    * *Preparation*
     * A Preparation Sum-up is triggered by a _MR_ entry when the process is not currently performing a Preparation Sum-up. Otherwise, the _MR_ entry is ignored.
     * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry.
     * The duration of Preparation is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Preparation Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
+    * Only significant Preparation Sum-up is reported in the final output.
    * *Production*
     * A Production Sum-up is triggered by a _Prod_ entry when the process is not currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
     * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry.
     * The duration of Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
+    * Only significant Production Sum-up is reported in the final output.
    * A *Job Sequence* is defined by one _Preparation_ Sum-up followed by one _Production_ Sum-up.
    * *Job ID* cannot change during a Job Sequence. However, multiple Job Sequences can share the same Job ID.
    * A significant _MR_ entry is a _MR_ entry that triggers a Significant Preparation Sum-up. Similarly, a significant _Prod_ entry is a _Prod_ entry that triggers a Significant Production Sum-up.
-  # The Sum-up process has several minor categories, *W-up*, *Process*, *Maintenance-H* and *Maintenance-I*, defined by following rules:
+
+  * The Sum-up process has several minor categories, *W-up*, *Process*, *Maintenance-H* and *Maintenance-I*, defined by following rules:
    * *W-up*
     * A W-up Sum-up is triggered by a _W-up_ entry when the process is not currently performing a W-up Sum-up.
     * Status code of a _W-up_ entry is always accumulated whenever the Sum-up process reads the entry. 
