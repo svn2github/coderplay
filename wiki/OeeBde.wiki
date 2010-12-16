@@ -7,7 +7,7 @@ The purpose of this project is to have a GUI-driven program to process raw *bde*
 == Functionalities ==
  * Read a ASCII text based *.bde* file.
  * Reconcile the content of the file and store as SQLite Database format.
- * Validate the data using a set of validation rules.
+ * Validate the data using a set of [OeeBdeDataValidationRules validation rules].
  * Generate helpful messages for any erroneous/invalid data for user correct the data in the bde file.
  * Generate a report using a set of sum-up rules based on the validated data.
  * The validated data are stored in the main database for future references.
@@ -19,11 +19,3 @@ The purpose of this project is to have a GUI-driven program to process raw *bde*
  * Tkinter
  * PySqlite
  * Py2exe(?)
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
