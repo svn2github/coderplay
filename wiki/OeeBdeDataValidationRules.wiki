@@ -1,31 +1,55 @@
 #Data validation rules for raw [OeeBdeFile bde files].
 
  ==Terminology==
-  * _MR_ - can be either @95 or MR
-  * _Prod_ - Prod
-  * _Job End_ - @97
-  * _Job Sequence_ - entries of the same job ID
-  * _non-blank job_ - a job sequence that has non-zero job ID
+  * _MR_ entry - can be either @95 or any ActivityCode that belongs to MR category
+  * _Prod_ entry - any ActivityCode that belongs to Prod category
+  * _Job End_ entry - @97
+  * _W-up_ entry - any ActivityCode that belongs to W-up category
+  * _Process_ entry - 4068
+  * _Maintenance_ entry - 9005 and 9007
+
 
  ==Basic Rules==
-  # Only rows with REC020 as its first column are processed.
-  # The records should be processed line by line following the increasing order of timestamp.
-  # Timestamp column must increase monotonically.
-  # Maximum Timestamp must not be in the future.
-  # Minimum Timestamp must not be earlier than the maximum Timestamp in reporting database.
-  # ImpressionTotal Column must increase monotonically.
+  # RecordID must exist in its master table in reporting database.
+  # EquipmentID must exist in its master table in reporting database.
+  # ActivityCode must exist in its master table in reporting database.
+  # Only rows with RecordID, REC020, as its first column are significant and processed.
+  # First significant row must have a non-zero Job ID.
+  # EquipmentID must remain the same for all significant rows in a file.
+  # TimeStamp column must increase monotonically.
+  # Maximum TimeStamp must not be in the future.
+  # Minimum TimeStamp must not be earlier than the maximum TimeStamp in reporting database.
+  # ImpressionTotal column must increase monotonically.
   # ImpressionTotal must be larger than the last record in reporting database.
+  # ImpressionTotal must in the range of 1 million to 999 million.
+  # File must contain at least one @95.
+  # A file must contain at least 500 significant rows.
+  # All ActivityCode is significant except @17.
+  # The first significant code of the significant rows must belong to a _MR_ entry.
+  # The files are processed line by line following the increasing order of TimeStamp.
 
- ==Advanced Rules==
-  # The validation process has two primary Sum-ups, *Preparation* and *Production*.
+
+ ==Sum-up Rules==
+  # The Sum-up process has two primary categories, *Preparation* and *Production*, defined by following rules:
    * *Preparation*
-    * A Preparation Sum-up is triggered by a _MR_ entry when the process is NOT currently performing a Preparation Sum-up. Otherwise, the _MR_ entry is ignored.
+    * A Preparation Sum-up is triggered by a _MR_ entry when the process is not currently performing a Preparation Sum-up. Otherwise, the _MR_ entry is ignored.
     * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry.
+    * The duration of Preparation is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
+    * A significant Preparation Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
    * *Production*
-    * A Production Sum-up is triggered by a _Prod_ entry when the process is NOT currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
+    * A Production Sum-up is triggered by a _Prod_ entry when the process is not currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
     * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry.
-  # The two primary Sum-ups must be paired with _Preparation_ followed by _Production_ within a same job sequence.
-  # A _non-blank job_ sequence must have of the two primary Sum-ups for at least once.
-  # The duration of Preparation and Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
-  # A significant Preparation or Production Sum-up must has duration longer than 5 minutes and Impression Count greater than 20.
-  # A significant _MR_ entry is a _MR_ entry that triggers a Significant Preparation Sum-up. Similarly, a significant _Prod_ entry is a _Prod_ entry that triggers a Significant Production Sum-up.
+    * The duration of Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
+    * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
+   * A *Job Sequence* is defined by one _Preparation_ Sum-up followed by one _Production_ Sum-up.
+   * *Job ID* cannot change during a Job Sequence. However, multiple Job Sequences can share the same Job ID.
+   * A significant _MR_ entry is a _MR_ entry that triggers a Significant Preparation Sum-up. Similarly, a significant _Prod_ entry is a _Prod_ entry that triggers a Significant Production Sum-up.
+  # The Sum-up process has several minor categories, *W-up*, *Process*, *Maintenance-H* and *Maintenance-I*, defined by following rules:
+   * *W-up*
+    * A W-up Sum-up is triggered by a _W-up_ entry when the process is not currently performing a W-up Sum-up.
+    * Status code of a _W-up_ entry is always accumulated whenever the Sum-up process reads the entry. 
+    * A W-up Sum-up is terminated if the value of the accumulation is zero. Otherwise, it proceeds further.
+    * The _W-up_ Sum-up is always terminated by any _MR_, _Prod_, _Job End_ or _Maintenance_ entries. If the accumulation is not zero when it is terminated, the accumulation is reset to zero and a warning is issued.
+   * *Process*
+    * A Process Sum-up is triggered by a _Process_ entry.
+    * A Process Sum-up is terminated by any _MR_, _Prod_, _Job End_ or _Maintenance_(?) entries.
