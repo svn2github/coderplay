@@ -1,7 +1,7 @@
 #sidebar OeeBdeToC
 Rules for sum-up the entries in input files.
 
- ==Sum-up Rules==
+==Sum-up Rules==
   * The Sum-up process has two primary categories, *Preparation* and *Production*, defined by following rules:
    * *Preparation*
     * A Preparation Sum-up is triggered by a _MR_ entry when the process is not currently performing a Preparation Sum-up. Otherwise, the _MR_ entry is ignored.
