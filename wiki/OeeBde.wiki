@@ -4,13 +4,21 @@ OEE Reporting Tools.
 
 The purpose of this project is to have a GUI-driven program to process raw *bde* data. A report is generated for the processed data. The report is further used by other programs for additional analysis, which is out of the scope of this project. 
 
-The functionalities of the program should include following items:
+== Functionalities ==
  * Read a ASCII text based *.bde* file.
- * Reconcile the content of the file and store as Database format.
+ * Reconcile the content of the file and store as SQLite Database format.
  * Validate the data using a set of validation rules.
  * Generate helpful messages for any erroneous/invalid data for user correct the data in the bde file.
  * Generate a report using a set of sum-up rules based on the validated data.
+ * The validated data are stored in the main database for future references.
  * The program must have a GUI for easy access.
+ * The program should be package as a stand-alone executable file (Windows format).
+
+== Development Tools ==
+ * Python
+ * Tkinter
+ * PySQlite
+ * Py2exe(?)
 
 
 = Details =
