@@ -18,4 +18,3 @@ Data validation rules for raw [OeeBdeFile bde files].
   # A file must contain at least 500 significant rows.
   # All ActivityCode is significant except @17.
   # The first significant code of the significant rows must belong to a _MR_ entry.
-  # The files are processed line by line following the increasing order of TimeStamp.
