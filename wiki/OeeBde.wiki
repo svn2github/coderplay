@@ -5,7 +5,7 @@ OEE Reporting Tools.
 The purpose of this project is to have a GUI-driven program to process raw [OeeBdeFile bde] data. A report is generated for the processed data. The report is further used by other programs for additional analysis, which is out of the scope of this project. 
 
 == Functionalities ==
- * Read a ASCII text based [OeeBdeFile *.bde] file.
+ * Read a ASCII text based [OeeBdeFile *.bde file].
  * Reconcile the content of the file and store as SQLite Database format.
  * Validate the data using a set of [OeeBdeDataValidationRules validation rules].
  * Generate helpful messages for any erroneous/invalid data for user correct the data in the [OeeBdeFile bde file].
