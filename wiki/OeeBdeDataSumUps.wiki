@@ -17,6 +17,7 @@ Rules for sum-up the entries in input files.
     * Only significant Production Sum-up is reported in the final output.
    * A *Job Sequence* is defined by one _Preparation_ Sum-up followed by one _Production_ Sum-up.
    * *Job ID* cannot change during a Job Sequence. However, multiple Job Sequences can share the same Job ID.
+   * A non-zero Job ID must have at least one Job Sequence.
    * A significant _MR_ entry is a _MR_ entry that triggers a Significant Preparation Sum-up. Similarly, a significant _Prod_ entry is a _Prod_ entry that triggers a Significant Production Sum-up.
 
   * The Sum-up process has several minor categories, *W-up*, *Process* and *Maintenance*, defined by following rules:
