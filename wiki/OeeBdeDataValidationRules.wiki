@@ -18,7 +18,7 @@
  ==Advanced Rules==
   # The validation process has two primary Sum-ups, *preparation* and *production*.
    * *preparation*
-    * A preparation Sum-up is triggered by a {{{MR}}} entry when the process is NOT currently performing a preparation Sum-up. Otherwise, the {{{MR}}} entry is ignored.
+    * A preparation Sum-up is triggered by a `MR` entry when the process is NOT currently performing a preparation Sum-up. Otherwise, the {{{MR}}} entry is ignored.
     * A preparation Sum-up is terminated by a significant {{{Prod}}} entry  or any {{{Job End}}} entry.
    * *production*
     * A production Sum-up is triggered by a {{{Prod}}} entry when the process is NOT currently performing a production Sum-up. Otherwise, the {{{Prod}}} entry is ignored.
