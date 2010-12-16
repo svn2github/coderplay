@@ -1,5 +1,6 @@
-#sidebar OeeBdeToc
-#description of the OEE bde file format.
+#sidebar OeeBdeToC
+
+Description of the OEE bde file format.
 
 = File Format =
 
