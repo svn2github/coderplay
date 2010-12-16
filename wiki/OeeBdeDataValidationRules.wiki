@@ -4,7 +4,8 @@
   * _MR_ - can be either @95 or MR
   * _Prod_ - Prod
   * _Job End_ - @97
-  * _non-blank job_ - a job that has non-zero job ID
+  * _Job Sequence_ - entries of the same job ID
+  * _non-blank job_ - a job sequence that has non-zero job ID
 
  ==Basic Rules==
   # Only rows with REC020 as its first column are processed.
@@ -23,8 +24,8 @@
    * *Production*
     * A Production Sum-up is triggered by a _Prod_ entry when the process is NOT currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
     * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry.
-  # For a _non-blank job_ sequence, the two primary Sum-ups must be paired with _Preparation_ followed by _Production_.
+  # The two primary Sum-ups must be paired with _Preparation_ followed by _Production_ within a same job sequence.
   # A _non-blank job_ sequence must have of the two primary Sum-ups for at least once.
   # The duration of Preparation and Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
   # A significant Preparation or Production Sum-up must has duration longer than 5 minutes and Impression Count greater than 20.
-  # A significant MR entry is a MR entry that triggers a Significant Preparation Sum-ups. Similarly, a significant Prod entry is a Prod entry that triggers a Significant Production Sum-ups.
+  # A significant _MR_ entry is a _MR_ entry that triggers a Significant Preparation Sum-up. Similarly, a significant _Prod_ entry is a _Prod_ entry that triggers a Significant Production Sum-up.
