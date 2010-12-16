@@ -63,4 +63,4 @@
  ==Possible Additional Rules==
   * A _Maintenance_ terminates both _Preparation_ and _Production_ Sum-ups. A warning message is issued if it happens.
   * Any _Prod_ or _Job End_ terminates a Maintenance Sum-up. A warning message is issued if it happens.
-  * A _W-up_ entries is found in during a Production Sum-up. A warning message is issued if it happens.
+  * A warning message is issued if a _W-up_ entries is found in during a Production Sum-up.
