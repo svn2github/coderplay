@@ -1,5 +1,11 @@
 #sidebar OeeBdeToC
 
+The processing does following two jobs:
+ * [OeeBdeDataValidationRules Data Validation]
+ * [OeeBdeDataSumUps Records Sum ups]
+
+Both job has a validation purpose. Errors found in any of the jobs terminate the processing.
+
  ==Terminology==
   * _MR_ entry - can be either @95 or any ActivityCode that belongs to MR category
   * _Prod_ entry - any ActivityCode that belongs to Prod category
