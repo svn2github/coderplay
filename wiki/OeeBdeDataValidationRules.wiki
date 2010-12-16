@@ -17,11 +17,11 @@
   # First significant row must have a non-zero Job ID.
   # EquipmentID must remain the same for all significant rows in a file.
   # TimeStamp column must increase monotonically.
-  # Maximum TimeStamp must not be in the future.
-  # Minimum TimeStamp must not be earlier than the maximum TimeStamp in reporting database.
+  # TimeStamp must not be in the future.
+  # TimeStamp must not be earlier than the last TimeStamp in reporting database.
   # ImpressionTotal column must increase monotonically.
-  # ImpressionTotal must be larger than the last record in reporting database.
-  # ImpressionTotal must in the range of 1 million to 999 million.
+  # ImpressionTotal must be greater than the last record in reporting database.
+  # ImpressionTotal must be in the range of 1 million to 999 million.
   # File must contain at least one @95.
   # A file must contain at least 500 significant rows.
   # All ActivityCode is significant except @17.
@@ -33,13 +33,13 @@
   * The Sum-up process has two primary categories, *Preparation* and *Production*, defined by following rules:
    * *Preparation*
     * A Preparation Sum-up is triggered by a _MR_ entry when the process is not currently performing a Preparation Sum-up. Otherwise, the _MR_ entry is ignored.
-    * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry.
+    * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry (or maybe maintenance, for which we may want issue a warning).
     * The duration of Preparation is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Preparation Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
     * Only significant Preparation Sum-up is reported in the final output.
    * *Production*
     * A Production Sum-up is triggered by a _Prod_ entry when the process is not currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
-    * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry.
+    * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry (or maybe maintenance, for which we may want issue a warning).
     * The duration of Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
     * Only significant Production Sum-up is reported in the final output.
@@ -56,3 +56,6 @@
    * *Process*
     * A Process Sum-up is triggered by a _Process_ entry.
     * A Process Sum-up is terminated by any _MR_, _Prod_, _Job End_ or _Maintenance_(?) entries.
+   * *Maintenance*
+    * A Maintenance Sum-up is triggered by a _Maintenance_ entry.
+    * A Maintenance Sum-up is terminated by any _MR_, _Prod_, _Job End_ entries (In theory, only _MR_ can possibly follow a Maintenance Sum-up and terminate it? Otherwise, we may want issue a warning.) 
