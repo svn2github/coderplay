@@ -13,7 +13,7 @@
   # RecordID must exist in its master table in reporting database.
   # EquipmentID must exist in its master table in reporting database.
   # ActivityCode must exist in its master table in reporting database.
-  # Only rows with RecordID, REC020, as its first column are significant and processed.
+  # Only rows with REC020 as its RecordID are significant and processed.
   # First significant row must have a non-zero Job ID.
   # EquipmentID must remain the same for all significant rows in a file.
   # TimeStamp column must increase monotonically.
