@@ -59,3 +59,8 @@
    * *Maintenance*
     * A Maintenance Sum-up is triggered by a _Maintenance_ entry.
     * A Maintenance Sum-up is terminated by any _MR_, _Prod_, _Job End_ entries (In theory, only _MR_ can possibly follow a Maintenance Sum-up and terminate it? Otherwise, we may want issue a warning.) 
+
+ ==Possible Additional Rules==
+  * A _Maintenance_ terminates both _Preparation_ and _Production_ Sum-ups. A warning message is issued if it happens.
+  * Any _Prod_ or _Job End_ terminates a Maintenance Sum-up. A warning message is issued if it happens.
+  * A _W-up_ entries is found in during a Production Sum-up. A warning message is issued if it happens.
