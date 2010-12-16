@@ -1,10 +1,10 @@
 #sidebar OeeBdeToC
 
-The processing does following two jobs:
+The input file is processed line by line following increasing order of the TimeStamp column. The processing does following two jobs:
  * [OeeBdeDataValidationRules Data Validation]
  * [OeeBdeDataSumUps Records Sum ups]
 
-Both job has a validation purpose. Errors found in any of the jobs terminate the processing. The data are saved in reporting database if both jobs succeeds. An output report is generated based on the Sum-ups.
+Both job has a validation purpose. Errors found in any of the jobs terminate the processing. The data are saved in reporting database if both jobs succeeds. An Activity Sum-up Report is generated based on the Sum-ups. A separate Info file is also generated if there are any warnings issued during the processing.
 
 ==Terminology==
  * _MR_ entry - can be either @95 or any ActivityCode that belongs to MR category
