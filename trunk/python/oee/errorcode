@@ -1,20 +1,28 @@
 0   OK
-1   OEE Error: Row RecordID not on Master table.
-3   OEE Error: RowTime Stamp is in the future.
-4   OEE Error: Row File Time Stamp is less than the prior record.
-5   OEE Error: Row File First record on file has a blank Job Number.
-6   OEE Error: Row EquipmentID not on master table.
-7   OEE Error: Row ActivityNo not on Master table.
-8   OEE Error: Row ImpressionTotal outside range 1m - 999m.
-9   OEE Error: Row ImpressionTotal < last value in Reporting database.
-10  OEE Error: Row ImpressionTotal is less than the prior record.
-11  OEE Error: Row EquipmentID differs from file header.
-12  OEE Error: Row Invalide Activity Number.
-13  OEE Error: Row Invalid Job Start/End sequence
-14  OEE Error: Row Job No changes between Job Start/End
-15  OEE Error: Row missing MR or Prod within Job Start/End
-802 OEE Error: File First non-blank Activity on file not MR or @95 (Start Job)
-803 OEE Error: File EquipmentID is missing.
-804 OEE Error: File EquipmentID is invalid.
-805 OEE Error: File contains less then 500 records
-806 OEE Error: File contains no @95
+1   Error: RecordID not in master table.
+2   Error: EquipmentID not in master table.
+3   Error: ActivityCode not in Master table.
+5   Error: First significant record in file has a zero Job ID.
+6   Error: EquipmentID not consistent for all significant rows.
+7   Error: TimeStamp is less than the prior record.
+8   Error: TimeStamp is in the future.
+9   Error: TimeStamp < last record in Reporting database.
+10  Error: Row ImpressionTotal is less than the prior record.
+11  Error: Row ImpressionTotal < last value in Reporting database.
+12  Error: Row ImpressionTotal not in range of 1m - 999m.
+13  Error: File contains no @95
+14  Error: File contains less then 500 signifcant records.
+16  Error: First significant activity not MR or @95
+800 Error: Invalid Job Sequence.
+801 Error: Production without Preparation.
+802 Error: Job ID changes between a single Job Sequence.
+803 Error: Non-zero Job ID contains no valid Job Sequence.
+901 Warning: Job Sequence with trivial Preparation.
+902 Warning: Job Sequence with trivial Production.
+903 Warning: Job Sequence with trivlal Preparation and Production.
+910 Warning: W-up terminated with non-zero status.
+911 Warning: Preparation terminated by Maintenance.
+912 Warning: Production terminated by Maintenance.
+913 Warning: Maintenance terminated by Prod activity.
+914 Warning: Maintenance terminated by @97 activity.
+915 Warning: W-up activity found in Production sum-up.
