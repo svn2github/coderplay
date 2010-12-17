@@ -1,5 +1,9 @@
 #sidebar OeeBdeToC
 
+=Validation Algorithm=
+
+ * All validations can be performed using SQLite queries.
+
 =Sum-up Algorithm=
 
 ==Terminology==
