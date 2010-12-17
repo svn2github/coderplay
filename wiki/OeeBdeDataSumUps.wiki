@@ -15,7 +15,7 @@ Rules for sum-up the entries in input files.
     * The duration of Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
     * Only significant Production Sum-up is reported in the final output.
-   * A *Job Sequence* is defined by one _Preparation_ Sum-up followed by one _Production_ Sum-up.
+   * A *Job Sequence* is defined by one _Preparation_ Sum-up followed by one _Production_ Sum-up. A warning is issued if either Preparation or Production Sum-up is not significant.
    * *Job ID* cannot change during a Job Sequence. However, multiple Job Sequences can share the same Job ID.
    * A non-zero Job ID must have at least one Job Sequence.
    * A significant _MR_ entry is a _MR_ entry that triggers a significant Preparation Sum-up. Similarly, a significant _Prod_ entry is a _Prod_ entry that triggers a significant Production Sum-up.
