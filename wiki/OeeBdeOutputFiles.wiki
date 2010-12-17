@@ -2,7 +2,12 @@
 
 =Activity Sum-up Report=
 
-An 
+An Activity Sum-up Report has following entries:
+ * MR
+ * Prod
+ * Maintenance
+ * Process
+ * W-up
 
 
 =Info File=
