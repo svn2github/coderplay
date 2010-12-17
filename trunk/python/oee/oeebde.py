@@ -310,9 +310,20 @@ class oeebde():
 
     
     def data_sumup(self):
-        primary_entries = self.code_MR + self.code_Prod + self.code_Prod \
-            + self.code_JobEnd + self.code_Maintenance
-        plines = [line for line in self.content if line[6] in primary_entries]
+        primary_entries = self.code_MR + self.code_Prod + self.code_JobEnd + self.code_Maintenance
+        plines = [(ii,)+line for ii, line in enumerate(self.content) if line[6] in primary_entries]
+
+        for line in plines:
+            if line[7] in self.code_MR:
+                pass
+            elif line[7] in self.code_Prod:
+                pass
+            elif line[7] in self.code_JobEnd:
+                pass
+            elif line[7] in self.code_Maintenance:
+                pass
+
+
 
         pdb.set_trace()
 
