@@ -5,8 +5,9 @@ Data validation rules for raw [OeeBdeFile bde files].
   # RecordID must exist in its master table in reporting database.
   # EquipmentID must exist in its master table in reporting database.
   # ActivityCode must exist in its master table in reporting database.
+  # All ActivityCode is significant except @17.
+  # First significant ActivityCode must have a non-zero Job ID.
   # Only rows with REC020 as its RecordID are significant and processed.
-  # First significant row must have a non-zero Job ID.
   # EquipmentID must remain the same for all significant rows in a file.
   # TimeStamp column must increase monotonically.
   # TimeStamp must not be in the future.
@@ -16,5 +17,4 @@ Data validation rules for raw [OeeBdeFile bde files].
   # ImpressionTotal must be in the range of 1 million to 999 million.
   # File must contain at least one @95.
   # A file must contain at least 500 significant rows.
-  # All ActivityCode is significant except @17.
   # The first significant code of the significant rows must belong to a _MR_ entry.
