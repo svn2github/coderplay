@@ -2,17 +2,17 @@
 1   Error: RecordID not in master table.
 2   Error: EquipmentID not in master table.
 3   Error: ActivityCode not in Master table.
-5   Error: First significant record in file has a zero Job ID.
-6   Error: EquipmentID not consistent for all significant rows.
-7   Error: TimeStamp is less than the prior record.
-8   Error: TimeStamp is in the future.
-9   Error: TimeStamp < last record in Reporting database.
-10  Error: Row ImpressionTotal is less than the prior record.
-11  Error: Row ImpressionTotal < last value in Reporting database.
-12  Error: Row ImpressionTotal not in range of 1m - 999m.
-13  Error: File contains no @95
-14  Error: File contains less then 500 signifcant records.
-16  Error: First significant activity not MR or @95
+5   Error: First significant ActivityCode in file has a zero Job ID.
+6   Error: First significant ActivityCode not MR or @95
+8   Error: EquipmentID not consistent for all significant rows.
+9   Error: TimeStamp is less than the prior record.
+10  Error: TimeStamp is in the future.
+11  Error: TimeStamp < last record in Reporting database.
+12  Error: Row ImpressionTotal is less than the prior record.
+13  Error: Row ImpressionTotal < last value in Reporting database.
+14  Error: Row ImpressionTotal not in range of 1m - 999m.
+15  Error: File contains no @95
+16  Error: File contains less then 500 signifcant rows.
 800 Error: Invalid Job Sequence.
 801 Error: Production without Preparation.
 802 Error: Job ID changes between a single Job Sequence.

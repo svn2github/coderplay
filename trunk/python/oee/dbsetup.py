@@ -135,9 +135,9 @@ def setup_activity_code(dbname='oeebde.db', filename='activitycode'):
 
 
 if __name__ == "__main__":
-    #setup_error_code()
+    setup_error_code()
     #setup_equipment_code()
     #setup_activity_code()
-    setup_reporting_table()
+    #setup_reporting_table()
 
 
