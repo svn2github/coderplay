@@ -9,7 +9,7 @@ The purpose of this project is to have a GUI-driven program to process raw [OeeB
  * Read a ASCII text based [OeeBdeFile *.bde file].
  * Reconcile contents of the file and temporarily store them as SQLite Database format.
  * Validate the data using a set of [OeeBdeDataValidationRules validation rules].
- * Perform sum-ups with a set of sum-up rules based on the validated data.
+ * Perform sum-ups with a set of [OeeBdeDataSumUps sum-up rules] based on the validated data.
  * Generate helpful messages for any errors found in above two steps. The messages should be useful hints for users to correct the source [OeeBdeFile bde file].
  * An Activity Sum-up Report is generated if all above steps succeed.
  * The data are stored in the main database for future references.
