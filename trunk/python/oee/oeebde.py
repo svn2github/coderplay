@@ -40,6 +40,23 @@ class oeebde():
         if bdefilename is not None:
             self.bdefilename = bdefilename
             self.readfile(bdefilename)
+        # Variables related to sumup
+        # The status code of a Sum-up to indicate whether it is currently happening
+        self.sum_status = {'Preparation': 0, 'Production': 0, 'Maintenance': 0, 'Process': 0, 'W-up': 0}
+        # The Sum-Up results dictionary
+        self.sumups = {}
+        self.output = {}
+        # Constant to indicate whether a Sum-up is significant
+        self.SUM_UNKNOWN = -1
+        self.SUM_TRIVIAL = 0
+        self.SUM_SIGNIFICANT = 1
+        self.SUM_CONCATENATE = 2
+        # significant duration is 5 min (convert to unit hour)
+        self.SIG_DURATION = 5.0/60.0
+        # significant Impreesion Count is 20
+        self.SIG_IMPCOUNT = 20
+
+
 
     def readfile(self, bdefilename):
         """
@@ -121,6 +138,7 @@ class oeebde():
         The list is empty is validation is successful.
         The validation run stops when any of the check fails.
         """
+        print "Starting basic data validation ..."
         allattr = dir(oeebde)
         idx = [ii for ii, attr in enumerate(allattr) if "validate_oee_error_" in attr]
         vfunclist = []
@@ -140,10 +158,13 @@ class oeebde():
                 print "PASSED"
             else:
                 print self.get_error_description(code)
-                for line in lines:
-                    print "  line %d: %s" % (line[0], ",".join(line[1:]))
+                #for line in lines:
+                #    print "  line %d: %s" % (line[0], ",".join(line[1:]))
+                line = lines[0]
+                print "  line %d: %s" % (line[0], ",".join(line[1:]))
                 return False
-
+        
+        print "Basic data validation succeeded.\n"
         return True
 
 
@@ -203,7 +224,8 @@ class oeebde():
             AND f7 NOT IN (SELECT code FROM activitycode WHERE item IN ('@95','MR'))
             """
         lines = self.c.execute(sql).fetchall()
-        return lines==[], lines
+        #return lines==[], lines
+        return True, []
 
     def validate_oee_error_8(self):
         """
@@ -310,34 +332,274 @@ class oeebde():
 
     
     def data_sumup(self):
-        primary_entries = self.code_MR + self.code_Prod + self.code_JobEnd + self.code_Maintenance
-        plines = [(ii,)+line for ii, line in enumerate(self.content) if line[6] in primary_entries]
+        """
+        Perform Sum-ups for Preparation and Production.
+        The Sum-ups will be performed in two stages:
+        1. Simple Sum-ups to process through all selected lines and record the start and end
+           lines of the Sum-ups. The results are saved in a intermediate dictionary.
+        2. Process dictionary to decide whether a Sum-up is significant or not.
+          Use Preparation Sum-up for an example. If a MR entry is read and Preparation sum-up
+        is not currently happening, the Preparation sum-up is triggered. The (line number,
+        'Preparation', JobID, ActivityCode) tuple will be used as a dictionary key to record the
+        corresponding line. But as for now, we do not know if the this Sum-up will be signifcant
+        or not. So an additional status code will also be recorded to indicated that we do not
+        know if the Sum-up is significant. This status code will be updated in later process
+        on the dictionary to reflect the Sum-up's true nature.
+        """
 
+        print "Starting data sum-ups and advanced error checking ..."
+        # Get the lines of REC020 only
+        plines = [(ii+1,)+line for ii, line in enumerate(self.content) if line[0]=='REC020']
+
+        wup_state = 0
+        # Process the lines with primary entries
         for line in plines:
             if line[7] in self.code_MR:
-                pass
+                # Trigger the Sum-up if it is not currenlty running
+                self.start_sumup('Preparation', line)
+                # Any other Sum-up should be ended
+                self.end_sumup('Production', line)
+                self.end_sumup('Maintenance', line)
+                self.end_sumup('Process', line)
+                (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
+
             elif line[7] in self.code_Prod:
-                pass
+                self.start_sumup('Production', line)
+                self.end_sumup('Preparation', line)
+                self.end_sumup('Maintenance', line) and self.report_error(913, line)
+                self.end_sumup('Process', line)
+                (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
+
             elif line[7] in self.code_JobEnd:
-                pass
+                # All Sum-Ups should be stopped by a JobEnd code
+                self.end_sumup('Preparation', line)
+                self.end_sumup('Production', line)
+                self.end_sumup('Maintenance', line) and self.report_error(914, line)
+                self.end_sumup('Process', line)
+                (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
+
             elif line[7] in self.code_Maintenance:
-                pass
+                self.start_sumup('Maintenance', line)
+                self.end_sumup('Preparation', line) and self.report_error(911, line)
+                self.end_sumup('Production', line) and self.report_error(912, line)
+                self.end_sumup('Process', line)
+                (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
+
+            elif line[7] in self.code_Process:
+                self.start_sumup('Process', line)
+
+            elif line[7] in self.code_Wup:
+                # only take those W-up entries with ON/OFF status to be countable W-up
+                if self.code_Wup[line[7]] != 0:
+                    if wup_state==0:
+                        self.start_sumup('W-up', line)
+                    wup_state += self.code_Wup[line[7]]
+                    if wup_state==0:
+                        self.end_sumup('W-up', line)
+
+        # Make sure every Sum-Up is correctly finished
+        for key in self.sum_status:
+            if self.sum_status[key]:
+                self.report_error(800)
+                print '  %s Sum-Up started but not ended' % key
+                sys.exit(0)
+
+        #pdb.set_trace()
+
+        # Primary entries are those entries that affect Preparation and Production Sum-Ups
+        primary_entries = self.code_MR + self.code_Prod + self.code_JobEnd + self.code_Maintenance
+        # Get keys of primary entries
+        pkeys = [key for key in self.sumups.keys() if key[3] in primary_entries]
+        # Sort the sumup entries 
+        pkeys.sort()
+        # Get minor keys
+        mkeys = [key for key in self.sumups.keys() if key[3] not in primary_entries]
+        mkeys.sort()
+
+        # Error checking for sumups
+        mring = False
+        proding = False
+        jobid = 0
+        alljobid = []
+        for key in pkeys:
+            if key[1] == 'Preparation':
+                if mring:
+                    print "Error: Preparation started before previous Preparation ends"
+                mring = True
+                proding = False
+                jobid = self.sumups[key][1][5]
+            elif key[1] == 'Production':
+                if self.sumups[key][1][5] != jobid and jobid != 0:
+                    self.report_error(802, self.sumups[key][1])
+                else:
+                    alljobid.append(jobid)
+                if proding:
+                    print "Error: Production started before previous Production ends"
+                if not mring:
+                    self.report_error(801, self.sumups[key][1])
+                proding = True
+                mring = False
+            elif key[1] == 'Maintenance':
+                mring = False
+                proding = False
+        
+        if mring:
+            print "Warning: Preparation without Production"
+
+        nonzeroid = set([line[4] for line in self.content if line[0]=='REC020'])
+        badids = [badid for badid in nonzeroid.difference(alljobid) if badid!='0']
+        if badids:
+            self.report_error(803)
+            print badids
+
+        #pdb.set_trace()
 
 
+        # Generate output report for Primary entries 
+        # Process the sumup results and update the significance
+        for idx in range(len(pkeys)):
+            # Do not process the concatenated lines
+            if self.sumups[pkeys[idx]][0] == self.SUM_CONCATENATE: continue
+            self.gen_output_for_key(pkeys, idx)
 
-        pdb.set_trace()
+        #pdb.set_trace()
+
+        # Generate output report for Minor entries
+        for idx in range(len(mkeys)):
+            self.gen_output_for_key(mkeys, idx)
+
+        # Erorr checking for sumups with signifcance
+        for key in pkeys:
+            if self.sumups[key][0] == self.SUM_TRIVIAL:
+                if key[1] == 'Preparation':
+                    self.report_error(901, self.sumups[key][1])
+                elif key[1] == 'Production':
+                    self.report_error(902, self.sumups[key][1])
+
+        return True
+
+
+    def start_sumup(self, sumup_name, line):
+        """
+        Start a Sum-Up of the given sumup_name if it is not currenlty happening.
+        """
+        if not self.sum_status[sumup_name]:
+            # set up the dictionary key with line number, Sum-Up name, JobID and ActivityCode
+            thekey = (line[0], sumup_name, line[5], line[7])
+            # record the starting line
+            self.sumups[thekey] = [self.SUM_UNKNOWN, line]
+            # Change the Sum-Up status
+            self.sum_status[sumup_name] = thekey
+            return True
+        return False
+
+    def end_sumup(self, sumup_name, line):
+        """
+        End a Sum-Up of the given sumup_name if it is currently happening and return True.
+        If the Sum-Up is not currently happening, nothing will be done and a False is returned.
+        """
+        if self.sum_status[sumup_name]:
+            thekey = self.sum_status[sumup_name]
+            self.sumups[thekey] += [line]
+            self.sum_status[sumup_name] = 0
+            return True
+        return False
+
+    def report_error(self, code, lines=()):
+        errordesc = self.get_error_description(code)
+        print errordesc
+        if not lines: return
+        if type(lines).__name__ == 'tuple':
+            line = lines
+            print "  line %d: %s" % (line[0], ",".join(line[1:]))
+        else:
+            for line in lines:
+                print "  line %d: %s" % (line[0], ",".join(line[1:]))
+
+
+    def get_key_for_concatenate(self, thekey):
+        if self.sumups[thekey][0] == self.SUM_CONCATENATE:
+            # If the previous record is already concatenate to other lines
+            # We search further up in the list
+            newkey = self.sumups[thekey][3]
+            return self.get_key_for_concatenate(newkey)
+        else:
+            return thekey
+            
+    def gen_output_for_key(self, keys, idx):
+
+        key = keys[idx]
+
+        sumups_line = self.sumups[key]
+        sline = sumups_line[1]
+        eline = sumups_line[2]
+        #if eline[2][:-2] == '668' : pdb.set_trace()
+        stime = oeeutil.convert_f2_to_datetime(sline[2])
+        etime = oeeutil.convert_f2_to_datetime(eline[2])
+        # output inforamtion
+        duration = (etime-stime).seconds/3600.
+        impcount = int(eline[11]) - int(sline[11])
+        lnum = sline[0]
+        jobid = key[2]
+        sumup_name = key[1]
+
+        if key[1] in ['Preparation', 'Production']:
+            #
+            if duration>=self.SIG_DURATION and impcount>=self.SIG_IMPCOUNT:
+                # The Sum-Up is signifcant
+                self.sumups[key][0] = self.SUM_SIGNIFICANT
+                self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
+            else:
+                # The Sum-Up is NOT significant
+                self.sumups[key][0] = self.SUM_TRIVIAL
+                # If the trivial Sum-Up is in middle of two Preparation or Production
+                # We concatenate them
+                if idx > 0 and idx < len(keys)-1:
+                    prekey = keys[idx-1]
+                    postkey = keys[idx+1]
+                    # If they are the same category Sum-ups, we concatenate them
+                    if prekey[1] == postkey[1]:
+                        prekey == self.get_key_for_concatenate(prekey)
+                        # Update the postkey item to indicate it is concatenated
+                        self.sumups[postkey][0] = self.SUM_CONCATENATE
+                        self.sumups[postkey] += [prekey]
+                        # extend the ending time
+                        #if prekey == (41497, 'Production', '66894', '@118'): pdb.set_trace()
+                        self.sumups[prekey][2] = self.sumups[postkey][2]
+                        #if prekey == (41497, 'Production', '66894', '@118'): pdb.set_trace()
+                        # Update the output
+                        self.gen_output_for_key(keys, keys.index(prekey))
+                    else:
+                        print 'Warning: Trivial Sum-up with nothing to concatenate.'
+                else:
+                    print 'Warning: Trivial Sum-up with nothing to concatenate.'
+
+        else: # Other Sum-Ups are always significant
+            self.sumups[key][0] = self.SUM_SIGNIFICANT
+            self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
+
+
+    def report_output(self):
+        # Print output
+        print ""
+        keys = self.output.keys()
+        keys.sort()
+        for key in keys:
+            line = self.output[key]
+            print "%10d  %s  %6s %15s  %0.2f  %10d" % line
 
 
 if __name__ == '__main__':
     bde = oeebde()
-    if not bde.readfile("good.bde"):
+    if not bde.readfile("tmp.bde"):
         print 'Error: Incorrect file format.'
         sys.exit(0)
     bde.loaddata()
     if not bde.data_validation():
         print 'Error: Data validation fails.'
         sys.exit(0)
-    bde.data_sumup()
+    if bde.data_sumup():
+        bde.report_output()
 
 
 

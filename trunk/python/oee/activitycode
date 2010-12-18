@@ -56,6 +56,7 @@
 4029	Prod		Produktion Good Sheet
 4030	Prod		Produktion Good Sheet
 4031	MR		Makeready for perforating
+4034	Mixing Ink		Mixing Ink
 4048	W-up		End of week wash
 4049	W-up		Washing blanket
 4050	W-up		Washing impression cylinder
@@ -64,14 +65,17 @@
 4053	W-up		"Washup, 3 units"
 4054	W-up		"Washup, 4 units"
 4055	W-up		"Washup, 5 units"
+4056	W-up		"Washup, 6 units"
 4058	W-up		"Washup, 8 units"
 4060			Start up
+4062	Downtime	Plate	correction because of modified job
 4064	Downtime	Plate	Wait. for spare plate - plate damage
 4065	Downtime	Cplate	Wait. for spare plate - prepress error
 4066	Downtime	Stock	Waiting for material
 4067	Downtime	Customer	Waiting for customer approval
 4068	Downtime	Process	Process-related waiting
 4069	Downtime	Org	Waiting due to organizational reasons
+4070	Downtime	Org	Waiting for in-house coordination
 4071	Downtime	Dry	Drying time
 4072	Meal		Meal Break
 4073	4073		Change Blanket
@@ -87,12 +91,14 @@
 4106	Prod		"Production, 6 units"
 4108	Prod		"Production, 8 units"
 4110	Prod		"Production, 10 units"
+4606	Downtime		Double sheet
 4994	4994		Test
 8018	Prod		Test
 8019	Prod		Test
 8027			Ready
 8029	Prod		Produktion Good Sheet
 8030	Prod		Produktion Good Sheet
+9001	Downtime	Clean-up	Further questions on the job
 9003	Downtime	Clean-up	Clean up
 9005	Downtime	Maintenance-H	Technical malfunction
 9007	Downtime	Maintenance-I	Maintenance - Internal
