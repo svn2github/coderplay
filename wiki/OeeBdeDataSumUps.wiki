@@ -8,14 +8,14 @@ Rules for sum-up the entries in input files.
     * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry (and _Maintenance_ entry, see [OeeBdeDataSumUps#Possible_Additional_Rules]).
     * The duration of Preparation is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Preparation Sum-up must have duration longer than 5 minutes and Impression count greater than 20. Otherwise, the Sum-up is trivial.
-    * The Sum-up process tries to concatenate the two Sum-ups immediately before and after a trivial Sum-up and the trivial Sum-up is then ignored. However, if the concatenation cannot be performed, the trivial Sum-up is kept and flagged for output.
+    * The Sum-up process tries to concatenate the two Sum-ups immediately before and after a trivial Sum-up. If the concatenation succeeds, the trivial Sum-up is ignored. Otherwise, the trivial Sum-up is kept and flagged for output.
     * Only significant and flagged trivial Sum-up Preparation Sum-ups are reported in the final output.
    * *Production*
     * A Production Sum-up is triggered by a _Prod_ entry when the process is not currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
     * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry (and _Maintenance_ entry, see [OeeBdeDataSumUps#Possible_Additional_Rules]).
     * The duration of Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
     * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20. Otherwise, the Sum-up is trivial.
-    * The Sum-up process tries to concatenate the two Sum-ups immediately before and after a trivial Sum-up and the trivial Sum-up is then ignored. However, if the concatenation cannot be performed, the trivial Sum-up is kept and flagged for output.
+    * The Sum-up process tries to concatenate the two Sum-ups immediately before and after a trivial Sum-up. If the concatenation succeeds, the trivial Sum-up is ignored. Otherwise, the trivial Sum-up is kept and flagged for output.
     * Only significant and flagged trivial Production Sum-ups are reported in the final output.
    * A *Job Sequence* is defined by one Preparation Sum-up followed by one Production Sum-up. A warning is issued if either Preparation or Production Sum-up is not significant.
    * *Job ID* cannot change during a Job Sequence. However, multiple Job Sequences can share the same Job ID.
