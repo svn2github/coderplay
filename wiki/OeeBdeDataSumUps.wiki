@@ -7,14 +7,16 @@ Rules for sum-up the entries in input files.
     * A Preparation Sum-up is triggered by a _MR_ entry when the process is not currently performing a Preparation Sum-up. Otherwise, the _MR_ entry is ignored.
     * A Preparation Sum-up is terminated by a significant _Prod_ entry  or any _Job End_ entry (and _Maintenance_ entry, see [OeeBdeDataSumUps#Possible_Additional_Rules]).
     * The duration of Preparation is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
-    * A significant Preparation Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
-    * Only significant Preparation Sum-up is reported in the final output.
+    * A significant Preparation Sum-up must have duration longer than 5 minutes and Impression count greater than 20. Otherwise, the Sum-up is trivial.
+    * The Sum-up process tries to concatenate the two Sum-ups immediately before and after a trivial Sum-up and the trivial Sum-up is then ignored. However, if the concatenation cannot be performed, the trivial Sum-up is kept and flagged for output.
+    * Only significant and flagged trivial Sum-up Preparation Sum-ups are reported in the final output.
    * *Production*
     * A Production Sum-up is triggered by a _Prod_ entry when the process is not currently performing a Production Sum-up. Otherwise, the _Prod_ entry is ignored.
     * A Production Sum-up is terminated by a significant _MR_ entry or any _Job End_ entry (and _Maintenance_ entry, see [OeeBdeDataSumUps#Possible_Additional_Rules]).
     * The duration of Production is calculated as the time difference between the entry that triggers the Sum-up and the entry that terminates the Sum-up. The Impression count is calculated similarly using ImpressionTotal.
-    * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20.
-    * Only significant Production Sum-up is reported in the final output.
+    * A significant Production Sum-up must have duration longer than 5 minutes and Impression count greater than 20. Otherwise, the Sum-up is trivial.
+    * The Sum-up process tries to concatenate the two Sum-ups immediately before and after a trivial Sum-up and the trivial Sum-up is then ignored. However, if the concatenation cannot be performed, the trivial Sum-up is kept and flagged for output.
+    * Only significant and flagged trivial Production Sum-ups are reported in the final output.
    * A *Job Sequence* is defined by one Preparation Sum-up followed by one Production Sum-up. A warning is issued if either Preparation or Production Sum-up is not significant.
    * *Job ID* cannot change during a Job Sequence. However, multiple Job Sequences can share the same Job ID.
    * A non-zero Job ID must have at least one Job Sequence.
@@ -28,10 +30,10 @@ Rules for sum-up the entries in input files.
     * The _W-up_ Sum-up is always terminated by any _MR_, _Prod_, _Job End_ or _Maintenance_ entries. If the accumulation is not zero when it is terminated, the accumulation is reset to zero and a warning is issued.
    * *Process*
     * A Process Sum-up is triggered by a _Process_ entry.
-    * A Process Sum-up is terminated by any _MR_, _Prod_, _Job End_ or _Maintenance_(?) entries.
+    * A Process Sum-up is terminated by any _MR_, _Prod_, _Job End_ or _Maintenance_ entries.
    * *Maintenance*
     * A Maintenance Sum-up is triggered by a _Maintenance_ entry.
-    * A Maintenance Sum-up is terminated by any _MR_, _Prod_, _Job End_ entries (In theory, only _MR_ can possibly follow a Maintenance Sum-up and terminate it? Otherwise, we may want issue a warning.) 
+    * A Maintenance Sum-up is terminated by any _MR_, _Prod_, _Job End_ entries (In theory, only _MR_ can possibly follow a Maintenance Sum-up and terminate it? Otherwise, we issue a warning.) 
 
 ==Possible Additional Rules==
   * A _Maintenance_ terminates both Preparation and Production Sum-ups. A warning message is issued if it happens.
