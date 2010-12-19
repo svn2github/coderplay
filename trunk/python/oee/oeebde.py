@@ -42,15 +42,18 @@ class oeebde():
             self.readfile(bdefilename)
         # Variables related to sumup
         # The status code of a Sum-up to indicate whether it is currently happening
-        self.sum_status = {'Preparation': 0, 'Production': 0, 'Maintenance': 0, 'Process': 0, 'W-up': 0}
+        self.sum_status = {'Preparation': 0, 'Production': 0, 'Maintenance': 0, 'Process': 0, 'W-up': 0, 'JobEnd': 0}
         # The Sum-Up results dictionary
         self.sumups = {}
         self.output = {}
+        self.errors = {}
         # Constant to indicate whether a Sum-up is significant
         self.SUM_UNKNOWN = -1
         self.SUM_TRIVIAL = 0
         self.SUM_SIGNIFICANT = 1
         self.SUM_CONCATENATE = 2
+        self.SUM_TRIVIAL_BUT_NEEDED = 3
+        self.SUM_TRIVIAL_AND_SKIPPED = 4
         # significant duration is 5 min (convert to unit hour)
         self.SIG_DURATION = 5.0/60.0
         # significant Impreesion Count is 20
@@ -371,6 +374,9 @@ class oeebde():
                 (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
 
             elif line[7] in self.code_JobEnd:
+                # Job End entry triggers and end the Sum-Up
+                self.start_sumup('JobEnd', line)
+                self.end_sumup('JobEnd', line)
                 # All Sum-Ups should be stopped by a JobEnd code
                 self.end_sumup('Preparation', line)
                 self.end_sumup('Production', line)
@@ -402,7 +408,7 @@ class oeebde():
             if self.sum_status[key]:
                 self.report_error(800)
                 print '  %s Sum-Up started but not ended' % key
-                sys.exit(0)
+                return False
 
         #pdb.set_trace()
 
@@ -424,7 +430,8 @@ class oeebde():
         for key in pkeys:
             if key[1] == 'Preparation':
                 if mring:
-                    print "Error: Preparation started before previous Preparation ends"
+                    # print "Error: Preparation started before previous Preparation ends"
+                    self.report_error(917, self.sumups[key][1])
                 mring = True
                 proding = False
                 jobid = self.sumups[key][1][5]
@@ -434,23 +441,28 @@ class oeebde():
                 else:
                     alljobid.append(jobid)
                 if proding:
-                    print "Error: Production started before previous Production ends"
+                    # print "Error: Production started before previous Production ends"
+                    self.report_error(918, self.sumups[key][1])
                 if not mring:
                     self.report_error(801, self.sumups[key][1])
                 proding = True
                 mring = False
-            elif key[1] == 'Maintenance':
+            elif key[1] in ['Maintenance', 'JobEnd']:
                 mring = False
                 proding = False
         
         if mring:
-            print "Warning: Preparation without Production"
+            # print "Warning: Preparation without Production"
+            self.report_error(804)
 
         nonzeroid = set([line[4] for line in self.content if line[0]=='REC020'])
         badids = [badid for badid in nonzeroid.difference(alljobid) if badid!='0']
         if badids:
-            self.report_error(803)
-            print badids
+            thelines = []
+            for theid in badids:
+                idx = [line[4] for line in self.content].index(theid)
+                thelines += [(idx+1,) + (self.content[idx])]
+            self.report_error(803, thelines)
 
         #pdb.set_trace()
 
@@ -516,6 +528,11 @@ class oeebde():
             for line in lines:
                 print "  line %d: %s" % (line[0], ",".join(line[1:]))
 
+        if code in self.errors:
+            self.errors[code] += [(line[0], self.content[line[0]-1])]
+        else:
+            self.errors[code] = [(line[0], self.content[line[0]-1])]
+
 
     def get_key_for_concatenate(self, thekey):
         if self.sumups[thekey][0] == self.SUM_CONCATENATE:
@@ -559,7 +576,7 @@ class oeebde():
                     postkey = keys[idx+1]
                     # If they are the same category Sum-ups, we concatenate them
                     if prekey[1] == postkey[1]:
-                        prekey == self.get_key_for_concatenate(prekey)
+                        prekey = self.get_key_for_concatenate(prekey)
                         # Update the postkey item to indicate it is concatenated
                         self.sumups[postkey][0] = self.SUM_CONCATENATE
                         self.sumups[postkey] += [prekey]
@@ -569,12 +586,19 @@ class oeebde():
                         #if prekey == (41497, 'Production', '66894', '@118'): pdb.set_trace()
                         # Update the output
                         self.gen_output_for_key(keys, keys.index(prekey))
+                        self.sumups[key][0] = self.SUM_TRIVIAL_AND_SKIPPED
                     else:
-                        print 'Warning: Trivial Sum-up with nothing to concatenate.'
+                        # print 'Warning: Trivial Sum-up with nothing to concatenate.'
+                        self.report_error(916, self.sumups[key][1])
+                        self.sumups[key][0] = self.SUM_TRIVIAL_BUT_NEEDED
+                        self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
                 else:
-                    print 'Warning: Trivial Sum-up with nothing to concatenate.'
+                    # print 'Warning: Trivial Sum-up with nothing to concatenate.'
+                    self.report_error(916, self.sumups[key][1])
+                    self.sumups[key][0] = self.SUM_TRIVIAL_BUT_NEEDED
+                    self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
 
-        else: # Other Sum-Ups are always significant
+        elif key[1] in ['Maintenance', 'Process', 'W-up', 'JobEnd']: # Other Sum-Ups are always significant
             self.sumups[key][0] = self.SUM_SIGNIFICANT
             self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
 
@@ -586,12 +610,12 @@ class oeebde():
         keys.sort()
         for key in keys:
             line = self.output[key]
-            print "%10d  %s  %6s %15s  %0.2f  %10d" % line
+            print "%10d  %s  %6s %15s  %6.2f  %10d" % line
 
 
 if __name__ == '__main__':
     bde = oeebde()
-    if not bde.readfile("tmp.bde"):
+    if not bde.readfile("good.bde"):
         print 'Error: Incorrect file format.'
         sys.exit(0)
     bde.loaddata()

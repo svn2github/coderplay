@@ -17,6 +17,7 @@
 801 Error: Production without Preparation.
 802 Error: Job ID changes between a single Job Sequence.
 803 Error: Non-zero Job ID contains no valid Job Sequence.
+804 Error: Preparation without Production.
 901 Warning: Job Sequence with trivial Preparation.
 902 Warning: Job Sequence with trivial Production.
 903 Warning: Job Sequence with trivlal Preparation and Production.
@@ -26,3 +27,6 @@
 913 Warning: Maintenance terminated by Prod activity.
 914 Warning: Maintenance terminated by @97 activity.
 915 Warning: W-up activity found in Production sum-up.
+916 Warning: Trivial Sum-up with nothing to concatenate.
+917 Error: Preparation started before previous Preparation ends.
+918 Error: Production started before previous Production ends.
