@@ -53,6 +53,7 @@
 4017	MR		Plate Change unit 7
 4018	Prod		Good counter
 4019	Prod		Produktion Good Sheet
+4021	Ink Change		Ink Change
 4029	Prod		Produktion Good Sheet
 4030	Prod		Produktion Good Sheet
 4031	MR		Makeready for perforating
@@ -68,7 +69,8 @@
 4056	W-up		"Washup, 6 units"
 4058	W-up		"Washup, 8 units"
 4060			Start up
-4062	Downtime	Plate	correction because of modified job
+4062	Downtime	Unknown	correction because of modified job
+4063	Downtime	Unknown	Plate correction because of error
 4064	Downtime	Plate	Wait. for spare plate - plate damage
 4065	Downtime	Cplate	Wait. for spare plate - prepress error
 4066	Downtime	Stock	Waiting for material
@@ -98,7 +100,7 @@
 8027			Ready
 8029	Prod		Produktion Good Sheet
 8030	Prod		Produktion Good Sheet
-9001	Downtime	Clean-up	Further questions on the job
+9001	Downtime	Unknown	Further questions on the job
 9003	Downtime	Clean-up	Clean up
 9005	Downtime	Maintenance-H	Technical malfunction
 9007	Downtime	Maintenance-I	Maintenance - Internal

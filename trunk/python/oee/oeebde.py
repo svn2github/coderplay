@@ -12,7 +12,7 @@ except ImportError:
     import sqlite3.dbapi2 as lite
 
 
-class oeebde():
+class bdefile():
     """
     This class is a processor for the OEE *.bde input file.
     It reads the bde file and maintain its content with a list. This list is going to
@@ -33,20 +33,23 @@ class oeebde():
         """
         Initialize the class and read the bde file is it is provided.
         """
-        self.content = []
         self.dbname = 'oeebde.db'
         self.recordcode = 'recordcode'
         self.nfilelines = 0
         if bdefilename is not None:
             self.bdefilename = bdefilename
             self.readfile(bdefilename)
+        # options
+        self.verbose = False
         # Variables related to sumup
         # The status code of a Sum-up to indicate whether it is currently happening
         self.sum_status = {'Preparation': 0, 'Production': 0, 'Maintenance': 0, 'Process': 0, 'W-up': 0, 'JobEnd': 0}
-        # The Sum-Up results dictionary
+        # The results variables
+        self.content = []
         self.sumups = {}
         self.output = {}
         self.errors = {}
+        self.unsumed_lines = []
         # Constant to indicate whether a Sum-up is significant
         self.SUM_UNKNOWN = -1
         self.SUM_TRIVIAL = 0
@@ -59,12 +62,22 @@ class oeebde():
         # significant Impreesion Count is 20
         self.SIG_IMPCOUNT = 20
 
-
+    def reset(self):
+        # Reset all analysis related variables
+        self.content = []
+        self.sumups = {}
+        self.output = {}
+        self.errors = {}
+        self.unsumed_lines = []
+        for key in self.sum_status: self.sum_status[key] = 0
 
     def readfile(self, bdefilename):
         """
         Read the content of a bde file and store it in a list variable.
         """
+        # Reset for new file
+        self.reset()
+
         # Read the content using csv reader
         f = csv.reader(open(bdefilename),delimiter="\t")
 
@@ -90,24 +103,26 @@ class oeebde():
             conn = lite.connect(dbname)
         c = conn.cursor()
 
-        #
+        # JobEnd
         self.code_JobEnd = ['@97']
-        #
+        # MR include MR and @95
         lines = c.execute("SELECT code FROM activitycode WHERE item IN ('MR', '@95')")
         self.code_MR = [item[0] for item in lines]
-        #
+        # Production
         lines = c.execute("SELECT code FROM activitycode WHERE item='Prod'")
         self.code_Prod = [item[0] for item in lines]
-        #
+        # Wash ups
         lines = c.execute("SELECT code, oeepoint FROM activitycode WHERE item='W-up'")
         lookup = {'ON': 1, 'OFF': -1, '': 0}
         self.code_Wup = dict([(item[0], lookup[item[1]]) for item in lines])
-        #
-        lines = c.execute("SELECT code FROM activitycode WHERE oeepoint='Process'")
-        self.code_Process = [item[0] for item in lines]
-        #
-        lines = c.execute("SELECT code FROM activitycode WHERE oeepoint LIKE 'Maintenance%'")
-        self.code_Maintenance = [item[0] for item in lines]
+        # production downtime, named as Process
+        pd = ('Plate','Cplate','Stock','Customer','Process','Org','Dry')
+        lines = c.execute("SELECT code, oeepoint FROM activitycode WHERE oeepoint IN ('%s','%s','%s','%s','%s','%s','%s')" % pd)
+        self.code_Process = dict([(item[0],item[1]) for item in lines])
+        # Non-Production Downtime, named as Maintenance for historical reasons
+        nonpd = ('Clean-up','Maintenance-I','Maintenance-H','Training','Nowork','Breakdown','Other')
+        lines = c.execute("SELECT code, oeepoint FROM activitycode WHERE oeepoint IN ('%s','%s','%s','%s','%s','%s','%s')" % nonpd)
+        self.code_Maintenance = dict([(item[0],item[1]) for item in lines])
 
         return conn, c
 
@@ -142,7 +157,7 @@ class oeebde():
         The validation run stops when any of the check fails.
         """
         print "Starting basic data validation ..."
-        allattr = dir(oeebde)
+        allattr = dir(bdefile)
         idx = [ii for ii, attr in enumerate(allattr) if "validate_oee_error_" in attr]
         vfunclist = []
         for ii in idx:
@@ -160,11 +175,7 @@ class oeebde():
             if success:
                 print "PASSED"
             else:
-                print self.get_error_description(code)
-                #for line in lines:
-                #    print "  line %d: %s" % (line[0], ",".join(line[1:]))
-                line = lines[0]
-                print "  line %d: %s" % (line[0], ",".join(line[1:]))
+                self.report_error(code, lines)
                 return False
         
         print "Basic data validation succeeded.\n"
@@ -355,7 +366,7 @@ class oeebde():
         plines = [(ii+1,)+line for ii, line in enumerate(self.content) if line[0]=='REC020']
 
         wup_state = 0
-        # Process the lines with primary entries
+        # Process the lines of REC020
         for line in plines:
             if line[7] in self.code_MR:
                 # Trigger the Sum-up if it is not currenlty running
@@ -402,18 +413,21 @@ class oeebde():
                     wup_state += self.code_Wup[line[7]]
                     if wup_state==0:
                         self.end_sumup('W-up', line)
+            else:
+                # Record any un-sumed lines
+                self.unsumed_lines.append(line[0])
 
         # Make sure every Sum-Up is correctly finished
         for key in self.sum_status:
             if self.sum_status[key]:
-                self.report_error(800)
+                self.report_error(800, self.sumups[self.sum_status[key]][1])
                 print '  %s Sum-Up started but not ended' % key
                 return False
 
         #pdb.set_trace()
 
         # Primary entries are those entries that affect Preparation and Production Sum-Ups
-        primary_entries = self.code_MR + self.code_Prod + self.code_JobEnd + self.code_Maintenance
+        primary_entries = self.code_MR + self.code_Prod + self.code_JobEnd + self.code_Maintenance.keys()
         # Get keys of primary entries
         pkeys = [key for key in self.sumups.keys() if key[3] in primary_entries]
         # Sort the sumup entries 
@@ -518,21 +532,30 @@ class oeebde():
         return False
 
     def report_error(self, code, lines=()):
+        """
+        Get the detailed error description based on the error code.
+        Print out the error message and problematic lines and store them
+        in the error tracking dictionary variable.
+        """
         errordesc = self.get_error_description(code)
-        print errordesc
+
+        print "%d  %s" % (code, errordesc)
+
+        # If lines are empty, no further processing needed
         if not lines: return
-        if type(lines).__name__ == 'tuple':
-            line = lines
-            print "  line %d: %s" % (line[0], ",".join(line[1:]))
-        else:
-            for line in lines:
-                print "  line %d: %s" % (line[0], ",".join(line[1:]))
 
-        if code in self.errors:
-            self.errors[code] += [(line[0], self.content[line[0]-1])]
-        else:
-            self.errors[code] = [(line[0], self.content[line[0]-1])]
+        # Always process list of lines. If the lines variable is a tuple, 
+        # i.e. we convert it to a single item list
+        if type(lines).__name__ == 'tuple': lines = [lines,]
 
+        for line in lines:
+            # output detailed lines if verbose is on
+            if self.verbose: print "  line %d: %s" % (line[0], ",".join(line[1:]))
+            # record the errors in error tracking 
+            if code in self.errors:
+                self.errors[code] += [(line[0], self.content[line[0]-1])]
+            else:
+                self.errors[code] = [(line[0], self.content[line[0]-1])]
 
     def get_key_for_concatenate(self, thekey):
         if self.sumups[thekey][0] == self.SUM_CONCATENATE:
@@ -600,22 +623,47 @@ class oeebde():
 
         elif key[1] in ['Maintenance', 'Process', 'W-up', 'JobEnd']: # Other Sum-Ups are always significant
             self.sumups[key][0] = self.SUM_SIGNIFICANT
+            if sumup_name == 'Maintenance': sumup_name = self.code_Maintenance[key[3]]
+            if sumup_name == 'Process': sumup_name = self.code_Process[key[3]]
             self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
 
 
-    def report_output(self):
+    def report_output(self, output_file=None):
+        # Print to stdout or file
+        if output_file is None:
+            outstream = sys.stdout
+        else:
+            outstream = open(output_file,'w')
+
         # Print output
-        print ""
         keys = self.output.keys()
         keys.sort()
         for key in keys:
-            line = self.output[key]
-            print "%10d  %s  %6s %15s  %6.2f  %10d" % line
+            line = list(self.output[key])
+            if line[3] == 'JobEnd': continue
+            if line[3] == 'Preparation': line[3]='MR'
+            if line[3] == 'Production': line[3]='Prod'
+            line = tuple([0,] + line)
+            outstream.write("%d,%d,%s,%s,%s,%0.2f,%d\n" % line)
 
 
 if __name__ == '__main__':
-    bde = oeebde()
-    if not bde.readfile("good.bde"):
+    import argparse
+
+    # Parse the command line arguments
+    parser = argparse.ArgumentParser(description='Process a bde file and perform Sum-ups.')
+    parser.add_argument('INPUT_FILE',nargs='?',default='good.bde', help='name of input bde file')
+    parser.add_argument('OUTPUT_FILE',nargs='?', help='name of output file')
+    parser.add_argument('-v','--verbose',action='store_true', help='print more information during running time')
+    arg = parser.parse_args()
+    
+    # Set up the output file name
+    if arg.OUTPUT_FILE is None: arg.OUTPUT_FILE = arg.INPUT_FILE.split('.')[0]+'.csv'
+
+    # Parse the bde file
+    bde = bdefile()
+    bde.verbose = arg.verbose
+    if not bde.readfile(arg.INPUT_FILE):
         print 'Error: Incorrect file format.'
         sys.exit(0)
     bde.loaddata()
@@ -623,8 +671,7 @@ if __name__ == '__main__':
         print 'Error: Data validation fails.'
         sys.exit(0)
     if bde.data_sumup():
-        bde.report_output()
-
-
+        bde.report_output(output_file=arg.OUTPUT_FILE)
+        print "Run succeeded"
 
 
