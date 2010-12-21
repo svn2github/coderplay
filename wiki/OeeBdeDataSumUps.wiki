@@ -1,10 +1,10 @@
 #sidebar OeeBdeToC
 Rules for sum-up the entries in input files.
 
-* W-up can happen during Production.
-* Only count W-up that has ON/OFF status.
-* W-up is terminated when ON and OFF is paired.
-* Any production (or similar) entry ends Process sum-up?
+ * W-up can happen during Production.
+ * Only count W-up that has ON/OFF status.
+ * W-up is terminated when ON and OFF is paired.
+ * Any production (or similar) entry ends Process sum-up?
 
 ==Sum-up Rules==
   * The Sum-up process has two primary categories, *Preparation* and *Production*, defined by following rules:
