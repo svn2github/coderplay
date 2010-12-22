@@ -41,12 +41,9 @@ class bdefile():
             self.readfile(bdefilename)
         # options
         self.verbose = False
-
         # Variables related to sumup
-        # The status code of a Sum-up to indicate whether it is currently running
-        self.sum_status = {'MR': 0, 'Prod': 0, 'JobEnd': 0, 'Nowork': 0, 'W-up': 0, \
-                'Dry': 0, 'Process': 0, 'Training': 0, 'Unknown': 0}
-
+        # The status code of a Sum-up to indicate whether it is currently happening
+        self.sum_status = {'Preparation': 0, 'Production': 0, 'Maintenance': 0, 'Process': 0, 'W-up': 0, 'JobEnd': 0}
         # The results variables
         self.content = []
         self.sumups = {}
@@ -106,47 +103,28 @@ class bdefile():
             conn = lite.connect(dbname)
         c = conn.cursor()
 
-        # 
-        # Set up the list of item/oeepoint, split into categories
-        # ----------------------------------------------------------------------------
-        # Major: can end other sum-ups
-        # ----------------------------------------------------------------------------
+        # JobEnd
+        self.code_JobEnd = ['@97']
         # MR include MR and @95
-        code_MR = """SELECT code FROM activitycode WHERE item IN ('@95' , 'MR')"""
-        code_Prod = """SELECT code FROM activitycode WHERE item='Prod'"""
-        code_JobEnd = """SELECT code FROM activitycode WHERE item='@97'"""
-        code_Nowork = """SELECT code FROM activitycode WHERE item='Downtime' AND oeepoint='Nowork'"""
-        # ----------------------------------------------------------------------------
-        # Minor: cannot end other sum-ups
-        # ----------------------------------------------------------------------------
-        code_Wup = """SELECT code, oeepoint FROM activitycode WHERE item='W-up' AND oeepoint IN ('ON','OFF')"""
-        code_Dry = """SELECT code FROM activitycode WHERE item='Downtime' AND oeepoint='Dry'"""
-        # Process: a group that has same processing protocal
-        code_Process = """SELECT code FROM activitycode WHERE (item='Downtime' AND oeepoint IN 
-            ('Plate','Stock','Customer','Process','Maintenance-I','Maintenance-H','Breakdown'))
-            OR item='Ink Mix'"""
-        code_Training = """SELECT code FROM activitycode WHERE item='Downtime' AND oeepoint='Training'"""
-        code_Unknown = """SELECT code FROM activitycode WHERE item='Downtime' AND oeepoint IN
-            ('Other','Cplate','Org','Clean-up')"""
-        # Major+
-        code_JobStart = """SELECT code FROM activitycode WHERE item='@95'"""
-
-        # Populate the variables using the above definitions
-        self.code_MR = [item[0] for item in c.execute(code_MR)]
-        self.code_Prod = [item[0] for item in c.execute(code_Prod)]
-        self.code_JobEnd = [item[0] for item in c.execute(code_JobEnd)]
-        self.code_Nowork = [item[0] for item in c.execute(code_Nowork)]
+        lines = c.execute("SELECT code FROM activitycode WHERE item IN ('MR', '@95')")
+        self.code_MR = [item[0] for item in lines]
+        # Production
+        lines = c.execute("SELECT code FROM activitycode WHERE item='Prod'")
+        self.code_Prod = [item[0] for item in lines]
+        # Wash ups
+        lines = c.execute("SELECT code, oeepoint FROM activitycode WHERE item='W-up'")
         lookup = {'ON': 1, 'OFF': -1, '': 0}
-        self.code_Wup = dict([(item[0], lookup[item[1]]) for item in c.execute(code_Wup)])
-        self.code_Dry = [item[0] for item in c.execute(code_Dry)]
-        self.code_Process = [item[0] for item in c.execute(code_Process)]
-        self.code_Training = [item[0] for item in c.execute(code_Training)]
-        self.code_Unknown = [item[0] for item in c.execute(code_Unknown)]
-        self.code_JobStart = [item[0] for item in c.execute(code_JobStart)]
+        self.code_Wup = dict([(item[0], lookup[item[1]]) for item in lines])
+        # production downtime, named as Process
+        pd = ('Plate','Cplate','Stock','Customer','Process','Org','Dry')
+        lines = c.execute("SELECT code, oeepoint FROM activitycode WHERE oeepoint IN ('%s','%s','%s','%s','%s','%s','%s')" % pd)
+        self.code_Process = dict([(item[0],item[1]) for item in lines])
+        # Non-Production Downtime, named as Maintenance for historical reasons
+        nonpd = ('Clean-up','Maintenance-I','Maintenance-H','Training','Nowork','Breakdown','Other')
+        lines = c.execute("SELECT code, oeepoint FROM activitycode WHERE oeepoint IN ('%s','%s','%s','%s','%s','%s','%s')" % nonpd)
+        self.code_Maintenance = dict([(item[0],item[1]) for item in lines])
 
-        pdb.set_trace()
         return conn, c
-
 
     def disconnect_db(self):
         self.c.close()
@@ -392,11 +370,6 @@ class bdefile():
         for line in plines:
             if line[7] in self.code_MR:
                 # Trigger the Sum-up if it is not currenlty running
-                if not (self.sum_status['MR'] or self.sum_status['W-up']):
-                    pass # start processing
-                else:
-                    pass
-
                 self.start_sumup('Preparation', line)
                 # Any other Sum-up should be ended
                 self.end_sumup('Production', line)
@@ -675,29 +648,17 @@ class bdefile():
 
 
 if __name__ == '__main__':
+    import argparse
 
-    try:
-        import argparse
-        # Parse the command line arguments
-        parser = argparse.ArgumentParser(description='Process a bde file and perform Sum-ups.')
-        parser.add_argument('INPUT_FILE',nargs='?',default='good.bde', help='name of input bde file')
-        parser.add_argument('OUTPUT_FILE',nargs='?', help='name of output file')
-        parser.add_argument('-v','--verbose',action='store_true', help='print more information during running time')
-        arg = parser.parse_args()
-    except ImportError:
-        import sys
-        class args:
-            def __init__(self):
-                if len(sys.argv) > 1:
-                    self.INPUT_FILE = sys.argv[1]
-                else:
-                    self.INPUT_FILE = 'good.bde'
-                self.OUTPUT_FILE = None
-                self.verbose = False
-        arg = args()
-
+    # Parse the command line arguments
+    parser = argparse.ArgumentParser(description='Process a bde file and perform Sum-ups.')
+    parser.add_argument('INPUT_FILE',nargs='?',default='good.bde', help='name of input bde file')
+    parser.add_argument('OUTPUT_FILE',nargs='?', help='name of output file')
+    parser.add_argument('-v','--verbose',action='store_true', help='print more information during running time')
+    arg = parser.parse_args()
+    
     # Set up the output file name
-    #if arg.OUTPUT_FILE is None: arg.OUTPUT_FILE = arg.INPUT_FILE.split('.')[0]+'.csv'
+    if arg.OUTPUT_FILE is None: arg.OUTPUT_FILE = arg.INPUT_FILE.split('.')[0]+'.csv'
 
     # Parse the bde file
     bde = bdefile()
