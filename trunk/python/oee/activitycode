@@ -54,6 +54,7 @@
 4018	Prod		Good counter
 4019	Prod		Produktion Good Sheet
 4021	Ink Change		Ink Change
+4024	Ink Change		Ink Change
 4029	Prod		Produktion Good Sheet
 4030	Prod		Produktion Good Sheet
 4031	MR		Makeready for perforating
@@ -67,6 +68,7 @@
 4054	W-up		"Washup, 4 units"
 4055	W-up		"Washup, 5 units"
 4056	W-up		"Washup, 6 units"
+4057	W-up		"Washup, 7 units"
 4058	W-up		"Washup, 8 units"
 4060			Start up
 4062	Downtime	Unknown	correction because of modified job
@@ -88,6 +90,7 @@
 4100	Prod		Good production
 4101	Prod		"Production, 1 unit"
 4102	Prod		"Production, 2 units"
+4103	Prod		"Production, 3 units"
 4104	Prod		"Production, 4 units"
 4105	Prod		"Production, 5 units"
 4106	Prod		"Production, 6 units"
@@ -103,6 +106,7 @@
 9001	Downtime	Unknown	Further questions on the job
 9003	Downtime	Clean-up	Clean up
 9005	Downtime	Maintenance-H	Technical malfunction
+9006	Downtime	Archiving	Archiving
 9007	Downtime	Maintenance-I	Maintenance - Internal
 9091	Downtime	Training	Training
 9092	Downtime	Nowork	Standstill - no jobs
