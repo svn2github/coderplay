@@ -375,14 +375,18 @@ class bdefile():
                 self.end_sumup('Production', line)
                 self.end_sumup('Maintenance', line)
                 self.end_sumup('Process', line)
-                (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
+                if self.end_sumup('W-up', line) and wup_state!=0:
+                    self.report_error(910, line)
+                    wup_state = 0
 
             elif line[7] in self.code_Prod:
                 self.start_sumup('Production', line)
                 self.end_sumup('Preparation', line)
                 self.end_sumup('Maintenance', line) and self.report_error(913, line)
                 self.end_sumup('Process', line)
-                (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
+                if self.end_sumup('W-up', line) and wup_state!=0:
+                    self.report_error(910, line)
+                    wup_state = 0
 
             elif line[7] in self.code_JobEnd:
                 # Job End entry triggers and end the Sum-Up
@@ -393,14 +397,18 @@ class bdefile():
                 self.end_sumup('Production', line)
                 self.end_sumup('Maintenance', line) and self.report_error(914, line)
                 self.end_sumup('Process', line)
-                (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
+                if self.end_sumup('W-up', line) and wup_state!=0:
+                    self.report_error(910, line)
+                    wup_state = 0
 
             elif line[7] in self.code_Maintenance:
                 self.start_sumup('Maintenance', line)
                 self.end_sumup('Preparation', line) and self.report_error(911, line)
                 self.end_sumup('Production', line) and self.report_error(912, line)
                 self.end_sumup('Process', line)
-                (self.end_sumup('W-up', line) and wup_state!=0) and self.report_error(910, line)
+                if self.end_sumup('W-up', line) and wup_state!=0:
+                    self.report_error(910, line)
+                    wup_state = 0
 
             elif line[7] in self.code_Process:
                 self.start_sumup('Process', line)
