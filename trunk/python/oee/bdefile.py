@@ -432,8 +432,6 @@ class bdefile():
                 print '  %s Sum-Up started but not ended' % key
                 return False
 
-        #pdb.set_trace()
-
         # Primary entries are those entries that affect Preparation and Production Sum-Ups
         primary_entries = self.code_MR + self.code_Prod + self.code_JobEnd + self.code_Maintenance.keys()
         # Get keys of primary entries
@@ -486,8 +484,6 @@ class bdefile():
                 thelines += [(idx+1,) + (self.content[idx])]
             self.report_error(803, thelines)
 
-        #pdb.set_trace()
-
 
         # Generate output report for Primary entries 
         # Process the sumup results and update the significance
@@ -495,8 +491,6 @@ class bdefile():
             # Do not process the concatenated lines
             if self.sumups[pkeys[idx]][0] == self.SUM_CONCATENATE: continue
             self.gen_output_for_key(pkeys, idx)
-
-        #pdb.set_trace()
 
         # Generate output report for Minor entries
         for idx in range(len(mkeys)):
@@ -581,7 +575,6 @@ class bdefile():
         sumups_line = self.sumups[key]
         sline = sumups_line[1]
         eline = sumups_line[2]
-        #if eline[2][:-2] == '668' : pdb.set_trace()
         stime = oeeutil.convert_f2_to_datetime(sline[2])
         etime = oeeutil.convert_f2_to_datetime(eline[2])
         # output inforamtion
@@ -612,9 +605,7 @@ class bdefile():
                         self.sumups[postkey][0] = self.SUM_CONCATENATE
                         self.sumups[postkey] += [prekey]
                         # extend the ending time
-                        #if prekey == (41497, 'Production', '66894', '@118'): pdb.set_trace()
                         self.sumups[prekey][2] = self.sumups[postkey][2]
-                        #if prekey == (41497, 'Production', '66894', '@118'): pdb.set_trace()
                         # Update the output
                         self.gen_output_for_key(keys, keys.index(prekey))
                         self.sumups[key][0] = self.SUM_TRIVIAL_AND_SKIPPED
