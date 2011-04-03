@@ -72,6 +72,7 @@
 4057	W-up		"Washup, 7 units"
 4058	W-up		"Washup, 8 units"
 4060			Start up
+4061			Shut down
 4062	Downtime	Unknown	correction because of modified job
 4063	Downtime	Unknown	Plate correction because of error
 4064	Downtime	Plate	Wait. for spare plate - plate damage

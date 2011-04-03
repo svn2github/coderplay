@@ -57,6 +57,7 @@ class bdefile():
         self.SUM_CONCATENATE = 2
         self.SUM_TRIVIAL_BUT_NEEDED = 3
         self.SUM_TRIVIAL_AND_SKIPPED = 4
+        self.SUM_TRIVIAL_AND_CONCATENATE = 5
         # significant duration is 5 min (convert to unit hour)
         self.SIG_DURATION = 5.0/60.0
         # significant Impreesion Count is 20
@@ -335,7 +336,8 @@ class bdefile():
         """
         sql = "SELECT COUNT(*) FROM bdeview"
         lines = self.c.execute(sql).fetchall()
-        return lines[0][0]>=500, []
+        # Temporary make it 50 for testing purpose
+        return lines[0][0]>=50, []
 
     def get_error_description(self, code):
         """
@@ -345,7 +347,7 @@ class bdefile():
         return self.c.fetchone()[1]
 
     
-    def data_sumup(self):
+    def data_sumup(self, special_prod_cycle=False):
         """
         Perform Sum-ups for Preparation and Production.
         The Sum-ups will be performed in two stages:
@@ -380,7 +382,9 @@ class bdefile():
                     wup_state = 0
 
             elif line[7] in self.code_Prod:
-                self.start_sumup('Production', line)
+                if not self.start_sumup('Production', line):
+                    if special_prod_cycle: 
+                        self.special_prod_cycle(line)
                 self.end_sumup('Preparation', line)
                 self.end_sumup('Maintenance', line) and self.report_error(913, line)
                 self.end_sumup('Process', line)
@@ -533,6 +537,28 @@ class bdefile():
             return True
         return False
 
+    def special_prod_cycle(self, line):
+        """
+        """
+        oldkey = self.sum_status['Production']
+        oldCode = oldkey[3]
+        newCode = line[7]
+        if oldCode == '@118':
+            if newCode == '@119':
+                # end the production as MR
+                newkey = (oldkey[0], 'Preparation', oldkey[2], oldkey[3])
+                self.sumups[newkey] = self.sumups[oldkey] + [line]
+                del self.sumups[oldkey]
+                self.sum_status['Production'] = 0
+            else:
+                # change the production to be valid
+                newProdCode = oldkey[3]+'_'+newCode
+                self.code_Prod += [newProdCode]
+                newkey = (oldkey[0], oldkey[1], oldkey[2], newProdCode)
+                self.sumups[newkey] = self.sumups[oldkey]
+                del self.sumups[oldkey]
+                self.sum_status['Production'] = newkey
+
     def report_error(self, code, lines=()):
         """
         Get the detailed error description based on the error code.
@@ -609,6 +635,15 @@ class bdefile():
                         # Update the output
                         self.gen_output_for_key(keys, keys.index(prekey))
                         self.sumups[key][0] = self.SUM_TRIVIAL_AND_SKIPPED
+                    elif prekey[1] == key[1]:
+                        prekey = self.get_key_for_concatenate(prekey)
+                        # update the key to indicate it is concatenated
+                        self.sumups[key][0] = self.SUM_TRIVIAL_AND_CONCATENATE
+                        self.sumups[key] += [prekey]
+                        # extend the ending time
+                        self.sumups[prekey][2] = self.sumups[key][2]
+                        # Update the output
+                        self.gen_output_for_key(keys, keys.index(prekey))
                     else:
                         # print 'Warning: Trivial Sum-up with nothing to concatenate.'
                         self.report_error(916, self.sumups[key][1])
@@ -627,13 +662,13 @@ class bdefile():
             self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
 
     def calc_idle_time(self):
-        '''
+        """
         Calculate the idle time between a JobEnd and the next work cycle.
         The idle time is defined as the time difference between the JobEnd entry
         and the next work cycle entry (Preparation or Production), substract any
         other sum-ups occupied time (W-up, Maintenance), and must be
         greater than 5 minutes.
-        '''
+        """
         tt = 0.0
         keys = self.output.keys()
         keys.sort()
@@ -683,6 +718,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process a bde file and perform Sum-ups.')
     parser.add_argument('INPUT_FILE',nargs='?',default='good.bde', help='name of input bde file')
     parser.add_argument('OUTPUT_FILE',nargs='?', help='name of output file')
+    parser.add_argument('-p','--prod-waste',action='store_true', help='Use production @118 @119 cycle as waste')
     parser.add_argument('-v','--verbose',action='store_true', help='print more information during running time')
     arg = parser.parse_args()
     
@@ -699,7 +735,7 @@ if __name__ == '__main__':
     if not bde.data_validation():
         print 'Error: Data validation fails.'
         sys.exit(0)
-    if bde.data_sumup():
+    if bde.data_sumup(arg.prod_waste):
         bde.report_output(output_file=arg.OUTPUT_FILE)
         bde.calc_idle_time()
         print "Run succeeded"
