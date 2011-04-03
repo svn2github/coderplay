@@ -104,7 +104,7 @@ class bdefile():
         c = conn.cursor()
 
         # JobEnd
-        self.code_JobEnd = ['@97']
+        self.code_JobEnd = ['@97', '@96']
         # MR include MR and @95
         lines = c.execute("SELECT code FROM activitycode WHERE item IN ('MR', '@95')")
         self.code_MR = [item[0] for item in lines]
@@ -626,6 +626,36 @@ class bdefile():
             if sumup_name == 'Process': sumup_name = self.code_Process[key[3]]
             self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
 
+    def calc_idle_time(self):
+        '''
+        Calculate the idle time between a JobEnd and the next work cycle.
+        The idle time is defined as the time difference between the JobEnd entry
+        and the next work cycle entry (Preparation or Production), substract any
+        other sum-ups occupied time (W-up, Maintenance), and must be
+        greater than 5 minutes.
+        '''
+        tt = 0.0
+        keys = self.output.keys()
+        keys.sort()
+        jobEndKeys = [thekey for thekey in keys if 'JobEnd' in thekey]
+        jobEndKeys = jobEndKeys[0:len(jobEndKeys)-1]
+        for key in jobEndKeys:
+            idxstart = keys.index(key)
+            stime = self.output[keys[idxstart]][1]
+            idxend = idxstart + 1
+            while not (keys[idxend][1] in ['Preparation','Production']):
+                idxend += 1
+            # Now we have the entry where the next work cycle starts
+            etime = self.output[keys[idxend]][1]
+            tot_time = (etime - stime).seconds/3600.
+            for ii in range(idxstart+1, idxend):
+                if keys[ii][1] in ['W-up', 'Maintenance']:
+                    tot_time -= self.output[keys[ii]][4]
+            # if the time is longer than 5 min:
+            if tot_time >= 5.0/60.0:
+                tt += tot_time
+        print 'idle time ', tt, ' hours'
+        
 
     def report_output(self, output_file=None):
         # Print to stdout or file
@@ -671,6 +701,7 @@ if __name__ == '__main__':
         sys.exit(0)
     if bde.data_sumup():
         bde.report_output(output_file=arg.OUTPUT_FILE)
+        bde.calc_idle_time()
         print "Run succeeded"
 
 
