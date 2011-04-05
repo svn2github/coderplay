@@ -58,6 +58,7 @@ class bdefile():
         self.SUM_TRIVIAL_BUT_NEEDED = 3
         self.SUM_TRIVIAL_AND_SKIPPED = 4
         self.SUM_TRIVIAL_AND_CONCATENATE = 5
+        self.SUM_TRIVIAL_AND_CONCATENATE_TO_NEXT = 6
         # significant duration is 5 min (convert to unit hour)
         self.SIG_DURATION = 5.0/60.0
         # significant Impreesion Count is 20
@@ -593,6 +594,26 @@ class bdefile():
             return self.get_key_for_concatenate(newkey)
         else:
             return thekey
+
+    def get_prekey(self, keys, idx):
+        if (idx > 0):
+            prekey = keys[idx-1]
+            return self.get_key_for_concatenate(prekey)
+        else:
+            return None
+
+    def get_postkey(self, keys, idx):
+        
+        if (idx < len(keys)-1):
+            postkey = keys[idx+1]
+            if self.sumups[postkey][0] == self.SUM_CONCATENATE:
+                postkey = self.get_postkey(keys, idx+1)
+                return postkey
+            else:
+                return postkey
+        else: 
+            return None
+
             
     def gen_output_for_key(self, keys, idx):
 
@@ -611,49 +632,61 @@ class bdefile():
         sumup_name = key[1]
 
         if key[1] in ['Preparation', 'Production']:
-            #
+
             if duration>=self.SIG_DURATION and impcount>=self.SIG_IMPCOUNT:
                 # The Sum-Up is signifcant
                 self.sumups[key][0] = self.SUM_SIGNIFICANT
                 self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
+
             else:
                 # The Sum-Up is NOT significant
                 self.sumups[key][0] = self.SUM_TRIVIAL
-                # If the trivial Sum-Up is in middle of two Preparation or Production
-                # We concatenate them
-                if idx > 0 and idx < len(keys)-1:
-                    prekey = keys[idx-1]
-                    postkey = keys[idx+1]
+
+                # Get the keys for possible concatenation
+                prekey = self.get_prekey(keys, idx)
+                postkey = self.get_postkey(keys, idx)
+
+                if not (prekey is None or postkey is None) and prekey[1] == postkey[1]:
+                    # If the trivial Sum-Up is in middle of two Preparation or Production
+                    # We concatenate them
                     # If they are the same category Sum-ups, we concatenate them
-                    if prekey[1] == postkey[1]:
-                        prekey = self.get_key_for_concatenate(prekey)
-                        # Update the postkey item to indicate it is concatenated
-                        self.sumups[postkey][0] = self.SUM_CONCATENATE
-                        self.sumups[postkey] += [prekey]
-                        # extend the ending time
-                        self.sumups[prekey][2] = self.sumups[postkey][2]
-                        # Update the output
-                        self.gen_output_for_key(keys, keys.index(prekey))
-                        self.sumups[key][0] = self.SUM_TRIVIAL_AND_SKIPPED
-                    elif prekey[1] == key[1]:
-                        prekey = self.get_key_for_concatenate(prekey)
-                        # update the key to indicate it is concatenated
-                        self.sumups[key][0] = self.SUM_TRIVIAL_AND_CONCATENATE
-                        self.sumups[key] += [prekey]
-                        # extend the ending time
-                        self.sumups[prekey][2] = self.sumups[key][2]
-                        # Update the output
-                        self.gen_output_for_key(keys, keys.index(prekey))
-                    else:
-                        # print 'Warning: Trivial Sum-up with nothing to concatenate.'
-                        self.report_error(916, self.sumups[key][1])
-                        self.sumups[key][0] = self.SUM_TRIVIAL_BUT_NEEDED
-                        self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
-                else:
-                    # print 'Warning: Trivial Sum-up with nothing to concatenate.'
-                    self.report_error(916, self.sumups[key][1])
-                    self.sumups[key][0] = self.SUM_TRIVIAL_BUT_NEEDED
-                    self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
+                    # Update the postkey item to indicate it is concatenated
+                    self.sumups[postkey][0] = self.SUM_CONCATENATE
+                    self.sumups[postkey] += [prekey]
+                    # extend the ending time
+                    self.sumups[prekey][2] = self.sumups[postkey][2]
+                    # Update the output
+                    self.gen_output_for_key(keys, keys.index(prekey))
+                    self.sumups[key][0] = self.SUM_TRIVIAL_AND_SKIPPED
+                    return
+
+                if not (prekey is None) and prekey[1] == key[1]:
+                    # Concatenate the key to the previous key
+                    # update the key to indicate it is concatenated
+                    self.sumups[key][0] = self.SUM_TRIVIAL_AND_CONCATENATE
+                    self.sumups[key] += [prekey]
+                    # extend the ending time
+                    self.sumups[prekey][2] = self.sumups[key][2]
+                    # Update the output
+                    self.gen_output_for_key(keys, keys.index(prekey))
+                    return
+
+                if not (postkey is None) and postkey[1] == key[1]:
+                    # Concatenate the key to the key next to it
+                    # Update the postkey item to indicate it is concatenated
+                    self.sumups[postkey][0] = self.SUM_CONCATENATE
+                    self.sumups[postkey] += [key]
+                    # extend the ending time
+                    self.sumups[key][2] = self.sumups[postkey][2]
+                    # Update the output
+                    self.gen_output_for_key(keys, keys.index(key))
+                    self.sumups[key][0] = self.SUM_TRIVIAL_AND_CONCATENATE_TO_NEXT
+                    return
+
+                # print 'Warning: Trivial Sum-up with nothing to concatenate.'
+                self.report_error(916, self.sumups[key][1])
+                self.sumups[key][0] = self.SUM_TRIVIAL_BUT_NEEDED
+                self.output[key] = (lnum, stime, jobid, sumup_name, duration, impcount)
 
         elif key[1] in ['Maintenance', 'Process', 'W-up', 'JobEnd']: # Other Sum-Ups are always significant
             self.sumups[key][0] = self.SUM_SIGNIFICANT
