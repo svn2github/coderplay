@@ -1,0 +1,117 @@
+@100	Ink Mix		Ink Mix
+@114	Log-in		Log in Operator
+@115	Log-out		Log out Operator
+@117	Prod		Printing interval
+@118	Prod		Printing interval
+@119	Prod		Printing interval
+@15			Old code from CP 2000
+@16			Old code from CP 2001
+@17			Operation partially completed
+@18	Prod		Printing interval
+@41	MR		Changing plate
+@42	MR		Changing plate
+@45	W-up	ON	Washing impression cylinder
+@46	W-up	OFF	Washing impression cylinder
+@47	W-up	ON	Washing blanket
+@48	W-up	OFF	Washing blanket
+@49	W-up	ON	Washing ink rollers
+@50	W-up	OFF	Washing ink rollers
+@51	W-up	ON	with washing ink fountain roller
+@52	W-up	OFF	with washing ink fountain roller
+@53	W-up	ON	with washing plates
+@54	W-up	OFF	with washing plates
+@57	@57		Test
+@58	@58		Test
+@59	@59		Early sheet
+@60	@60		Early sheet
+@61	@61		Misaligned sheet
+@62	@62		Misaligned sheet
+@63	@63		Double sheet
+@64	@64		Double sheet
+@67	@67		Side guide warning
+@68	@68		Side guide warning
+@95	@95		Start job
+@96			Interrupt job
+@97	@97		Finish job
+4000	MR		Basic makeready
+4001	MR		"Basic makeready, 1 units"
+4002	MR		"Basic makeready, 2 units"
+4003	MR		"Basic makeready, 3 units"
+4004	MR		"Basic makeready, 4 units"
+4005	MR		"Basic makeready, 5 units"
+4006	MR		"Basic makeready, 6 units"
+4007	MR		"Basic makeready, 7 units"
+4008	MR		"Basic makeready, 8 units"
+4009	MR		"Basic makeready, 9 units"
+4010	MR		"Basic makeready, 10 units"
+4011	MR		Plate Change unit 1
+4012	MR		Plate Change unit 2
+4013	MR		Plate Change unit 3
+4014	MR		Plate Change unit 4
+4015	MR		Plate Change unit 5
+4016	MR		Plate Change unit 6
+4017	MR		Plate Change unit 7
+4018	Prod		Good counter
+4019	Prod		Produktion Good Sheet
+4021	Ink Change		Ink Change
+4022	Ink Change		Ink Change
+4024	Ink Change		Ink Change
+4029	Prod		Produktion Good Sheet
+4030	Prod		Produktion Good Sheet
+4031	MR		Makeready for perforating
+4034	Mixing Ink		Mixing Ink
+4048	W-up		End of week wash
+4049	W-up		Washing blanket
+4050	W-up		Washing impression cylinder
+4051	W-up		"Washup, 1 unit"
+4052	W-up		"Washup, 2 units"
+4053	W-up		"Washup, 3 units"
+4054	W-up		"Washup, 4 units"
+4055	W-up		"Washup, 5 units"
+4056	W-up		"Washup, 6 units"
+4057	W-up		"Washup, 7 units"
+4058	W-up		"Washup, 8 units"
+4060			Start up
+4061			Shut down
+4062	Downtime	Unknown	correction because of modified job
+4063	Downtime	Unknown	Plate correction because of error
+4064	Downtime	Plate	Wait. for spare plate - plate damage
+4065	Downtime	Cplate	Wait. for spare plate - prepress error
+4066	Downtime	Stock	Waiting for material
+4067	Downtime	Customer	Waiting for customer approval
+4068	Downtime	Process	Process-related waiting
+4069	Downtime	Org	Waiting due to organizational reasons
+4070	Downtime	Org	Waiting for in-house coordination
+4071	Downtime	Dry	Drying time
+4072	Meal		Meal Break
+4073	4073		Change Blanket
+4074	Downtime	Customer	Waiting for customer approval
+4087	MR		Makeready -UV
+4088	MR		Makeready - conventional
+4090	W-up		"Washup, 10 units"
+4100	Prod		Good production
+4101	Prod		"Production, 1 unit"
+4102	Prod		"Production, 2 units"
+4103	Prod		"Production, 3 units"
+4104	Prod		"Production, 4 units"
+4105	Prod		"Production, 5 units"
+4106	Prod		"Production, 6 units"
+4108	Prod		"Production, 8 units"
+4110	Prod		"Production, 10 units"
+4606	Downtime		Double sheet
+4994	4994		Test
+8018	Prod		Test
+8019	Prod		Test
+8027			Ready
+8029	Prod		Produktion Good Sheet
+8030	Prod		Produktion Good Sheet
+9001	Downtime	Unknown	Further questions on the job
+9003	Downtime	Clean-up	Clean up
+9005	Downtime	Maintenance-H	Technical malfunction
+9006	Downtime	Archiving	Archiving
+9007	Downtime	Maintenance-I	Maintenance - Internal
+9091	Downtime	Training	Training
+9092	Downtime	Nowork	Standstill - no jobs
+9093	Downtime	Breakdown	Repair
+9094	Downtime	Other	Other downtimes
+9195	9195		Pause

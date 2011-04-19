@@ -1,0 +1,32 @@
+0   OK
+1   Error: RecordID not in master table.
+2   Error: EquipmentID not in master table.
+3   Error: ActivityCode not in Master table.
+5   Error: First significant ActivityCode in file has a zero Job ID.
+6   Error: First significant ActivityCode not MR or @95
+8   Error: EquipmentID not consistent for all significant rows.
+9   Error: TimeStamp is less than the prior record.
+10  Error: TimeStamp is in the future.
+11  Error: TimeStamp < last record in Reporting database.
+12  Error: Row ImpressionTotal is less than the prior record.
+13  Error: Row ImpressionTotal < last value in Reporting database.
+14  Error: Row ImpressionTotal not in range of 1m - 999m.
+15  Error: File contains no @95
+16  Error: File contains less then 500 signifcant rows.
+800 Error: Invalid Job Sequence.
+801 Error: Production without Preparation.
+802 Error: Job ID changes between a single Job Sequence.
+803 Error: Non-zero Job ID contains no valid Job Sequence.
+804 Error: Preparation without Production.
+901 Warning: Job Sequence with trivial Preparation.
+902 Warning: Job Sequence with trivial Production.
+903 Warning: Job Sequence with trivlal Preparation and Production.
+910 Warning: W-up terminated with non-zero status.
+911 Warning: Preparation terminated by Maintenance.
+912 Warning: Production terminated by Maintenance.
+913 Warning: Maintenance terminated by Prod activity.
+914 Warning: Maintenance terminated by @97 activity.
+915 Warning: W-up activity found in Production sum-up.
+916 Warning: Trivial Sum-up with nothing to concatenate.
+917 Error: Preparation started before previous Preparation ends.
+918 Error: Production started before previous Production ends.
