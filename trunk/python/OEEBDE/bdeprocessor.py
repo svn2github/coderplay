@@ -7,7 +7,7 @@ Created on 15/04/2011
 @author: yang
 '''
 
-bde = BdeFile('C:/Users/yang/programs/oeebde/good.bde')
+bde = BdeFile('good.bde')
 bde.readFile()
     
 print bde.lines[0].fields

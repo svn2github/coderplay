@@ -29,6 +29,9 @@ class BdeFile(object):
 
     def validation(self):
         errorlog = BdeErrorLog()
+        
+        firstNonAt17Found = False
+        
         for line in self.lines:
             
             if line.getRecordID() not in Record.lookupTable.keys():
@@ -44,7 +47,13 @@ class BdeFile(object):
             if line.getActivityCode() not in Activity.lookupTable.keys():
                 errorlog.add(3, line)
             
-            
+            if firstNonAt17Found and line.getActivityCode() != '@17':
+                firstNonAt17Found = True;
+                if line.getJobID() == '0':
+                    errorlog.add(5, line)
+                    
+                if line.getActivityCode() not in ['@95', 'MR']:
+                    errorlog.add(6, line)
 
         
         return errorlog

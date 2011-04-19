@@ -17,7 +17,7 @@ class Record(object):
 
 class Equipment(object):
     
-    file = 'C:/Users/yang/programs/oeebde/equipcode'
+    file = 'equipcode'
     lines = csv.reader(open(os.path.abspath(file), 'r'))
     lookupTable = {}
     for line in lines:
@@ -33,7 +33,7 @@ class Equipment(object):
 
 class Activity(object):
     
-    file = 'C:/Users/yang/programs/oeebde/activitycode'
+    file = 'activitycode'
     lines = csv.reader(open(file, 'r'), delimiter="\t")
     lookupTable = {}
     for line in lines:
@@ -58,7 +58,7 @@ class Error(object):
     '''
     classdocs
     '''
-    file = 'C:/Users/yang/programs/oeebde/errorcode'
+    file = 'errorcode'
     f = open(file, "r")
     lines = f.readlines()
     lookupTable = {}
