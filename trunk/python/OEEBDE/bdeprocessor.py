@@ -19,5 +19,6 @@ print line.getImpressionCount()
 
 a = bde.validation()
 
+print a
 
 
