@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 _file = 'errorcode'
-_lines = open(file, "r").readlines()
+_lines = open(_file, "r").readlines()
 lookupTable = {}
 
 def getDescription(code):

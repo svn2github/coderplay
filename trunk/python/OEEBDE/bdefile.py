@@ -2,7 +2,11 @@
 
 import csv
 import bdeline
-from bdecode import *
+import activitycode
+import equipmentcode
+import errorcode
+import recordcode
+from bdeerrorlog import *
 
 '''
 Created on 15/04/2011
@@ -30,25 +34,25 @@ class BdeFile(object):
     def validation(self):
         errorlog = BdeErrorLog()
         
-        firstNonAt17Found = False
+        found_first_non_at_17_code = False
         
         for line in self.lines:
             
-            if line.getRecordID() not in Record.lookupTable.keys():
+            if line.getRecordID() not in recordcode.lookupTable.keys():
                 errorlog.add(1, line)
             
             # Skip if record type is not REC020
-            if not Record.lookupTable[line.getRecordID()]:
+            if not recordcode.lookupTable[line.getRecordID()]:
                 continue
             
-            if line.getEquipmentCode() not in Equipment.lookupTable.keys():
+            if line.getEquipmentCode() not in equipmentcode.lookupTable.keys():
                 errorlog.add(2, line)
             
-            if line.getActivityCode() not in Activity.lookupTable.keys():
+            if line.getActivityCode() not in activitycode.lookupTable.keys():
                 errorlog.add(3, line)
             
-            if firstNonAt17Found and line.getActivityCode() != '@17':
-                firstNonAt17Found = True;
+            if found_first_non_at_17_code and line.getActivityCode() != '@17':
+                found_first_non_at_17_code = True;
                 if line.getJobID() == '0':
                     errorlog.add(5, line)
                     
