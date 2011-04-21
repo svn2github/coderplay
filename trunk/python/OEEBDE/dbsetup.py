@@ -13,9 +13,33 @@ class BdeDB(object):
         """
         self.conn = lite.connect(':memory:')
         self.cursor = self.conn.cursor()
+        self.buildRecordCodeTable()
         self.buildEquipmentCodeTable()
         self.buildActivityCodeTable()
         
+    
+    def buildRecordCodeTable(self):
+        """
+        Create and populate the Record Code table in the database.
+        """
+        # Build the table
+        sql = """
+        CREATE TABLE IF NOT EXISTS RecordCode(
+        id INTEGER PRIMARY KEY,
+        code VARCHAR(10))
+        """
+        self.cursor.execute(sql)
+        
+        # Insert into table
+        self.cursor.execute('DELETE FROM RecordCode')
+        self.cursor.execute("INSERT INTO RecordCode (code) VALUES ('REC001')")
+        self.cursor.execute("INSERT INTO RecordCode (code) VALUES ('REC011')")
+        self.cursor.execute("INSERT INTO RecordCode (code) VALUES ('REC020')")
+    
+        # finalize the operation
+        self.conn.commit()
+        
+        return True
     
     def buildEquipmentCodeTable(self):
         """

@@ -26,7 +26,7 @@ class BdeFile(object):
         self.filename = filename
         self.lines = []
              
-    def readFile(self):
+    def read(self):
         lines = csv.reader(open(self.filename, 'r'), delimiter="\t")
         for ii, line in enumerate(lines):
             self.lines.append(bdeline.BdeLine(ii, line))

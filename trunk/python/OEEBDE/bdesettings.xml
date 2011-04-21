@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Validations>
+	<Rules Module="bdevalidation" Function="rule_"><Rule>
+			<Code>1</Code>
+			<Name>RCode</Name>
+			<Description>Record code not in master table</Description></Rule><Rule>
+			<Code>2</Code>
+			<Name>ECode</Name>
+			<Description>Equipment code not in master table</Description></Rule><Rule>
+			<Code>3</Code>
+			<Name>ACode</Name>
+			<Description>Activity code not in master table</Description></Rule><Rule>
+			<Code>5</Code>
+			<Name>FACodeZeroJobID</Name>
+			<Description>First significant Activity code has a zero Job ID</Description></Rule><Rule>
+			<Code>6</Code>
+			<Name>FACodeNotMRor@95</Name>
+			<Description>First significant Activity code not MR or @95</Description></Rule><Rule>
+			<Code>8</Code>
+			<Name>ECodeChanges</Name>
+			<Description>Equipment code not consistent</Description></Rule><Rule>
+			<Code>9</Code>
+			<Name>TSLess</Name>
+			<Description>Timestamp is less than the prior record</Description></Rule><Rule>
+			<Code>10</Code>
+			<Name>TSFuture</Name>
+			<Description>Timestamp is in the future</Description></Rule><Rule>
+			<Code>12</Code>
+			<Name>ITLess</Name>
+			<Description>Impression Total is less than the prior record</Description></Rule><Rule>
+			<Code>14</Code>
+			<Name>ITOutbound</Name>
+			<Description>Impression Total not in range of 1-999 million</Description></Rule><Rule>
+			<Code>15</Code>
+			<Name>No@95</Name>
+			<Description>File contains no @95</Description></Rule></Rules>
+</Validations>

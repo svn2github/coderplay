@@ -10,8 +10,8 @@ class BdeErrorLog(object):
 
         
     def __init__(self):
-        self.errorList = {}
+        self.errorList = []
         
     def add(self, code, line):
-        self.errorList[code] = line
+        self.errorList.append((code, line))
         

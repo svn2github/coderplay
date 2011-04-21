@@ -58,5 +58,3 @@ class BdeLine(object):
     
     
     
-    def convertDateTimeToField2(self, thistime):
-        return int(str(thistime)[:-4].replace('-','').replace(' ','').replace(':','').replace('.',''))
