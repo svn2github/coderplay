@@ -4,90 +4,104 @@ import activitycode
 from bdesumup import BdeSumup
 
 class SumupRule(object):
-    def __init__(self, categoryName, ruleName):
+    def __init__(self, categoryName):
         self.categoryName = categoryName
-        self.ruleName = ruleName
-        self.routine = None
-        
-    def setRoutine(self, routine):
-        self.routine = routine
+        self.startSumupRule = None
+        self.terminateSumupRule = None
+        self.endSumupRule = None
+        self.startSumupRoutine = None
+        self.terminateSumupRoutine = None
+        self.endSumupRoutine = None
         
     def setattr(self, name, value):
-        setattr(self, name, value)
+        # Make the attribute's value a list if multiple value is going to be inserted.
+        theattr = self.getattr(name)
+        if theattr is None:
+            setattr(self, name, value)
+        elif type(theattr).__name__ == 'list':
+            setattr(self, name, theattr.append(value))
+        else:
+            setattr(self, name, [theattr].append(value))
         
     def getattr(self, name):
-        return getattr(self, name)
+        try:
+            return getattr(self, name)
+        except AttributeError:
+            return None
         
     def action(self, line, sumupCurrent, sumupList):
-        self.routine(line, self, sumupCurrent, sumupList)
-        
-
-def rule_Significant(line, sumupRule, sumupCurrent, sumupList):
-    categoryName = sumupRule.categoryName
-    # If no sumup of this category is running
-    if sumupCurrent[categoryName] is None:
-        # Start own sumup
-        sumupCurrent[categoryName] = BdeSumup(categoryName)
-        sumupCurrent[categoryName].addLine(line)
-        # Terminate all others
-        for tname in sumupCurrent.keys():
-            if tname == categoryName:
-                continue
-            if sumupCurrent[tname] is not None:
-                sumupList.add(sumupCurrent[tname])
-                sumupCurrent[tname] = None
-    else: # If a sumup of this category is already running
-        sumupCurrent[categoryName].addLine(line)
-                
-        
-def rule_Parallel(line, sumupRule, sumupCurrent, sumupList):
-    categoryName = sumupRule.categoryName
-    # If no sumup of this category is running
-    if sumupCurrent[categoryName] is None:
-        # Start own sumup
-        sumupCurrent[categoryName] = BdeSumup(categoryName)
-        sumupCurrent[categoryName].addLine(line)
-        # Does not terminate anything
-    else: # If a sumup of this category is already running
-        sumupCurrent[categoryName].addLine(line)
-                
-
-def rule_Wup(line, sumupRule, sumupCurrent, sumupList):
-    categoryName = sumupRule.categoryName
-    # If no sumup of this category is running
-    if sumupCurrent[categoryName] is None:
-        # Special start based on status code
-        if activitycode.getStatus(line.getActivityCode()) == 'ON':
-            sumupCurrent[categoryName] = BdeSumup(categoryName)
-            sumupCurrent[categoryName].addLine(line)
-            sumupCurrent[categoryName].status += 1
-    else: # If a sumup of this category is already running
-        sumupCurrent[categoryName].addLine(line)
-        if activitycode.getStatus(line.getActivityCode()) == 'ON':
-            sumupCurrent[categoryName].status + 1
-        if activitycode.getStatus(line.getActivityCode()) == 'OFF':
-            sumupCurrent[categoryName].status - 1
-        # Do we need now terminate the sumup based on the status
-        if sumupCurrent[categoryName].status == 0:
-            # special self-termination
-            sumupList.add(sumupCurrent[categoryName])
-            sumupCurrent[categoryName] = None
-                    
-def rule_SelfCycle(line, sumupRule, sumupCurrent, sumupList):
-    categoryName = sumupRule.categoryName
-    # If no sumup of this category is running
-    if sumupCurrent[categoryName] is None:
-        if line.getActivityCode() == sumupRule.startCode:
-            sumupCurrent[categoryName] = BdeSumup(categoryName)
-            sumupCurrent[categoryName].addLine(line)
-        
-    else: # If a sumup of this category is already running
-        sumupCurrent[categoryName].addLine(line)
-        if line.getActivityCode() == sumupRule.endCode:
-            # Self-termination
-            sumupList.add(sumupCurrent[categoryName])
-            sumupCurrent[categoryName] = None
+        categoryName = self.categoryName
+        # If no sumup of this category is running
+        if sumupCurrent[categoryName] is None:
+            # Start own sumup?
+            self.startSumupRoutine(line, self, sumupCurrent, sumupList)
+            # Terminate any other sumups by requirement?
+            self.terminateSumupRoutine(line, self, sumupCurrent, sumupList)
             
+        else: # If a sumup of this category is already running
+            # End own sumup?
+            self.endSumupRoutine(line, self, sumupCurrent, sumupList)
+            
+
+def rule_SR_Whenever(line, sumupRule, sumupCurrent, sumupList):
+    categoryName = sumupRule.categoryName
+    sumupCurrent[categoryName] = BdeSumup(categoryName)
+    sumupCurrent[categoryName].addLine(line)
+
+def rule_SR_OnCode(line, sumupRule, sumupCurrent, sumupList):
+    categoryName = sumupRule.categoryName
+    if line.getActivityCode() == sumupRule.startCode:
+        sumupCurrent[categoryName] = BdeSumup(categoryName)
+        sumupCurrent[categoryName].addLine(line)
     
+def rule_SR_Wup(line, sumupRule, sumupCurrent, sumupList):
+    categoryName = sumupRule.categoryName
+    if activitycode.getStatus(line.getActivityCode()) == 'ON':
+        sumupCurrent[categoryName] = BdeSumup(categoryName)
+        sumupCurrent[categoryName].addLine(line)
+        sumupCurrent[categoryName].status += 1
+
+def rule_TR_All(line, sumupRule, sumupCurrent, sumupList):
+    categoryName = sumupRule.categoryName
+    for tname in sumupCurrent.keys():
+        if tname == categoryName:
+            continue
+        exceptCategory = sumupRule.getattr('except')
+        if exceptCategory is not None:
+            if type(exceptCategory).__name__ == 'list' and tname in exceptCategory:
+                continue
+            elif tname == exceptCategory:
+                continue
+        if sumupCurrent[tname] is not None:
+            sumupCurrent[tname].addLine(line) # add the terminate line
+            sumupList.add(sumupCurrent[tname])
+            sumupCurrent[tname] = None
     
-    
+def rule_TR_None(line, sumupRule, sumupCurrent, sumupList):
+    pass
+
+def rule_ER_ByOthers(line, sumupRule, sumupCurrent, sumupList):
+    categoryName = sumupRule.categoryName
+    sumupCurrent[categoryName].addLine(line)
+
+def rule_ER_OnCode(line, sumupRule, sumupCurrent, sumupList):
+    categoryName = sumupRule.categoryName
+    sumupCurrent[categoryName].addLine(line)
+    if line.getActivityCode() == sumupRule.endCode:
+        # Self-termination
+        sumupList.add(sumupCurrent[categoryName])
+        sumupCurrent[categoryName] = None
+            
+def rule_ER_Wup(line, sumupRule, sumupCurrent, sumupList):
+    categoryName = sumupRule.categoryName
+    sumupCurrent[categoryName].addLine(line)
+    if activitycode.getStatus(line.getActivityCode()) == 'ON':
+        sumupCurrent[categoryName].status + 1
+    if activitycode.getStatus(line.getActivityCode()) == 'OFF':
+        sumupCurrent[categoryName].status - 1
+    # Do we need now terminate the sumup based on the status
+    if sumupCurrent[categoryName].status == 0:
+        # special self-termination
+        sumupList.add(sumupCurrent[categoryName])
+        sumupCurrent[categoryName] = None
+

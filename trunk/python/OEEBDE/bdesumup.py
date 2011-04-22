@@ -11,7 +11,6 @@ class BdeSumup(object):
     classdocs
     '''
 
-
     def __init__(self, name):
         '''
         Constructor
@@ -24,12 +23,17 @@ class BdeSumup(object):
     def addLine(self, line):
         self.lines.append(line);
     
+    def getFirstLine(self):
+        return self.lines[0]
+        
+    def getLastLine(self):
+        return self.lines[len(self.lines)-1]
         
     def getStartTime(self):
-        return self.lines[0].getDateTime()
+        return self.getFirstLine().getDateTime()
         
     def getEndTime(self):
-        return self.lines[len(self.lines)-1].getDateTime()
+        return self.getLastLine().getDateTime()
         
     def calculateDuration(self):
         '''
@@ -41,8 +45,8 @@ class BdeSumup(object):
         return (etime-stime).seconds/3600.
         
     def calculateImpressionTotal(self):
-        sit = self.lines[0].getImpressionTotal()
-        eit = self.lines[len(self.lines)-1].getImpressionTotal()
+        sit = self.getFirstLine().getImpressionTotal()
+        eit = self.getLastLine().getImpressionTotal()
         return eit-sit
 
 
@@ -52,6 +56,7 @@ class BdeSumupList(object):
         self.list = []
         
     def add(self, sumup):
+        # Add the sumup in order of start time
         stime = sumup.lines[0].getDateTime()
         if self.list == []:
             self.list.append(sumup)

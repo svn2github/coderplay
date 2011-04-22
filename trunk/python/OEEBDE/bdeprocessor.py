@@ -67,29 +67,68 @@ for categoryName in categoryNames:
     node = tree.find('Sumups/Categories')
     for element in node.getiterator('Category'):
         if element.attrib['Name'] == categoryName:
-            ruleElement = element.find('Rule')
-            sumupRules[categoryName] = bdesumuprules.SumupRule(categoryName, ruleElement.text)
-            for extraElement in ruleElement.getiterator():
-                sumupRules[categoryName].setattr(extraElement.tag, extraElement.text)
+            # Create the rule object
+            thisRule = bdesumuprules.SumupRule(categoryName)
             
-            # Set the routine that process the sumup
-            rulesNode = tree.find('Sumups/Rules')
+            # Process the start rule
+            ruleElement = element.find('StartRule')
+            # The rule name
+            thisRule.startSumupRule = ruleElement.attrib['Name']
+            for extraElement in ruleElement.getiterator():
+                thisRule.setattr(extraElement.tag, extraElement.text)
+            # Set the routine 
+            rulesNode = tree.find('Sumups/Rules/StartRules/'+thisRule.startSumupRule)
             moduleName = rulesNode.attrib['Module']
-            functionName = rulesNode.find(sumupRules[categoryName].ruleName).attrib['function']
+            functionName = rulesNode.attrib['Function']
             moduleName = __import__(moduleName)
-            sumupRules[categoryName].setRoutine(getattr(moduleName, functionName))
-                
+            thisRule.startSumupRoutine = getattr(moduleName, functionName)
+            
+            # Process the terminate rule
+            ruleElement = element.find('TerminateRule')
+            # The rule name
+            thisRule.terminateSumupRule = ruleElement.attrib['Name']
+            for extraElement in ruleElement.getiterator():
+                thisRule.setattr(extraElement.tag, extraElement.text)
+            # Set the routine 
+            rulesNode = tree.find('Sumups/Rules/TerminateRules/'+thisRule.terminateSumupRule)
+            moduleName = rulesNode.attrib['Module']
+            functionName = rulesNode.attrib['Function']
+            moduleName = __import__(moduleName)
+            thisRule.terminateSumupRoutine = getattr(moduleName, functionName)
+            
+            # Process the end rule
+            ruleElement = element.find('EndRule')
+            # The rule name
+            thisRule.endSumupRule = ruleElement.attrib['Name']
+            for extraElement in ruleElement.getiterator():
+                thisRule.setattr(extraElement.tag, extraElement.text)
+            # Set the routine 
+            rulesNode = tree.find('Sumups/Rules/EndRules/'+thisRule.endSumupRule)
+            moduleName = rulesNode.attrib['Module']
+            functionName = rulesNode.attrib['Function']
+            moduleName = __import__(moduleName)
+            thisRule.endSumupRoutine = getattr(moduleName, functionName)
+            
+            # The rule are now complete
+            sumupRules[categoryName] = thisRule
+            
             # Get out of node loop once match is found
             break;
+
+
+# Lines that are not used for any sumups
+unSumLines = []
 
 # Data sum-ups
 for line in file.getCountableLines():
     # Which category the code belongs to
     categoryName = activitycode.findCategory(line.getActivityCode())
     
-    # Process the category's sumup is it is not None
+    # Process the code from this line belongs to a required category
     if categoryName is not None:
         sumupRules[categoryName].action(line, sumupCurrent, sumupList)
+    else:
+        unSumLines.append(line)
         
 # End any unfinished sumup at the end of the file
 for categoryName in sumupCurrent.keys():
@@ -99,6 +138,8 @@ for categoryName in sumupCurrent.keys():
         
     
 for sumup in sumupList.list:
-    print '%10s %8.2f  %s   %s  %12d' % (sumup.name, sumup.calculateDuration(), sumup.getStartTime(), sumup.getEndTime(), sumup.calculateImpressionTotal())
+    print '%10s %8.2f  %5d  %5d  %s   %s  %12d' % (sumup.name, sumup.calculateDuration(),
+                                              sumup.lines[0].getLineNumber(), sumup.lines[len(sumup.lines)-1].getLineNumber(),
+                                              sumup.getStartTime(), sumup.getEndTime(), sumup.calculateImpressionTotal())
 
 

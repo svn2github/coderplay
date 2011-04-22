@@ -1,73 +1,130 @@
-<?xml version="1.0" encoding="UTF-8"?><BdeSettings>
-    <Validations>
-        <Rules Module="bdevalidation" Function="rule_"><Rule>
-                <Code>1</Code>
-                <Name>RCode</Name>
-                <Description>Record code not in master table</Description></Rule><Rule>
-                <Code>2</Code>
-                <Name>ECode</Name>
-                <Description>Equipment code not in master table</Description></Rule><Rule>
-                <Code>3</Code>
-                <Name>ACode</Name>
-                <Description>Activity code not in master table</Description></Rule><Rule>
-                <Code>5</Code>
-                <Name>FACodeZeroJobID</Name>
-                <Description>First significant Activity code has a zero Job ID</Description></Rule><Rule>
-                <Code>6</Code>
-                <Name>FACodeNotMRor@95</Name>
-                <Description>First significant Activity code not MR or @95</Description></Rule><Rule>
-                <Code>8</Code>
-                <Name>ECodeChanges</Name>
-                <Description>Equipment code not consistent</Description></Rule><Rule>
-                <Code>9</Code>
-                <Name>TSLess</Name>
-                <Description>Timestamp is less than the prior record</Description></Rule><Rule>
-                <Code>10</Code>
-                <Name>TSFuture</Name>
-                <Description>Timestamp is in the future</Description></Rule><Rule>
-                <Code>12</Code>
-                <Name>ITLess</Name>
-                <Description>Impression Total is less than the prior record</Description></Rule><Rule>
-                <Code>14</Code>
-                <Name>ITOutbound</Name>
-                <Description>Impression Total not in range of 1-999 million</Description></Rule><Rule>
-                <Code>15</Code>
-                <Name>No@95</Name>
-                <Description>File contains no @95</Description></Rule></Rules>
-    </Validations>
-    <Sumups>
-    <Categories>
-        <Category Name="MR">
-            <Member Name="MR"></Member>
-            <Member Name="@95"></Member>
-            <Rule>Significant</Rule></Category>
-        <Category Name="Prod">
-            <Member Name="Prod"></Member>
-            <Rule>Significant</Rule>
-        </Category>
-        <Category Name="W-up">
-            <Member Name="W-up">
-                <Status><Contains>ON</Contains>
-                	<Contains>OFF</Contains>
-                	<Except>Nothing</Except></Status>
-                <Code>
-                	<Except>999</Except></Code></Member>
-            <Rule>W-up</Rule>
-        </Category>
-        <Category Name="Downtime">
-            <Member Name="Downtime">
-            </Member>
-            <Rule>Parallel</Rule>
-        </Category>
-        <Category Name="JobEnd">
-        	<Member Name="@97"></Member>
-        	<Rule>Significant</Rule></Category>
-    </Categories>
-    <Rules Module="bdesumuprules">
-    	<Significant function="rule_Significant"></Significant>
-    	<Parallel function="rule_Parallel"></Parallel>
-    	<W-up function="rule_Wup"></W-up>
-    </Rules>
-    </Sumups>
+<?xml version="1.0" encoding="UTF-8"?>
+<BdeSettings>
+	<Validations>
+		<Rules Module="bdevalidation" Function="rule_">
+			<Rule>
+				<Code>1</Code>
+				<Name>RCode</Name>
+				<Description>Record code not in master table</Description>
+			</Rule>
+			<Rule>
+				<Code>2</Code>
+				<Name>ECode</Name>
+				<Description>Equipment code not in master table</Description>
+			</Rule>
+			<Rule>
+				<Code>3</Code>
+				<Name>ACode</Name>
+				<Description>Activity code not in master table</Description>
+			</Rule>
+			<Rule>
+				<Code>5</Code>
+				<Name>FACodeZeroJobID</Name>
+				<Description>First significant Activity code has a zero Job ID
+				</Description>
+			</Rule>
+			<Rule>
+				<Code>6</Code>
+				<Name>FACodeNotMRor@95</Name>
+				<Description>First significant Activity code not MR or @95
+				</Description>
+			</Rule>
+			<Rule>
+				<Code>8</Code>
+				<Name>ECodeChanges</Name>
+				<Description>Equipment code not consistent</Description>
+			</Rule>
+			<Rule>
+				<Code>9</Code>
+				<Name>TSLess</Name>
+				<Description>Timestamp is less than the prior record</Description>
+			</Rule>
+			<Rule>
+				<Code>10</Code>
+				<Name>TSFuture</Name>
+				<Description>Timestamp is in the future</Description>
+			</Rule>
+			<Rule>
+				<Code>12</Code>
+				<Name>ITLess</Name>
+				<Description>Impression Total is less than the prior record
+				</Description>
+			</Rule>
+			<Rule>
+				<Code>14</Code>
+				<Name>ITOutbound</Name>
+				<Description>Impression Total not in range of 1-999 million
+				</Description>
+			</Rule>
+			<Rule>
+				<Code>15</Code>
+				<Name>No@95</Name>
+				<Description>File contains no @95</Description>
+			</Rule>
+		</Rules>
+	</Validations>
+	<Sumups>
+		<Categories>
+			<Category Name="MR">
+				<Member Name="MR"></Member>
+				<Member Name="@95"></Member>
+				<StartRule Name="Whenever"></StartRule>
+				<TerminateRule Name="All"></TerminateRule>
+				<EndRule Name="ByOthers"></EndRule>
+			</Category>
+			<Category Name="Prod">
+				<Member Name="Prod">
+				</Member>
+				<StartRule Name="Whenever">
+				</StartRule>
+				<TerminateRule Name="All"></TerminateRule>
+				<EndRule Name="ByOthers"></EndRule>
+			</Category>
+			<Category Name="W-up">
+				<Member Name="W-up">
+					<Status>
+						<Contains>ON</Contains>
+						<Contains>OFF</Contains>
+						<Except>Nothing</Except>
+					</Status>
+					<Code>
+						<Except>999</Except>
+					</Code>
+				</Member>
+				<StartRule Name="W-up"></StartRule>
+				<TerminateRule Name="None"></TerminateRule>
+				<EndRule Name="W-up"></EndRule>
+			</Category>
+			<Category Name="Downtime">
+				<Member Name="Downtime">
+				</Member>
+				<StartRule Name="Whenever"></StartRule>
+				<TerminateRule Name="None"></TerminateRule>
+				<EndRule Name="ByOthers"></EndRule>
+			</Category>
+			<Category Name="JobEnd">
+				<Member Name="@97"></Member>
+				<StartRule Name="Whenever"></StartRule>
+				<TerminateRule Name="All"></TerminateRule>
+				<EndRule Name="ByOthers"></EndRule>
+			</Category>
+		</Categories>
+		<Rules>
+			<StartRules>
+				<Whenever Module="bdesumuprules" Function="rule_SR_Whenever"></Whenever>
+				<OnCode Module="bdesumuprules" Function="rule_SR_OnCode"></OnCode>
+				<W-up Module="bdesumuprules" Function="rule_SR_Wup"></W-up>
+			</StartRules>
+			<TerminateRules>
+				<All Module="bdesumuprules" Function="rule_TR_All"></All>
+				<None Module="bdesumuprules" Function="rule_TR_None"></None>
+			</TerminateRules>
+			<EndRules>
+				<ByOthers Module="bdesumuprules" Function="rule_ER_ByOthers"></ByOthers>
+				<OnCode Module="bdesumuprules" Function="rule_ER_OnCode"></OnCode>
+				<W-up Module="bdesumuprules" Function="rule_ER_Wup"></W-up>
+			</EndRules>
+		</Rules>
+	</Sumups>
 </BdeSettings>
 
