@@ -144,3 +144,4 @@ class BdeDB(object):
         
         self.cursor.executescript(sql_create_bdefile_view)
         self.conn.commit()
+

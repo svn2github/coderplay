@@ -24,7 +24,7 @@ class BdeLine(object):
     def getLineNumber(self):
         return self.index + 1
 
-    def getRecordID(self):
+    def getRecordCode(self):
         field = self.fields[0]
         return field
 
@@ -52,7 +52,7 @@ class BdeLine(object):
         field = self.fields[1][:-2]
         return datetime.datetime.strptime(field, "%Y%m%d%H%M%S")
     
-    def getImpressionCount(self):
+    def getImpressionTotal(self):
         field = self.fields[10]
         return int(field)
     

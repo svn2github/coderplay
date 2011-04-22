@@ -31,6 +31,9 @@ class BdeFile(object):
         for ii, line in enumerate(lines):
             self.lines.append(bdeline.BdeLine(ii, line))
 
+    def getCountableLines(self):
+        return [line for line in self.lines if line.getRecordCode() == 'REC020']
+
     def validation(self):
         errorlog = BdeErrorLog()
         
