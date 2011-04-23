@@ -2,7 +2,7 @@
 
 import csv
 import sqlite3.dbapi2 as lite
-import equipmentcode
+from bdecodes import equipmentcode
 import activitycode
 
 

@@ -4,7 +4,7 @@ from bdeerror import BdeErrorLog
 from bdefile import BdeFile, BdeSumup, BdeSumupList
 from bdeconfig import BdeConfig
 from bdedb import BdeDB
-import activitycode
+from bdecodes import activitycode
 import bdeutil
 import bdesumuprules
 

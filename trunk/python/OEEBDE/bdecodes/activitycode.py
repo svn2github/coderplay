@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+print __name__
 import csv
 import bdeutil
 

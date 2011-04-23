@@ -3,8 +3,8 @@
 import csv
 import os
 
-_file = 'equipcode'
-_lines = csv.reader(open(os.path.abspath(_file), 'r'))
+_file = 'equipmentcode'
+_lines = csv.reader(open(_file, 'r'))
 lookupTable = {}
 
 def getName(code):
