@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-from bdeerrorlog import BdeErrorLog
-from bdefile import BdeFile
+from bdeerror import BdeErrorLog
+from bdefile import BdeFile, BdeSumup, BdeSumupList
 from bdeconfig import BdeConfig
 from bdedb import BdeDB
-from bdesumup import BdeSumup, BdeSumupList
 import activitycode
 import bdeutil
 import bdesumuprules
@@ -117,7 +116,7 @@ for categoryName in categoryNames:
 
 
 # Lines that are not used for any sumups
-unSumLines = []
+unCategoryLines = []
 
 # Data sum-ups
 for line in file.getCountableLines():
@@ -128,7 +127,7 @@ for line in file.getCountableLines():
     if categoryName is not None:
         sumupRules[categoryName].action(line, sumupCurrent, sumupList)
     else:
-        unSumLines.append(line)
+        unCategoryLines.append(line)
         
 # End any unfinished sumup at the end of the file
 for categoryName in sumupCurrent.keys():
@@ -137,9 +136,6 @@ for categoryName in sumupCurrent.keys():
         sumupCurrent[categoryName] = None
         
     
-for sumup in sumupList.list:
-    print '%10s %8.2f  %5d  %5d  %s   %s  %12d' % (sumup.name, sumup.calculateDuration(),
-                                              sumup.lines[0].getLineNumber(), sumup.lines[len(sumup.lines)-1].getLineNumber(),
-                                              sumup.getStartTime(), sumup.getEndTime(), sumup.calculateImpressionTotal())
+sumupList.show()
 
 

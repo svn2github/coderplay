@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import activitycode
-from bdesumup import BdeSumup
+from bdefile import BdeSumup
 
 class SumupRule(object):
     def __init__(self, categoryName):
@@ -45,11 +45,27 @@ class SumupRule(object):
 
 def rule_SR_Whenever(line, sumupRule, sumupCurrent, sumupList):
     categoryName = sumupRule.categoryName
+    ifnot = sumupRule.getattr('ifnot')
+    if type(ifnot).__name__ == 'list':
+        for ifnotcate in ifnot:
+            if sumupCurrent[ifnotcate] is not None:
+                return
+    else:
+        if ifnot is not None and sumupCurrent[ifnot] is not None:
+            return
     sumupCurrent[categoryName] = BdeSumup(categoryName)
     sumupCurrent[categoryName].addLine(line)
 
 def rule_SR_OnCode(line, sumupRule, sumupCurrent, sumupList):
     categoryName = sumupRule.categoryName
+    ifnot = sumupRule.getattr('ifnot')
+    if type(ifnot).__name__ == 'list':
+        for ifnotcate in ifnot:
+            if sumupCurrent[ifnotcate] is not None:
+                return
+    else:
+        if ifnot is not None and sumupCurrent[ifnot] is not None:
+            return
     if line.getActivityCode() == sumupRule.startCode:
         sumupCurrent[categoryName] = BdeSumup(categoryName)
         sumupCurrent[categoryName].addLine(line)

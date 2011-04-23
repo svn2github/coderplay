@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <BdeSettings>
 	<Validations>
-		<Rules Module="bdevalidation" Function="rule_">
+		<Rules Module="bdevalidationrules" Function="rule_">
 			<Rule>
 				<Code>1</Code>
 				<Name>RCode</Name>
@@ -126,5 +126,6 @@
 			</EndRules>
 		</Rules>
 	</Sumups>
-</BdeSettings>
+	<Reporting>
+		<Rules></Rules></Reporting></BdeSettings>
 

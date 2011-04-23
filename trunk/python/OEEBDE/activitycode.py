@@ -13,16 +13,22 @@ def getDescription(code):
     return lookupTable[str(code)][2]
 
 def fillLookupTable(file='activitycode'):
-    _lines = csv.reader(open(file, 'r'), delimiter="\t")
-    for _line in _lines:
-        _code = _line[0]
-        _value = _line[1:]
-        # Build the activity lookup table
-        lookupTable[_code] = _value
-        # Set the categories of the code
-        name = getName(_code)
+    '''
+    Build the activity lookup table
+    '''
+    lookupTable = {}
+    lines = csv.reader(open(file, 'r'), delimiter="\t")
+    for line in lines:
+        code = line[0]
+        value = line[1:]
+        lookupTable[code] = value
+    return lookupTable
     
 def fillCodeOf():
+    '''
+    Populate the code of every category based on the settings XML file.
+    '''
+    codeOf = {}
     tree = bdeutil.readXMLTree()
     node = tree.find('Sumups/Categories')
     for element in node.getiterator('Category'):
@@ -65,11 +71,11 @@ def fillCodeOf():
             # Add the codes into this category
             codeOf[categoryName].extend(codes)
             
+    return codeOf
+            
 # The lookup table and code categories
-lookupTable = {}
-codeOf = {}
-fillLookupTable()
-fillCodeOf()
+lookupTable = fillLookupTable()
+codeOf = fillCodeOf()
 
 def findCategory(code):
     for categoryName in codeOf.keys():

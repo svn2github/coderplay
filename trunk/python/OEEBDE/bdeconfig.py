@@ -2,7 +2,7 @@
 
 import os
 import ConfigParser
-import bdevalidation
+import bdevalidationrules
 import bdeutil
 
 class Option(object):

@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 
-_file = 'errorcode'
-_lines = open(_file, "r").readlines()
-lookupTable = {}
+def fillLookupTable(file='errorcode'):
+    lines = open(file, "r").readlines()
+    lookupTable = {}
+    for line in lines:
+        code, value = (int(line[:4]), line[4:])
+        lookupTable[code] = value
+    return lookupTable
 
 def getDescription(code):
-    return Error.lookupTable[code]
+    return lookupTable[code]
     
-for _line in _lines:
-    _code, _value = (int(_line[:4]), _line[4:])
-    lookupTable[_code] = _value
+lookupTable = fillLookupTable()
+
+if __name__ == '__main__':
+    print lookupTable
+    
