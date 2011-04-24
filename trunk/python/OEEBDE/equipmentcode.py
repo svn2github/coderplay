@@ -3,14 +3,19 @@
 import csv
 import os
 
-_file = 'equipmentcode'
-_lines = csv.reader(open(_file, 'r'))
-lookupTable = {}
-
+def fillLookupTable(file='equipmentcode'):
+    lines = csv.reader(open(file, 'r'))
+    lookupTable = {}
+    for line in lines:
+        code = line[0]
+        value = line[1]
+        lookupTable[code] = value
+    return lookupTable
+        
 def getName(code):
     return Equipment.lookupTable[str(code)]
 
-for _line in _lines:
-    _code = _line[0]
-    _value = _line[1]
-    lookupTable[_code] = _value
+lookupTable = fillLookupTable()
+
+if __name__ == '__main__':
+    print lookupTable

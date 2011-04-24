@@ -22,3 +22,13 @@ def readXMLTree(file='bdesettings.xml'):
     xmlfile = os.path.join(srcdir, file)
     tree = ET.parse(xmlfile)
     return tree
+
+def getConcatenatableSumup(sumup1, sumup2):
+    name1 = [element.name for element in sumup1]
+    name2 = [element.name for element in sumup2]
+    
+    commonNames = [element for element in name1 if element in name2]
+    
+    return [element for element in sumup1 if element.name in commonNames], \
+           [element for element in sumup2 if element.name in commonNames]
+

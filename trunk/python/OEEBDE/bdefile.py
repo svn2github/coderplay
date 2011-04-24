@@ -41,6 +41,10 @@ class BdeLine(object):
         '''
         self.index = index
         self.fields = line
+        self.sumups = []
+        
+    def addSumup(self, sumup):
+        self.sumups.append(sumup)
         
     def getLineNumber(self):
         return self.index + 1
@@ -76,6 +80,20 @@ class BdeLine(object):
     def getImpressionTotal(self):
         field = self.fields[10]
         return int(field)
+        
+    def getStartedSumups(self):
+        sums = []
+        for sumup in self.sumups:
+            if sumup.getFirstLine() == self:
+                sums.append(sumup)
+        return sums
+    
+    def getTerminatedSumups(self):
+        sums = []
+        for sumup in self.sumups:
+            if sumup.getLastLine() == self:
+                sums.append(sumup)
+        return sums
     
     
 class BdeSumup(object):
@@ -90,9 +108,11 @@ class BdeSumup(object):
         self.name = name
         self.lines = []
         self.status = 0
+        self.reporting = None
         
     def addLine(self, line):
         self.lines.append(line);
+        line.addSumup(self)
     
     def getFirstLine(self):
         return self.lines[0]
@@ -128,18 +148,24 @@ class BdeSumupList(object):
         
     def add(self, sumup):
         # Add the sumup in order of start time
-        stime = sumup.lines[0].getDateTime()
+        stime = sumup.getFirstLine().getDateTime()
         if self.list == []:
             self.list.append(sumup)
         else:
             for idx, element in enumerate(self.list):
-                if element.lines[0].getDateTime() > stime:
+                if element.getFirstLine().getDateTime() > stime:
                     self.list.insert(idx, sumup)
                     return
             self.list.append(sumup)
                     
     def __iter__(self):
         return iter(self.list)
+        
+    def __len__(self):
+        return len(self.list)
+        
+    def __getitem__(self, index):
+        return self.list[index]
         
     def show(self):
         for sumup in self.list:
@@ -152,3 +178,73 @@ class BdeSumupList(object):
                                                            sumup.calculateImpressionTotal())
     
         
+class BdeReporting(object):
+    
+    def __init__(self):
+        self.sumups = []
+
+    def addSumup(self, sumup):
+        # Add the sumup in order of start time
+        stime = sumup.getFirstLine().getDateTime()
+        if self.sumups == []:
+            self.sumups.append(sumup)
+        else:
+            for idx, element in enumerate(self.sumups):
+                if element.name != sumup.name:
+                    raise BdeException, 'Only one category Sumup can be added into one Reporting.'
+                if element.lines[0].getDateTime() > stime:
+                    self.sumups.insert(idx, sumup)
+                    return
+            self.sumups.append(sumup)
+            
+        sumup.reporting = self
+    
+    def getFirstSumup(self):
+        return self.sumups[0]
+        
+    def getLastSumup(self):
+        return self.sumups[len(self.sumups)-1]
+        
+    def calculateDuration(self):
+        stime = self.getFirstSumup().getFirstLine().getDateTime()
+        etime = self.getLastSumup().getLastLine().getDateTime()
+        return (etime-stime).seconds/3600.
+        
+    def calculateImpressionTotal(self):
+        sit = self.getFirstSumup().getFirstLine().getImpressionTotal()
+        eit = self.getLastSumup().getLastLine().getImpressionTotal()
+        return eit-sit
+        
+    def getName(self):
+        return self.getFirstSumup().name
+        
+
+class BdeReportingList(object):
+    
+    def __init__(self):
+        self.list = []
+        
+    def add(self, reporting):
+        self.list.append(reporting)
+
+    def __iter__(self):
+        return iter(self.list)
+        
+    def __len__(self):
+        return len(self.list)
+        
+    def __getitem__(self, index):
+        return self.list[index]
+        
+        
+    def show(self):
+        for reporting in self.list:
+            print '%10s %8.2f  %5d  %5d  %s   %s  %12d' % (reporting.getName(),
+                                                           reporting.calculateDuration(),
+                                                           reporting.getFirstSumup().getFirstLine().getLineNumber(),
+                                                           reporting.getLastSumup().getLastLine().getLineNumber(),
+                                                           reporting.getFirstSumup().getStartTime(),
+                                                           reporting.getLastSumup().getEndTime(),
+                                                           reporting.calculateImpressionTotal())
+        
+

@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 from bdeerror import BdeErrorLog
-from bdefile import BdeFile, BdeSumup, BdeSumupList
+from bdefile import BdeFile, BdeSumup, BdeSumupList, BdeReporting, BdeReportingList
 from bdeconfig import BdeConfig
 from bdedb import BdeDB
-from bdecodes import activitycode
+import activitycode
 import bdeutil
 import bdesumuprules
+import reportingrules
 
 '''
 Created on 15/04/2011
@@ -61,59 +62,55 @@ for categoryName in categoryNames:
     
 # Build the Sumup Rules object
 sumupRules = {}
-for categoryName in categoryNames:
-    tree = bdeutil.readXMLTree()
-    node = tree.find('Sumups/Categories')
-    for element in node.getiterator('Category'):
-        if element.attrib['Name'] == categoryName:
-            # Create the rule object
-            thisRule = bdesumuprules.SumupRule(categoryName)
-            
-            # Process the start rule
-            ruleElement = element.find('StartRule')
-            # The rule name
-            thisRule.startSumupRule = ruleElement.attrib['Name']
-            for extraElement in ruleElement.getiterator():
-                thisRule.setattr(extraElement.tag, extraElement.text)
-            # Set the routine 
-            rulesNode = tree.find('Sumups/Rules/StartRules/'+thisRule.startSumupRule)
-            moduleName = rulesNode.attrib['Module']
-            functionName = rulesNode.attrib['Function']
-            moduleName = __import__(moduleName)
-            thisRule.startSumupRoutine = getattr(moduleName, functionName)
-            
-            # Process the terminate rule
-            ruleElement = element.find('TerminateRule')
-            # The rule name
-            thisRule.terminateSumupRule = ruleElement.attrib['Name']
-            for extraElement in ruleElement.getiterator():
-                thisRule.setattr(extraElement.tag, extraElement.text)
-            # Set the routine 
-            rulesNode = tree.find('Sumups/Rules/TerminateRules/'+thisRule.terminateSumupRule)
-            moduleName = rulesNode.attrib['Module']
-            functionName = rulesNode.attrib['Function']
-            moduleName = __import__(moduleName)
-            thisRule.terminateSumupRoutine = getattr(moduleName, functionName)
-            
-            # Process the end rule
-            ruleElement = element.find('EndRule')
-            # The rule name
-            thisRule.endSumupRule = ruleElement.attrib['Name']
-            for extraElement in ruleElement.getiterator():
-                thisRule.setattr(extraElement.tag, extraElement.text)
-            # Set the routine 
-            rulesNode = tree.find('Sumups/Rules/EndRules/'+thisRule.endSumupRule)
-            moduleName = rulesNode.attrib['Module']
-            functionName = rulesNode.attrib['Function']
-            moduleName = __import__(moduleName)
-            thisRule.endSumupRoutine = getattr(moduleName, functionName)
-            
-            # The rule are now complete
-            sumupRules[categoryName] = thisRule
-            
-            # Get out of node loop once match is found
-            break;
-
+tree = bdeutil.readXMLTree()
+node = tree.find('Sumups/Categories')
+for element in node.getiterator('Category'):
+    categoryName = element.attrib['Name']
+    # Create the rule object
+    thisRule = bdesumuprules.SumupRule(categoryName)
+    
+    # Process the start rule
+    ruleElement = element.find('StartRule')
+    # The rule name
+    thisRule.startSumupRule = ruleElement.attrib['Name']
+    for extraElement in ruleElement.getiterator():
+        thisRule.setattr(extraElement.tag, extraElement.text)
+    # Set the routine 
+    rulesNode = tree.find('Sumups/Rules/StartRules/'+thisRule.startSumupRule)
+    moduleName = rulesNode.attrib['Module']
+    functionName = rulesNode.attrib['Function']
+    moduleName = __import__(moduleName)
+    thisRule.startSumupRoutine = getattr(moduleName, functionName)
+    
+    # Process the terminate rule
+    ruleElement = element.find('TerminateRule')
+    # The rule name
+    thisRule.terminateSumupRule = ruleElement.attrib['Name']
+    for extraElement in ruleElement.getiterator():
+        thisRule.setattr(extraElement.tag, extraElement.text)
+    # Set the routine 
+    rulesNode = tree.find('Sumups/Rules/TerminateRules/'+thisRule.terminateSumupRule)
+    moduleName = rulesNode.attrib['Module']
+    functionName = rulesNode.attrib['Function']
+    moduleName = __import__(moduleName)
+    thisRule.terminateSumupRoutine = getattr(moduleName, functionName)
+    
+    # Process the end rule
+    ruleElement = element.find('EndRule')
+    # The rule name
+    thisRule.endSumupRule = ruleElement.attrib['Name']
+    for extraElement in ruleElement.getiterator():
+        thisRule.setattr(extraElement.tag, extraElement.text)
+    # Set the routine 
+    rulesNode = tree.find('Sumups/Rules/EndRules/'+thisRule.endSumupRule)
+    moduleName = rulesNode.attrib['Module']
+    functionName = rulesNode.attrib['Function']
+    moduleName = __import__(moduleName)
+    thisRule.endSumupRoutine = getattr(moduleName, functionName)
+    
+    # This one rule is now complete
+    sumupRules[categoryName] = thisRule
+        
 
 # Lines that are not used for any sumups
 unCategoryLines = []
@@ -135,7 +132,41 @@ for categoryName in sumupCurrent.keys():
         sumupList.add(sumupCurrent[categoryName])
         sumupCurrent[categoryName] = None
         
+#sumupList.show()
+
+
+
+# Reporting based on the sumups
+
+# Build the reporting Rules object
+reportRules = {}
+tree = bdeutil.readXMLTree()
+node = tree.find('Reporting/Categories')
+for element in node.getiterator('Category'):
+    categoryName = element.attrib['Name']
+    thisRule = reportingrules.ReportingRule(categoryName)
+    for ruleElement in element.find('Rules').getiterator():
+        thisRule.addReportRule(ruleElement.tag)
+        # Looking for the rule description
+        for r in tree.find('Reporting/Rules').getiterator('Rule'):
+            if r.attrib['Name'] == ruleElement.tag:
+                moduleName = r.attrib['Module']
+                functionName = r.attrib['Function']
+                moduleName = __import__(moduleName)
+                thisRule.addReportRoutine(getattr(moduleName, functionName))
+                break
+    # This rule is now complete
+    reportRules[categoryName] = thisRule
     
-sumupList.show()
+    
+reportingList = BdeReportingList()
+for idx, sumup in enumerate(sumupList):
+    if sumup.name not in reportRules.keys():
+        continue
+    reportRules[sumup.name].action(idx, sumupList, reportingList)
+    
+
+reportingList.show()
+
 
 

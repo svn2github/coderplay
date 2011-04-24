@@ -127,5 +127,33 @@
 		</Rules>
 	</Sumups>
 	<Reporting>
-		<Rules></Rules></Reporting></BdeSettings>
+		<Categories>
+			<Category Name="MR">
+				<Rules>
+					<Concatenate>
+						<SIG_DURATION type="float" list="0" value="0.083333"></SIG_DURATION></Concatenate>
+				</Rules>
+			</Category>
+			<Category Name="Prod">
+				<Rules>
+					<Concatenate></Concatenate>
+				</Rules>
+			</Category>
+			<Category Name="W-up">
+				<Rules>
+					<None></None>
+				</Rules>
+			</Category>
+			<Category Name="Downtime">
+				<Rules>
+					<None></None>
+				</Rules>
+			</Category>
+		</Categories>
+		<Rules>
+			<Rule Name="None" Module="reportingrules" Function="rule_None"></Rule>
+			<Rule Name="Concatenate" Module="reportingrules" Function="rule_Concatenate"></Rule>
+		</Rules>
+	</Reporting>
+</BdeSettings>
 
