@@ -73,8 +73,8 @@ for element in node.getiterator('Category'):
     ruleElement = element.find('StartRule')
     # The rule name
     thisRule.startSumupRule = ruleElement.attrib['Name']
-    for extraElement in ruleElement.getiterator():
-        thisRule.setattr(extraElement.tag, extraElement.text)
+    # Get any additional variables
+    bdeutil.readRuleVars(ruleElement, thisRule)
     # Set the routine 
     rulesNode = tree.find('Sumups/Rules/StartRules/'+thisRule.startSumupRule)
     moduleName = rulesNode.attrib['Module']
@@ -86,8 +86,8 @@ for element in node.getiterator('Category'):
     ruleElement = element.find('TerminateRule')
     # The rule name
     thisRule.terminateSumupRule = ruleElement.attrib['Name']
-    for extraElement in ruleElement.getiterator():
-        thisRule.setattr(extraElement.tag, extraElement.text)
+    # Get any additional variables
+    bdeutil.readRuleVars(ruleElement, thisRule)
     # Set the routine 
     rulesNode = tree.find('Sumups/Rules/TerminateRules/'+thisRule.terminateSumupRule)
     moduleName = rulesNode.attrib['Module']
@@ -99,8 +99,8 @@ for element in node.getiterator('Category'):
     ruleElement = element.find('EndRule')
     # The rule name
     thisRule.endSumupRule = ruleElement.attrib['Name']
-    for extraElement in ruleElement.getiterator():
-        thisRule.setattr(extraElement.tag, extraElement.text)
+    # Get any additional variables
+    bdeutil.readRuleVars(ruleElement, thisRule)
     # Set the routine 
     rulesNode = tree.find('Sumups/Rules/EndRules/'+thisRule.endSumupRule)
     moduleName = rulesNode.attrib['Module']
@@ -145,16 +145,19 @@ node = tree.find('Reporting/Categories')
 for element in node.getiterator('Category'):
     categoryName = element.attrib['Name']
     thisRule = reportingrules.ReportingRule(categoryName)
-    for ruleElement in element.find('Rules').getiterator():
-        thisRule.addReportRule(ruleElement.tag)
+    for ruleElement in element.find('Rules').getiterator('Rule'):
+        thisRule.addReportRule(ruleElement.attrib['Name'])
         # Looking for the rule description
         for r in tree.find('Reporting/Rules').getiterator('Rule'):
-            if r.attrib['Name'] == ruleElement.tag:
+            if r.attrib['Name'] == ruleElement.attrib['Name']:
                 moduleName = r.attrib['Module']
                 functionName = r.attrib['Function']
                 moduleName = __import__(moduleName)
                 thisRule.addReportRoutine(getattr(moduleName, functionName))
                 break
+        # Read any variables
+        bdeutil.readRuleVars(ruleElement, thisRule)
+        
     # This rule is now complete
     reportRules[categoryName] = thisRule
     

@@ -31,4 +31,17 @@ def getConcatenatableSumup(sumup1, sumup2):
     
     return [element for element in sumup1 if element.name in commonNames], \
            [element for element in sumup2 if element.name in commonNames]
+    
+def readRuleVars(ruleElement, ruleobj):
+    convertDict = {'int': int, 'float': float, 'str': str}
+    for varElement in ruleElement.getiterator('Variable'):
+        name = varElement.attrib['Name']
+        type = varElement.attrib['Type']
+        value = convertDict[type](varElement.attrib['Value'])
+        
+        if varElement.attrib['List'] != '0': # list
+            ruleobj.addListAttr(name, value)
+        else: # scalar
+            ruleobj.setattr(name, value)
+        
 

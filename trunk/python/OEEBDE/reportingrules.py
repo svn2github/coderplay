@@ -9,18 +9,20 @@ class ReportingRule(object):
         self.categoryName = categoryName
         self.reportRules = []
         self.reportRoutines = []
-        self.SIG_DURATION = 5.0/60.0
-        self.SIG_IMPCOUNT = 20
     
     def setattr(self, name, value):
+        setattr(self, name, value)
+            
+    def addListAttr(self, name, value):
         # Make the attribute's value a list if multiple value is going to be inserted.
         theattr = self.getattr(name)
         if theattr is None:
-            setattr(self, name, value)
+            setattr(self, name, [].extend(value))
         elif type(theattr).__name__ == 'list':
-            setattr(self, name, theattr.append(value))
+            setattr(self, name, theattr.extend(value))
         else:
-            setattr(self, name, [theattr].append(value))
+            setattr(self, name, [theattr].extend(value))
+            
         
     def getattr(self, name):
         try:
@@ -103,7 +105,7 @@ def rule_Concatenate(idx, sumupList, reportRule):
     
     return None
     
-def rule_MergeWithPrevious(idx, sumupList, reportRule):
+def rule_MergeAdjacent(idx, sumupList, reportRule):
     theSum = sumupList[idx]
     if theSum.reporting is not None:
         return None

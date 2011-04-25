@@ -130,23 +130,32 @@
 		<Categories>
 			<Category Name="MR">
 				<Rules>
-					<Concatenate>
-						<SIG_DURATION type="float" list="0" value="0.083333"></SIG_DURATION></Concatenate>
+					<Rule Name="Concatenate">
+						<Variable Name="SIG_DURATION" Type="float" List="0"
+							Value="0.08333333">
+						</Variable>
+						<Variable Name="SIG_IMPCOUNT" Type="int" List="0" Value="20"></Variable>
+					</Rule>
 				</Rules>
 			</Category>
 			<Category Name="Prod">
 				<Rules>
-					<Concatenate></Concatenate>
+					<Rule Name="Concatenate">
+						<Variable Name="SIG_DURATION" Type="float" List="0"
+							Value="0.08333333">
+						</Variable>
+						<Variable Name="SIG_IMPCOUNT" Type="int" List="0" Value="20"></Variable>
+					</Rule>
 				</Rules>
 			</Category>
 			<Category Name="W-up">
 				<Rules>
-					<None></None>
+					<Rule Name="None"></Rule>
 				</Rules>
 			</Category>
 			<Category Name="Downtime">
 				<Rules>
-					<None></None>
+					<Rule Name="None"></Rule>
 				</Rules>
 			</Category>
 		</Categories>

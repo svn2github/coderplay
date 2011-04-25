@@ -14,14 +14,17 @@ class SumupRule(object):
         self.endSumupRoutine = None
         
     def setattr(self, name, value):
+        setattr(self, name, value)
+            
+    def addListAttr(self, name, value):
         # Make the attribute's value a list if multiple value is going to be inserted.
         theattr = self.getattr(name)
         if theattr is None:
-            setattr(self, name, value)
+            setattr(self, name, [].extend(value))
         elif type(theattr).__name__ == 'list':
-            setattr(self, name, theattr.append(value))
+            setattr(self, name, theattr.extend(value))
         else:
-            setattr(self, name, [theattr].append(value))
+            setattr(self, name, [theattr].extend(value))
         
     def getattr(self, name):
         try:
