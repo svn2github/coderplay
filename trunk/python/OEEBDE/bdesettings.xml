@@ -140,6 +140,12 @@
 			</Category>
 			<Category Name="Prod">
 				<Rules>
+					<Rule Name="ConvertIfCode">
+						<Variable Name="from_sumup" Type="str" List="0" Value="Prod"></Variable>
+						<Variable Name="to_sumup" Type="str" List="0" Value="MR"></Variable>
+						<Variable Name="onlycodes" Type="str" List="1" Value="@118"></Variable>
+						<Variable Name="onlycodes" Type="str" List="1" Value="@119"></Variable>
+					</Rule>
 					<Rule Name="Concatenate">
 						<Variable Name="SIG_DURATION" Type="float" List="0"
 							Value="0.08333333">
@@ -162,6 +168,7 @@
 		<Rules>
 			<Rule Name="None" Module="reportingrules" Function="rule_None"></Rule>
 			<Rule Name="Concatenate" Module="reportingrules" Function="rule_Concatenate"></Rule>
+			<Rule Name="ConvertIfCode" Module="reportingrules" Function="rule_ConvertIfCode"></Rule>
 		</Rules>
 	</Reporting>
 </BdeSettings>

@@ -17,12 +17,16 @@ class ReportingRule(object):
         # Make the attribute's value a list if multiple value is going to be inserted.
         theattr = self.getattr(name)
         if theattr is None:
-            setattr(self, name, [].extend(value))
+            tmp = []
+            tmp.append(value)
+            setattr(self, name, tmp)
         elif type(theattr).__name__ == 'list':
-            setattr(self, name, theattr.extend(value))
+            theattr.append(value)
+            setattr(self, name, theattr)
         else:
-            setattr(self, name, [theattr].extend(value))
-            
+            theattr = [theattr]
+            theattr.append(value)
+            setattr(self, name, theattr)
         
     def getattr(self, name):
         try:
@@ -128,5 +132,20 @@ def rule_MergeAdjacent(idx, sumupList, reportRule):
         reporting.addSumup(theSum)
         return reporting
     
+def rule_ConvertIfCode(idx, sumupList, reportRule):
+    theSum = sumupList[idx]
+    if theSum.reporting is not None:
+        return None
+    
+    if theSum.name != reportRule.from_sumup:
+        return None
+    
+    for line in theSum.lines:
+        if line.getActivityCode() not in reportRule.onlycodes:
+            return None
+        
+    theSum.name = reportRule.to_sumup
+    
+    return None
     
     

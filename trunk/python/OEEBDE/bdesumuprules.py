@@ -20,11 +20,16 @@ class SumupRule(object):
         # Make the attribute's value a list if multiple value is going to be inserted.
         theattr = self.getattr(name)
         if theattr is None:
-            setattr(self, name, [].extend(value))
+            tmp = []
+            tmp.append(value)
+            setattr(self, name, tmp)
         elif type(theattr).__name__ == 'list':
-            setattr(self, name, theattr.extend(value))
+            theattr.append(value)
+            setattr(self, name, theattr)
         else:
-            setattr(self, name, [theattr].extend(value))
+            theattr = [theattr]
+            theattr.append(value)
+            setattr(self, name, theattr)
         
     def getattr(self, name):
         try:
