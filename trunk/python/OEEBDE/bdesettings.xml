@@ -1,64 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <BdeSettings>
 	<Validations>
-		<Rules Module="bdevalidationrules" Function="rule_">
-			<Rule>
+		<Action>
+			<Rule Name="RCode"></Rule>
+			<Rule Name="ECode"></Rule>
+			<Rule Name="ACode"></Rule>
+			<Rule Name="FACodeZeroJobID"></Rule>
+			<Rule Name="FACodeNotMRor@95"></Rule>
+			<Rule Name="ECodeChanges"></Rule>
+			<Rule Name="TSLess"></Rule>
+			<Rule Name="TSFuture"></Rule>
+			<Rule Name="ITLess"></Rule>
+			<Rule Name="ITOutbound"></Rule>
+			<Rule Name="No@95"></Rule>
+		</Action>
+		<Rules>
+			<Rule Name="RCode" Module="bdevalidationrules" Function="rule_1">
 				<Code>1</Code>
-				<Name>RCode</Name>
 				<Description>Record code not in master table</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="ECode" Module="bdevalidationrules" Function="rule_2">
 				<Code>2</Code>
-				<Name>ECode</Name>
 				<Description>Equipment code not in master table</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="ACode" Module="bdevalidationrules" Function="rule_3">
 				<Code>3</Code>
-				<Name>ACode</Name>
 				<Description>Activity code not in master table</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="FACodeZeroJobID" Module="bdevalidationrules" Function="rule_5">
 				<Code>5</Code>
-				<Name>FACodeZeroJobID</Name>
 				<Description>First significant Activity code has a zero Job ID
 				</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="FACodeNotMRor@95" Module="bdevalidationrules"
+				Function="rule_6">
 				<Code>6</Code>
-				<Name>FACodeNotMRor@95</Name>
 				<Description>First significant Activity code not MR or @95
 				</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="ECodeChanges" Module="bdevalidationrules" Function="rule_8">
 				<Code>8</Code>
-				<Name>ECodeChanges</Name>
 				<Description>Equipment code not consistent</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="TSLess" Module="bdevalidationrules" Function="rule_9">
 				<Code>9</Code>
-				<Name>TSLess</Name>
 				<Description>Timestamp is less than the prior record</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="TSFuture" Module="bdevalidationrules" Function="rule_10">
 				<Code>10</Code>
-				<Name>TSFuture</Name>
 				<Description>Timestamp is in the future</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="ITLess" Module="bdevalidationrules" Function="rule_12">
 				<Code>12</Code>
-				<Name>ITLess</Name>
 				<Description>Impression Total is less than the prior record
 				</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="ITOutbound" Module="bdevalidationrules" Function="rule_14">
 				<Code>14</Code>
-				<Name>ITOutbound</Name>
 				<Description>Impression Total not in range of 1-999 million
 				</Description>
 			</Rule>
-			<Rule>
+			<Rule Name="No@95" Module="bdevalidationrules" Function="rule_15">
 				<Code>15</Code>
-				<Name>No@95</Name>
 				<Description>File contains no @95</Description>
 			</Rule>
 		</Rules>

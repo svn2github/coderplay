@@ -3,6 +3,48 @@
 import datetime
 import bdeutil
 
+class ValidationRule(object):
+
+    def __init__(self, name):
+        self.name = name
+        self.routine = None
+    
+    def setattr(self, name, value):
+        setattr(self, name, value)
+            
+    def addListAttr(self, name, value):
+        # Make the attribute's value a list if multiple value is going to be inserted.
+        theattr = self.getattr(name)
+        if theattr is None:
+            tmp = []
+            tmp.append(value)
+            setattr(self, name, tmp)
+        elif type(theattr).__name__ == 'list':
+            theattr.append(value)
+            setattr(self, name, theattr)
+        else:
+            theattr = [theattr]
+            theattr.append(value)
+            setattr(self, name, theattr)
+        
+    def getattr(self, name):
+        try:
+            return getattr(self, name)
+        except AttributeError:
+            return None
+        
+    def setValidationRoutine(self, validationRoutine):
+        self.routine = validationRoutine
+        
+    def action(self, cursor, errorlog):
+        code, lineIndex = self.routine(cursor)
+        for index in lineIndex:
+            if index is not None:
+                errorlog.add(code, file.lines[index])
+            else:
+                errorlog.add(code, None)
+
+
 # Data validation rules 
 def rule_1(cursor):
     """

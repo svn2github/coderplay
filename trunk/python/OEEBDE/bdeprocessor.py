@@ -6,6 +6,7 @@ from bdeconfig import BdeConfig
 from bdedb import BdeDB
 import activitycode
 import bdeutil
+import bdevalidationrules
 import bdesumuprules
 import reportingrules
 
@@ -15,14 +16,10 @@ Created on 15/04/2011
 @author: yang
 '''
 
-# Read the file into file object
+# Read the BDE file into file object
 file = BdeFile('good.bde')
 file.read()
     
-# Process the config file
-config = BdeConfig()
-config.read()
-
 # Create the sqlite DB for data validations
 # Load the file into the Database
 # This creates a memory concern that we now have two copies of the file.
@@ -33,15 +30,31 @@ db.loaddata('good.bde')
 # The error logger
 errorlog = BdeErrorLog()
 
-# Perform required data validations based on the config file
-# Add any error into the error logger
-for option in config.validationOptions:
-    code, lineIndex = option.routine(db.cursor)
-    for index in lineIndex:
-            if index is not None:
-                errorlog.add(code, file.lines[index])
-            else:
-                errorlog.add(code, None)
+# Read the XML file for data validation settings
+validationRules = {}
+tree = bdeutil.readXMLTree()
+node = tree.find('Validations/Action')
+for ruleElement in node.getiterator('Rule'):
+    ruleName = ruleElement.attrib['Name']
+    # create the rule object
+    thisRule = bdevalidationrules.ValidationRule(ruleName)
+    # get any additional variables
+    bdeutil.readRuleVars(ruleElement, thisRule)
+    # Set the routine
+    for r in tree.find('Validations/Rules').getiterator('Rule'):
+        if r.attrib['Name'] == ruleElement.attrib['Name']:
+            moduleName = r.attrib['Module']
+            functionName = r.attrib['Function']
+            moduleName = __import__(moduleName)
+            thisRule.routine = getattr(moduleName, functionName)
+            break
+    validationRules[ruleName] = thisRule
+            
+    
+# Perform data validations
+for rule in validationRules.itervalues():
+    rule.action(db.cursor, errorlog)
+
 
 # Be nice and delete the database
 del(db)
