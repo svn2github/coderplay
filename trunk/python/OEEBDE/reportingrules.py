@@ -42,26 +42,25 @@ class ReportingRule(object):
         
     def action(self, idx, sumupList, reportingList):
         for routine in self.reportRoutines:
-            reporting = routine(idx, sumupList, self)
-            if reporting is not None:
-                reportingList.add(reporting)
-    
+            routine(idx, sumupList, self, reportingList)
 
-def rule_None(idx, sumupList, reportRule):
+
+def rule_None(idx, sumupList, reportRule, reportingList):
     theSum = sumupList[idx]
     if theSum.reporting is not None:
-        return None
+        return 
     
     reporting = BdeReporting()
     
     reporting.addSumup(theSum)
-    return reporting
+    reportingList.add(reporting)
+    return 
 
 
-def rule_Concatenate(idx, sumupList, reportRule):
+def rule_Concatenate(idx, sumupList, reportRule, reportingList):
     theSum = sumupList[idx]
     if theSum.reporting is not None:
-        return None
+        return 
     
     reporting = BdeReporting()
     
@@ -70,27 +69,32 @@ def rule_Concatenate(idx, sumupList, reportRule):
     
     if duration > reportRule.SIG_DURATION and impressionTotal > reportRule.SIG_IMPCOUNT:
         reporting.addSumup(theSum)
-        return reporting
+        reportingList.add(reporting)
+        return 
     
     if idx == 0 or idx == len(sumupList)-1:
         reporting.addSumup(theSum)
-        return reporting
+        reportingList.add(reporting)
+        return 
     
     sumTerminatedByFirstLine = theSum.getFirstLine().getTerminatedSumups()
     if sumTerminatedByFirstLine == []:
         reporting.addSumup(theSum)
-        return reporting
+        reportingList.add(reporting)
+        return 
     
     sumStartedByLastLine = theSum.getLastLine().getStartedSumups()
     if sumStartedByLastLine == []:
         reporting.addSumup(theSum)
-        return reporting
+        reportingList.add(reporting)
+        return 
     
     preSum, postSum = bdeutil.getConcatenatableSumup(sumTerminatedByFirstLine, sumStartedByLastLine)
     
     if preSum == [] or postSum == []:
         reporting.addSumup(theSum)
-        return reporting
+        reportingList.add(reporting)
+        return 
     
     if len(preSum) != 1 or len(postSum) != 1:
         raise BdeException, 'More than one concatenation candidates found.'
@@ -107,45 +111,45 @@ def rule_Concatenate(idx, sumupList, reportRule):
     # Concatenate
     preSum.reporting.addSumup(postSum)
     
-    return None
+    return 
     
-def rule_MergeAdjacent(idx, sumupList, reportRule):
+    
+def rule_MergeAdjacent(idx, sumupList, reportRule, reportingList):
     theSum = sumupList[idx]
-    if theSum.reporting is not None:
-        return None
+    if theSum.reporting is None:
+        return
     
-    reporting = BdeReporting()
-    
-    duration = theSum.calculateDuration()
-    impressionTotal = theSum.calculateImpressionTotal()
-    
-    if duration > reportRule.SIG_DURATION and impressionTotal > reportRule.SIG_IMPCOUNT:
-        reporting.addSumup(theSum)
-        return reporting
+    reporting = theSum.reporting
+    idx = reportingList.index(reporting)
     
     if idx == 0:
-        reporting.addSumup(theSum)
-        return reporting
+        return
     
-    sumTerminatedByFirstLine = theSum.getFirstLine().getTerminatedSumups()
-    if sumTerminatedByFirstLine == []:
-        reporting.addSumup(theSum)
-        return reporting
+    preReporting = reportingList[idx-1]
     
-def rule_ConvertIfCode(idx, sumupList, reportRule):
+    if preReporting.getName() != reporting.getName():
+        return
+    
+    # Merge this reporting to the previous reporting
+    preReporting.merge(reporting)
+    # Delete this reporting since it is now merged
+    reportingList.remove(reporting)
+    
+    
+def rule_ConvertIfCode(idx, sumupList, reportRule, reportingList):
     theSum = sumupList[idx]
     if theSum.reporting is not None:
-        return None
+        return 
     
     if theSum.name != reportRule.from_sumup:
-        return None
+        return 
     
     for line in theSum.lines:
         if line.getActivityCode() not in reportRule.onlycodes:
-            return None
+            return 
         
     theSum.name = reportRule.to_sumup
     
-    return None
+    return 
     
     

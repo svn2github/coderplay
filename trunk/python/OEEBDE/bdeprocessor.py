@@ -170,6 +170,7 @@ for idx, sumup in enumerate(sumupList):
     
 
 reportingList.show()
+reportingList.report()
 
 
 

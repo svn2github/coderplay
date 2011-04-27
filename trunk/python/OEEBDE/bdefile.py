@@ -196,7 +196,7 @@ class BdeReporting(object):
                     self.sumups.insert(idx, sumup)
                     return
             self.sumups.append(sumup)
-            
+        # Mark the sumup's reporting 
         sumup.reporting = self
     
     def getFirstSumup(self):
@@ -217,6 +217,10 @@ class BdeReporting(object):
         
     def getName(self):
         return self.getFirstSumup().name
+        
+    def merge(self, reporting):
+        for sumup in reporting.sumups:
+            self.addSumup(sumup)
         
 
 class BdeReportingList(object):
@@ -247,4 +251,12 @@ class BdeReportingList(object):
                                                            reporting.getLastSumup().getEndTime(),
                                                            reporting.calculateImpressionTotal())
         
+    def report(self):
+        for reporting in self.list:
+            print '0,%d,%s,%s,%s,%0.2f,%d' % (reporting.getFirstSumup().getFirstLine().getLineNumber(),
+                                              reporting.getFirstSumup().getStartTime(),
+                                              reporting.getFirstSumup().getFirstLine().getJobID(),
+                                              reporting.getName(),
+                                              reporting.calculateDuration(),
+                                              reporting.calculateImpressionTotal())
 
