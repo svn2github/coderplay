@@ -2,6 +2,7 @@
 
 import activitycode
 from bdefile import BdeSumup
+import bdeutil
 
 class SumupRule(object):
     def __init__(self, categoryName):
@@ -50,6 +51,52 @@ class SumupRule(object):
             # End own sumup?
             self.endSumupRoutine(line, self, sumupCurrent, sumupList)
             
+
+def bulidSumupRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
+    sumupRules = {}
+    tree = bdeutil.readXMLTree(settingsxml)
+    node = tree.find('Sumups/Categories')
+    for element in node.getiterator('Category'):
+        categoryName = element.attrib['Name']
+        # Create the rule object
+        thisRule = SumupRule(categoryName)
+        
+        # Process the start rule
+        ruleElement = element.find('StartRule')
+        # The rule name
+        thisRule.startSumupRule = ruleElement.attrib['Name']
+        # Get any additional variables
+        bdeutil.readRuleVars(ruleElement, thisRule)
+        # Set the routine 
+        thisRule.startSumupRoutine = bdeutil.readRuleRoutine(ruleElement.attrib['Name'],
+                                                             bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/StartRules'))
+        
+        # Process the terminate rule
+        ruleElement = element.find('TerminateRule')
+        # The rule name
+        thisRule.terminateSumupRule = ruleElement.attrib['Name']
+        # Get any additional variables
+        bdeutil.readRuleVars(ruleElement, thisRule)
+        # Set the routine 
+        thisRule.terminateSumupRoutine = bdeutil.readRuleRoutine(ruleElement.attrib['Name'],
+                                                                 bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/TerminateRules'))
+        
+        # Process the end rule
+        ruleElement = element.find('EndRule')
+        # The rule name
+        thisRule.endSumupRule = ruleElement.attrib['Name']
+        # Get any additional variables
+        bdeutil.readRuleVars(ruleElement, thisRule)
+        # Set the routine 
+        thisRule.endSumupRoutine = bdeutil.readRuleRoutine(ruleElement.attrib['Name'],
+                                                           bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/EndRules'))
+        
+        # This one rule is now complete
+        sumupRules[categoryName] = thisRule
+            
+    return sumupRules
+
+
 
 def rule_SR_Whenever(line, sumupRule, sumupCurrent, sumupList):
     categoryName = sumupRule.categoryName

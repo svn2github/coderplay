@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BdeRules>
+	<Validations>
+		<Rules>
+			<Rule Name="RCode" Module="validationrules" Function="rule_1">
+				<Code>1</Code>
+				<Description>Record code not in master table</Description>
+			</Rule>
+			<Rule Name="ECode" Module="validationrules" Function="rule_2">
+				<Code>2</Code>
+				<Description>Equipment code not in master table</Description>
+			</Rule>
+			<Rule Name="ACode" Module="validationrules" Function="rule_3">
+				<Code>3</Code>
+				<Description>Activity code not in master table</Description>
+			</Rule>
+			<Rule Name="FACodeZeroJobID" Module="validationrules"
+				Function="rule_5">
+				<Code>5</Code>
+				<Description>First significant Activity code has a zero Job ID
+				</Description>
+			</Rule>
+			<Rule Name="FACodeNotMRor@95" Module="validationrules"
+				Function="rule_6">
+				<Code>6</Code>
+				<Description>First significant Activity code not MR or @95
+				</Description>
+			</Rule>
+			<Rule Name="ECodeChanges" Module="validationrules" Function="rule_8">
+				<Code>8</Code>
+				<Description>Equipment code not consistent</Description>
+			</Rule>
+			<Rule Name="TSLess" Module="validationrules" Function="rule_9">
+				<Code>9</Code>
+				<Description>Timestamp is less than the prior record</Description>
+			</Rule>
+			<Rule Name="TSFuture" Module="validationrules" Function="rule_10">
+				<Code>10</Code>
+				<Description>Timestamp is in the future</Description>
+			</Rule>
+			<Rule Name="ITLess" Module="validationrules" Function="rule_12">
+				<Code>12</Code>
+				<Description>Impression Total is less than the prior record
+				</Description>
+			</Rule>
+			<Rule Name="ITOutbound" Module="validationrules" Function="rule_14">
+				<Code>14</Code>
+				<Description>Impression Total not in range of 1-999 million
+				</Description>
+			</Rule>
+			<Rule Name="No@95" Module="validationrules" Function="rule_15">
+				<Code>15</Code>
+				<Description>File contains no @95</Description>
+			</Rule>
+		</Rules>
+	</Validations>
+	<Sumups>
+		<Rules>
+			<StartRules>
+				<Rule Name="Whenever" Module="sumuprules" Function="rule_SR_Whenever"></Rule>
+				<Rule Name="OnCode" Module="sumuprules" Function="rule_SR_OnCode"></Rule>
+				<Rule Name="W-up" Module="sumuprules" Function="rule_SR_Wup"></Rule>
+			</StartRules>
+			<TerminateRules>
+				<Rule Name="All" Module="sumuprules" Function="rule_TR_All"></Rule>
+				<Rule Name="None" Module="sumuprules" Function="rule_TR_None"></Rule>
+			</TerminateRules>
+			<EndRules>
+				<Rule Name="ByOthers" Module="sumuprules" Function="rule_ER_ByOthers"></Rule>
+				<Rule Name="OnCode" Module="sumuprules" Function="rule_ER_OnCode"></Rule>
+				<Rule Name="W-up" Module="sumuprules" Function="rule_ER_Wup"></Rule>
+			</EndRules>
+		</Rules>
+	</Sumups>
+	<Reporting>
+		<Rules>
+			<Rule Name="None" Module="reportingrules" Function="rule_None"></Rule>
+			<Rule Name="Concatenate" Module="reportingrules" Function="rule_Concatenate"></Rule>
+			<Rule Name="ConvertIfCode" Module="reportingrules" Function="rule_ConvertIfCode"></Rule>
+		</Rules>
+	</Reporting>
+</BdeRules>
+

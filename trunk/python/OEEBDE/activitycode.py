@@ -24,12 +24,12 @@ def fillLookupTable(file='activitycode'):
         lookupTable[code] = value
     return lookupTable
     
-def fillCodeOf():
+def fillCodeOf(settingsxml='bdesettings.xml'):
     '''
     Populate the code of every category based on the settings XML file.
     '''
     codeOf = {}
-    tree = bdeutil.readXMLTree()
+    tree = bdeutil.readXMLTree(settingsxml)
     node = tree.find('Sumups/Categories')
     for element in node.getiterator('Category'):
         categoryName = element.attrib['Name']

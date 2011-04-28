@@ -14,15 +14,18 @@ class BdeFile(object):
     classdocs
     '''
 
-    def __init__(self, filename):
+    def __init__(self):
         '''
         Constructor
         '''
-        self.filename = filename
+        self.filename = None
         self.lines = []
              
-    def read(self):
-        lines = csv.reader(open(self.filename, 'r'), delimiter="\t")
+    def read(self, filename=None):
+        if filename == None:
+            filename = self.filename
+        self.lines = []
+        lines = csv.reader(open(filename, 'r'), delimiter="\t")
         for ii, line in enumerate(lines):
             self.lines.append(BdeLine(ii, line))
 

@@ -45,6 +45,29 @@ class ValidationRule(object):
                 errorlog.add(code, None)
 
 
+# Build the validation rules dictionary, which contains the validation rule objects
+def buildValidationRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
+    validationRules = {}
+    # Read the XML file for validation settings
+    tree = bdeutil.readXMLTree(settingsxml)
+    node = tree.find('Validations/Action')
+    for ruleElement in node.getiterator('Rule'):
+        ruleName = ruleElement.attrib['Name']
+        # create the rule object
+        thisRule = ValidationRule(ruleName)
+        # get any additional variables
+        bdeutil.readRuleVars(ruleElement, thisRule)
+        # Set the routine by reading the rules xml
+        thisRule.routine = bdeutil.readRuleRoutine(ruleElement.attrib['Name'],
+                                                   bdeutil.readXMLTree(rulesxml).find('Validations/Rules'))
+        # Fill the rule dictionary
+        validationRules[ruleName] = thisRule
+        
+    return validationRules
+            
+
+
+
 # Data validation rules 
 def rule_1(cursor):
     """

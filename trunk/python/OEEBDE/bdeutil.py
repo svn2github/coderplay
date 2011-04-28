@@ -44,4 +44,11 @@ def readRuleVars(ruleElement, ruleobj):
         else: # scalar
             ruleobj.setattr(name, value)
         
+def readRuleRoutine(ruleName, rulesNode):
+    for r in rulesNode.getiterator('Rule'):
+        if r.attrib['Name'] == ruleName:
+            moduleName = r.attrib['Module']
+            functionName = r.attrib['Function']
+            moduleName = __import__(moduleName)
+            return getattr(moduleName, functionName)
 

@@ -43,6 +43,32 @@ class ReportingRule(object):
     def action(self, idx, sumupList, reportingList):
         for routine in self.reportRoutines:
             routine(idx, sumupList, self, reportingList)
+            
+
+def buildReportingRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
+    reportRules = {}
+    tree = bdeutil.readXMLTree(settingsxml)
+    node = tree.find('Reporting/Categories')
+    for element in node.getiterator('Category'):
+        categoryName = element.attrib['Name']
+        thisRule = ReportingRule(categoryName)
+        for ruleElement in element.find('Rules').getiterator('Rule'):
+            thisRule.addReportRule(ruleElement.attrib['Name'])
+            # Looking for the rule description
+            for r in bdeutil.readXMLTree(rulesxml).find('Reporting/Rules').getiterator('Rule'):
+                if r.attrib['Name'] == ruleElement.attrib['Name']:
+                    moduleName = r.attrib['Module']
+                    functionName = r.attrib['Function']
+                    moduleName = __import__(moduleName)
+                    thisRule.addReportRoutine(getattr(moduleName, functionName))
+                    break
+            # Read any variables
+            bdeutil.readRuleVars(ruleElement, thisRule)
+            
+        # This rule is now complete
+        reportRules[categoryName] = thisRule
+        
+    return reportRules
 
 
 def rule_None(idx, sumupList, reportRule, reportingList):

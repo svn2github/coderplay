@@ -8,12 +8,15 @@ Created on 15/04/2011
 
 class BdeErrorLog(object):
 
-        
     def __init__(self):
-        self.errorList = []
+        self.list = []
         
     def add(self, code, line):
-        self.errorList.append((code, line))
+        self.list.append((code, line))
+        
+    def show(self):
+        for error in self.list:
+            print error[0], ': ', error[1].getLineNumber()
         
         
 class BdeException(Exception):
