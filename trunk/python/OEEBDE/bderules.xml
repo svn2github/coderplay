@@ -78,7 +78,7 @@
 	</Sumups>
 	<Reporting>
 		<Rules>
-			<Rule Name="None" Module="reportingrules" Function="rule_None"><!--Do nothing. If this rule is the only one assigned to a sumup, the sumup will not appear in the reporting.--></Rule>
+			<Rule Name="None" Module="reportingrules" Function="rule_None"><!--Simply add this sumup to the reporting and do nothing else.--></Rule>
 			<Rule Name="Concatenate" Module="reportingrules" Function="rule_Concatenate"><!--Try concatenate its previous and next sumups if itself is a trivial sumup.-->
 			</Rule>
 			<Rule Name="ConvertIfCode" Module="reportingrules" Function="rule_ConvertIfCode"><!--Convert the sumup from one category to another if the activity codes in the sumup are all from a specified set.-->

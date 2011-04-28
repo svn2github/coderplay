@@ -25,10 +25,21 @@ class ProcessorConfig(object):
         self.debug = False
         self.rulesxml = 'bderules.xml'
         self.settingsxml = 'bdesettings.xml'
-    
+
+
+class ProcessorResult(object):
+
+    def __init__(self):
+        self.errorlog = None
+        self.sumupList = None
+        self.reportingList = None
+        self.unCategoryLines = []
     
 
 def bdeprocessor(config):
+
+    # Create the result object
+    result = ProcessorResult()
 
     # Create the sqlite DB for data validations
     # Load the file into the Database
@@ -56,12 +67,13 @@ def bdeprocessor(config):
         
     # Print any errors found
     errorlog.show(bdefile, verbose=config.verbose)
+    result.errorlog = errorlog
     
     # Abort the run if any data validation fails
     if errorlog.hasError():
         print ''
         print 'Data validation failed. Program execution aborted.'
-        return
+        return result
     else:
         print 'Data validation PASSED.'
     
@@ -79,8 +91,6 @@ def bdeprocessor(config):
     for categoryName in categoryNames:
         sumupCurrent[categoryName] = None
         
-    # Lines that are not used for any sumups
-    unCategoryLines = []
     
     # Data sum-ups
     for line in bdefile.getCountableLines():
@@ -90,8 +100,8 @@ def bdeprocessor(config):
         # Process the code from this line belongs to a required category
         if categoryName is not None:
             sumupRules[categoryName].action(line, sumupCurrent, sumupList)
-        else:
-            unCategoryLines.append(line)
+        else: # Lines that are not used for any sumups
+            result.unCategoryLines.append(line)
             
     # End any unfinished sumup at the end of the file
     for categoryName in sumupCurrent.keys():
@@ -102,7 +112,7 @@ def bdeprocessor(config):
     print 'Data sumup finished.'
     if config.debug:
         sumupList.show()
-    
+    result.sumupList = sumupList
     
     
     # Reporting based on the sumups
@@ -121,7 +131,9 @@ def bdeprocessor(config):
     if config.debug:
         reportingList.show()
     reportingList.report(config.outputfile)
+    result.reportingList = reportingList
 
+    return result
 
 
 if __name__ == '__main__':
@@ -130,6 +142,6 @@ if __name__ == '__main__':
     config.verbose = True
     config.debug = True
     
-    bdeprocessor(config)
+    result = bdeprocessor(config)
     
 
