@@ -132,7 +132,9 @@ def rule_Concatenate(idx, sumupList, reportRule, reportingList):
         raise BdeException, 'Sumup is already assigned to another reporting.'
     
     if preSum.reporting is None:
-        raise BdeException, 'Sumup does not belong to any reporting.'
+        # This means the preSum could be a sumup that is not required for report, e.g. JobEnd
+        #raise BdeException, 'Sumup does not belong to any reporting.'
+        return 
     
     # Concatenate
     preSum.reporting.addSumup(postSum)

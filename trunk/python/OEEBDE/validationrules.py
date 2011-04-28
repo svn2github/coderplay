@@ -37,13 +37,10 @@ class ValidationRule(object):
         self.routine = validationRoutine
         
     def action(self, cursor, errorlog):
-        code, lineIndex = self.routine(cursor)
-        for index in lineIndex:
-            if index is not None:
-                errorlog.add(code, file.lines[index])
-            else:
-                errorlog.add(code, None)
-
+        code, lineNumber = self.routine(cursor)
+        if lineNumber != []:
+            errorlog.add(code, lineNumber)
+            
 
 # Build the validation rules dictionary, which contains the validation rule objects
 def buildValidationRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
@@ -198,8 +195,8 @@ def getRuleCode():
     return int(rnlist[len(rnlist)-1])
     
 def getLineIndex(lines):
-    lineIndex = []
+    lineNumber = []
     for line in lines:
-        lineIndex.append(int(line[0])-1)
-    return lineIndex
+        lineNumber.append(int(line[0]))
+    return lineNumber
         

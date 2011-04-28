@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import csv
 import datetime
 
@@ -31,6 +32,9 @@ class BdeFile(object):
 
     def getCountableLines(self):
         return [line for line in self.lines if line.getRecordCode() == 'REC020']
+        
+    def getLine(self, lineNumber):
+        return self.lines[lineNumber-1]
 
 
 class BdeLine(object):
@@ -45,6 +49,9 @@ class BdeLine(object):
         self.index = index
         self.fields = line
         self.sumups = []
+    
+    def __str__(self):
+        return str(self.getLineNumber()) + ': ' + ', '.join(self.fields)
         
     def addSumup(self, sumup):
         self.sumups.append(sumup)
@@ -254,12 +261,13 @@ class BdeReportingList(object):
                                                            reporting.getLastSumup().getEndTime(),
                                                            reporting.calculateImpressionTotal())
         
-    def report(self):
+    def report(self, output=sys.stdout):
         for reporting in self.list:
-            print '0,%d,%s,%s,%s,%0.2f,%d' % (reporting.getFirstSumup().getFirstLine().getLineNumber(),
-                                              reporting.getFirstSumup().getStartTime(),
-                                              reporting.getFirstSumup().getFirstLine().getJobID(),
-                                              reporting.getName(),
-                                              reporting.calculateDuration(),
-                                              reporting.calculateImpressionTotal())
+            output.write('0, %d, %s, %s, %s, %0.2f, %d\n' %
+                         (reporting.getFirstSumup().getFirstLine().getLineNumber(),
+                          reporting.getFirstSumup().getStartTime(),
+                          reporting.getFirstSumup().getFirstLine().getJobID(),
+                          reporting.getName(),
+                          reporting.calculateDuration(),
+                          reporting.calculateImpressionTotal()))
 

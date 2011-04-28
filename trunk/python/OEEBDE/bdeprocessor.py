@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 from bdeerror import BdeErrorLog
 from bdefile import BdeFile, BdeSumup, BdeSumupList, BdeReporting, BdeReportingList
 from bdedb import BdeDB
@@ -15,87 +16,120 @@ Created on 15/04/2011
 @author: yang
 '''
 
-# Read the BDE file into file object
-file = BdeFile()
-file.read('good.bde')
+class ProcessorConfig(object):
     
-# Create the sqlite DB for data validations
-# Load the file into the Database
-# This creates a memory concern that we now have two copies of the file.
-# One in the file object and this one in sqlite database.
-db = BdeDB()
-db.loaddata('good.bde')
-
-# The error logger
-errorlog = BdeErrorLog()
-
-# Build the validation rules from the xml files
-validationRules = validationrules.buildValidationRules()
+    def __init__(self):
+        self.inputfile = None
+        self.outputfile = sys.stdout
+        self.verbose = False
+        self.debug = False
+        self.rulesxml = 'bderules.xml'
+        self.settingsxml = 'bdesettings.xml'
     
-# Perform data validations
-for rule in validationRules.itervalues():
-    rule.action(db.cursor, errorlog)
-
-# Be nice and delete the database for saving memories
-del(db)
-
-# Print any errors found
-errorlog.show()
-
-
-
-# Build the Sumup Rules object
-sumupRules = sumuprules.bulidSumupRules()
-
-# The overall sumup list
-sumupList = BdeSumupList()
-
-# Set every sumup to be None at the beginning, meaning
-# no sumup is current happening.
-categoryNames = activitycode.codeOf.keys()
-sumupCurrent = {}
-for categoryName in categoryNames:
-    sumupCurrent[categoryName] = None
     
-# Lines that are not used for any sumups
-unCategoryLines = []
 
-# Data sum-ups
-for line in file.getCountableLines():
-    # Which category the code belongs to
-    categoryName = activitycode.findCategory(line.getActivityCode())
+def bdeprocessor(config):
+
+    # Create the sqlite DB for data validations
+    # Load the file into the Database
+    db = BdeDB()
+    db.loaddata(config.inputfile)
     
-    # Process the code from this line belongs to a required category
-    if categoryName is not None:
-        sumupRules[categoryName].action(line, sumupCurrent, sumupList)
-    else:
-        unCategoryLines.append(line)
+    # The error logger
+    errorlog = BdeErrorLog()
+    
+    # Build the validation rules from the xml files
+    validationRules = validationrules.buildValidationRules(config.rulesxml, config.settingsxml)
         
-# End any unfinished sumup at the end of the file
-for categoryName in sumupCurrent.keys():
-    if sumupCurrent[categoryName] is not None:
-        sumupList.add(sumupCurrent[categoryName])
+    # Perform data validations
+    for rule in validationRules.itervalues():
+        rule.action(db.cursor, errorlog)
+    
+    # Be nice and delete the database for saving memories
+    del(db)
+    
+    # Read the BDE file into file object
+    # The file object is created after deleting the database object
+    # to avoid having two copies of the file.
+    bdefile = BdeFile()
+    bdefile.read(config.inputfile)
+        
+    # Print any errors found
+    errorlog.show(bdefile, verbose=config.verbose)
+    
+    # Abort the run if any data validation fails
+    if errorlog.hasError():
+        print ''
+        print 'Data validation failed. Program execution aborted.'
+        return
+    else:
+        print 'Data validation PASSED.'
+    
+    
+    # Build the Sumup Rules object
+    sumupRules = sumuprules.bulidSumupRules(config.rulesxml, config.settingsxml)
+    
+    # The overall sumup list
+    sumupList = BdeSumupList()
+    
+    # Set every sumup to be None at the beginning, meaning
+    # no sumup is current happening.
+    categoryNames = activitycode.codeOf.keys()
+    sumupCurrent = {}
+    for categoryName in categoryNames:
         sumupCurrent[categoryName] = None
         
-#sumupList.show()
-
-
-
-# Reporting based on the sumups
-
-# Build the reporting Rules object
-reportRules = reportingrules.buildReportingRules()
+    # Lines that are not used for any sumups
+    unCategoryLines = []
     
-# Create the reportings
-reportingList = BdeReportingList()
-for idx, sumup in enumerate(sumupList):
-    if sumup.name not in reportRules.keys():
-        continue
-    reportRules[sumup.name].action(idx, sumupList, reportingList)
+    # Data sum-ups
+    for line in bdefile.getCountableLines():
+        # Which category the code belongs to
+        categoryName = activitycode.findCategory(line.getActivityCode())
+        
+        # Process the code from this line belongs to a required category
+        if categoryName is not None:
+            sumupRules[categoryName].action(line, sumupCurrent, sumupList)
+        else:
+            unCategoryLines.append(line)
+            
+    # End any unfinished sumup at the end of the file
+    for categoryName in sumupCurrent.keys():
+        if sumupCurrent[categoryName] is not None:
+            sumupList.add(sumupCurrent[categoryName])
+            sumupCurrent[categoryName] = None
+            
+    print 'Data sumup finished.'
+    if config.debug:
+        sumupList.show()
     
+    
+    
+    # Reporting based on the sumups
+    
+    # Build the reporting Rules object
+    reportRules = reportingrules.buildReportingRules(config.rulesxml, config.settingsxml)
+        
+    # Create the reportings
+    reportingList = BdeReportingList()
+    for idx, sumup in enumerate(sumupList):
+        if sumup.name not in reportRules.keys():
+            continue
+        reportRules[sumup.name].action(idx, sumupList, reportingList)
+        
+    print 'Data reporting finished.'
+    if config.debug:
+        reportingList.show()
+    reportingList.report(config.outputfile)
 
-reportingList.show()
-#reportingList.report()
 
 
+if __name__ == '__main__':
+    config = ProcessorConfig()
+    config.inputfile = 'good.bde'
+    config.verbose = True
+    config.debug = True
+    
+    bdeprocessor(config)
+    
 

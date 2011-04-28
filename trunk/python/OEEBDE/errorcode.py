@@ -4,7 +4,7 @@ def fillLookupTable(file='errorcode'):
     lines = open(file, "r").readlines()
     lookupTable = {}
     for line in lines:
-        code, value = (int(line[:4]), line[4:])
+        code, value = (int(line[:4]), line[4:].strip())
         lookupTable[code] = value
     return lookupTable
 
