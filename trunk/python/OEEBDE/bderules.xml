@@ -57,26 +57,33 @@
 	<Sumups>
 		<Rules>
 			<StartRules>
-				<Rule Name="Whenever" Module="sumuprules" Function="rule_SR_Whenever"></Rule>
-				<Rule Name="OnCode" Module="sumuprules" Function="rule_SR_OnCode"></Rule>
-				<Rule Name="W-up" Module="sumuprules" Function="rule_SR_Wup"></Rule>
+				<Rule Name="Whenever" Module="sumuprules" Function="rule_SR_Whenever"><!--Start whenever the corresponding codes are read.--></Rule>
+				<Rule Name="OnCode" Module="sumuprules" Function="rule_SR_OnCode"><!--Start only when A specific code is read.-->
+				</Rule>
+				<Rule Name="W-up" Module="sumuprules" Function="rule_SR_Wup"><!--Specialized for W-up only. Working based on the On/Off status of the W-up codes.-->
+				</Rule>
 			</StartRules>
 			<TerminateRules>
-				<Rule Name="All" Module="sumuprules" Function="rule_TR_All"></Rule>
-				<Rule Name="None" Module="sumuprules" Function="rule_TR_None"></Rule>
+				<Rule Name="All" Module="sumuprules" Function="rule_TR_All"><!--Terminate all other running sumups.-->
+				</Rule>
+				<Rule Name="None" Module="sumuprules" Function="rule_TR_None"><!--Do NOT terminate any other running sumups.--></Rule>
 			</TerminateRules>
 			<EndRules>
-				<Rule Name="ByOthers" Module="sumuprules" Function="rule_ER_ByOthers"></Rule>
-				<Rule Name="OnCode" Module="sumuprules" Function="rule_ER_OnCode"></Rule>
-				<Rule Name="W-up" Module="sumuprules" Function="rule_ER_Wup"></Rule>
+				<Rule Name="ByOthers" Module="sumuprules" Function="rule_ER_ByOthers"><!--The end of this sumup is triggered by other sumups.--></Rule>
+				<Rule Name="OnCode" Module="sumuprules" Function="rule_ER_OnCode"><!--The end of this sumup is triggered on A specific code.--></Rule>
+				<Rule Name="W-up" Module="sumuprules" Function="rule_ER_Wup"><!--Specialized for W-up only. The end of this sumup is based on the On/Off Status of the W-up codes.-->
+				</Rule>
 			</EndRules>
 		</Rules>
 	</Sumups>
 	<Reporting>
 		<Rules>
-			<Rule Name="None" Module="reportingrules" Function="rule_None"></Rule>
-			<Rule Name="Concatenate" Module="reportingrules" Function="rule_Concatenate"></Rule>
-			<Rule Name="ConvertIfCode" Module="reportingrules" Function="rule_ConvertIfCode"></Rule>
+			<Rule Name="None" Module="reportingrules" Function="rule_None"><!--Do nothing. If this rule is the only one assigned to a sumup, the sumup will not appear in the reporting.--></Rule>
+			<Rule Name="Concatenate" Module="reportingrules" Function="rule_Concatenate"><!--Try concatenate its previous and next sumups if itself is a trivial sumup.-->
+			</Rule>
+			<Rule Name="ConvertIfCode" Module="reportingrules" Function="rule_ConvertIfCode"><!--Convert the sumup from one category to another if the activity codes in the sumup are all from a specified set.-->
+			</Rule>
+			<Rule Name="MergeAdjacent" Module="reportingrules" Function="rule_MergeAdjacent"><!--Merge adjacent sumups if they are from the same category.--></Rule>
 		</Rules>
 	</Reporting>
 </BdeRules>
