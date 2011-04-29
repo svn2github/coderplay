@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
+import os
 import sys
 from bdeerror import BdeErrorLog
 from bdefile import BdeFile, BdeSumup, BdeSumupList, BdeReporting, BdeReportingList
 from bdedb import BdeDB
-import activitycode
 import bdeutil
 import validationrules
 import sumuprules
@@ -20,11 +20,39 @@ class ProcessorConfig(object):
     
     def __init__(self):
         self.inputfile = None
-        self.outputfile = sys.stdout
+        self.outputfile = None
+        self.outputstream = sys.stdout
         self.verbose = False
         self.debug = False
-        self.rulesxml = 'bderules.xml'
-        self.settingsxml = 'bdesettings.xml'
+        # The XML file is assumed to be in the same directory as the source
+        # file. So we build the complete path to the file based on it.
+        srcdir = os.path.dirname(os.path.abspath(__file__))
+        self.rulesxml = os.path.join(srcdir, 'bderules.xml')
+        self.settingsxml = os.path.join(srcdir, 'bdesettings.xml')
+        
+    def readXMLConfig(self, settingsxml=None):
+        if settingsxml is None:
+            settingsxml = self.settingsxml
+        tree = bdeutil.readXMLTree(settingsxml)
+        node = tree.find('General')
+        
+        inputfile = node.find('InputFile').text
+        if inputfile is not None:
+            self.inputfile = inputfile
+            
+        outputfile = node.find('OutputFile').text
+        if outputfile is not None:
+            self.outputfile = outputfile
+            self.outputstream = open(outputfile, 'w')
+            
+        if node.find('Verbose').text == 'true':
+            self.verbose = True
+        else:
+            self.verbose = False
+        if node.find('Debug').text == 'true':
+            self.debug = True
+        else:
+            self.debug = False
 
 
 class ProcessorResult(object):
@@ -86,7 +114,7 @@ def bdeprocessor(config):
     
     # Set every sumup to be None at the beginning, meaning
     # no sumup is current happening.
-    categoryNames = activitycode.codeOf.keys()
+    categoryNames = sumupRules.keys()
     sumupCurrent = {}
     for categoryName in categoryNames:
         sumupCurrent[categoryName] = None
@@ -95,7 +123,7 @@ def bdeprocessor(config):
     # Data sum-ups
     for line in bdefile.getCountableLines():
         # Which category the code belongs to
-        categoryName = activitycode.findCategory(line.getActivityCode())
+        categoryName = sumuprules.findCategory(line.getActivityCode())
         
         # Process the code from this line belongs to a required category
         if categoryName is not None:
@@ -130,7 +158,7 @@ def bdeprocessor(config):
     print 'Data reporting finished.'
     if config.debug:
         reportingList.show()
-    reportingList.report(config.outputfile)
+    reportingList.report(config.outputstream)
     result.reportingList = reportingList
 
     return result
@@ -138,9 +166,7 @@ def bdeprocessor(config):
 
 if __name__ == '__main__':
     config = ProcessorConfig()
-    config.inputfile = 'good.bde'
-    config.verbose = True
-    config.debug = True
+    config.readXMLConfig()
     
     result = bdeprocessor(config)
     

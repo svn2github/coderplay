@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.example.org/NewXMLSchema"
+	xmlns:tns="http://www.example.org/NewXMLSchema"
+	elementFormDefault="qualified">
+
+	<element name="BdeSettings" type="tns:BdeSettingsType"></element>
+
+
+
+
+	<complexType name="BdeSettingsType">
+		<sequence>
+            <element ref="tns:Header"></element>
+            <element ref="tns:General"></element>
+			<element name="Validations" type="tns:ValidationsType"></element>
+			<element name="Sumups" type="tns:SumupsType"></element>
+			<element name="Reporting" type="tns:ReportingType"></element>
+		</sequence>
+	</complexType>
+
+	<complexType name="ValidationsType">
+		<sequence>
+			<element name="Action" type="tns:ActionType"></element>
+		</sequence>
+	</complexType>
+
+	<complexType name="ActionType">
+		<sequence>
+			<element name="Rule" type="tns:RuleType"
+				maxOccurs="unbounded" minOccurs="0">
+				<simpleType>
+					<restriction base="string"></restriction>
+				</simpleType>
+			</element>
+		</sequence>
+	</complexType>
+
+	<complexType name="RuleType">
+		<sequence>
+			<element name="Variable" type="tns:VariableType"
+				maxOccurs="unbounded" minOccurs="0">
+			</element>
+		</sequence>
+		<attribute name="Name" type="string"></attribute>
+	</complexType>
+
+	<complexType name="VariableType">
+		<attribute name="Name" type="string"></attribute>
+		<attribute name="Type">
+			<simpleType>
+				<restriction base="string">
+					<enumeration value="int"></enumeration>
+					<enumeration value="float"></enumeration>
+					<enumeration value="str"></enumeration>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="List" type="boolean"></attribute>
+		<attribute name="Value" type="string"></attribute>
+	</complexType>
+
+	<complexType name="SumupsType">
+		<sequence>
+			<element name="Categories" type="tns:SumupCategoriesType"></element>
+		</sequence>
+	</complexType>
+
+	<complexType name="CategoriesType">
+		<sequence>
+			<element name="Category" type="tns:ReportingCategoryType"></element>
+		</sequence>
+	</complexType>
+
+	<complexType name="ReportingType">
+		<sequence>
+			<element name="Categories" type="tns:CategoriesType"></element>
+		</sequence>
+	</complexType>
+
+	<complexType name="SumupCategoryType">
+		<sequence>
+			<element name="Member" maxOccurs="unbounded"
+				minOccurs="1">
+				<complexType>
+					<sequence>
+						<element name="Status">
+							<complexType>
+								<sequence>
+									<element name="Contains"
+										type="string" maxOccurs="unbounded" minOccurs="0">
+									</element>
+									<element name="Except" type="string"
+										maxOccurs="unbounded" minOccurs="0">
+									</element>
+								</sequence>
+							</complexType>
+						</element>
+						<element name="Code">
+							<complexType>
+								<sequence>
+									<element name="Contains"
+										type="string" maxOccurs="unbounded" minOccurs="0">
+									</element>
+									<element name="Except" type="string"
+										maxOccurs="unbounded" minOccurs="0">
+									</element>
+								</sequence>
+							</complexType>
+						</element>
+					</sequence>
+					<attribute name="Name" type="string"></attribute>
+				</complexType>
+			</element>
+			<element name="StartRule" type="tns:RuleType"></element>
+			<element name="TerminateRule" type="tns:RuleType"></element>
+			<element name="EndRule" type="tns:RuleType"></element>
+		</sequence>
+		<attribute name="Name" type="string"></attribute>
+	</complexType>
+
+
+	<complexType name="ReportingCategoryType">
+		<sequence>
+			<element name="Rules">
+				<complexType>
+					<sequence>
+						<element name="Rule" type="tns:RuleType"></element>
+					</sequence>
+				</complexType>
+			</element>
+		</sequence>
+		<attribute name="Name" type="string"></attribute>
+	</complexType>
+
+
+	<complexType name="SumupCategoriesType">
+		<sequence>
+			<element name="Category" type="tns:SumupCategoryType"></element>
+		</sequence>
+	</complexType>
+
+	<element name="General" type="tns:GeneralType"></element>
+
+	<complexType name="GeneralType">
+		<sequence>
+			<element name="InputFile">
+				<simpleType>
+					<restriction base="string">
+						<whiteSpace value="collapse"></whiteSpace>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="OutputFile">
+				<simpleType>
+					<restriction base="string">
+						<whiteSpace value="collapse"></whiteSpace>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="Verbose" type="boolean"></element>
+			<element name="Debug" type="boolean"></element>
+		</sequence>
+	</complexType>
+
+	<element name="Header" type="tns:HeaderType"></element>
+
+	<complexType name="HeaderType">
+		<sequence>
+			<element name="Client">
+				<complexType>
+					<sequence>
+						<element name="Name" type="string"
+							default="Unknown Client">
+						</element>
+						<element name="ID" type="string" maxOccurs="1"
+							minOccurs="0">
+						</element>
+						<element name="Address" type="string"
+							maxOccurs="1" minOccurs="0">
+						</element>
+						<element name="Contact" type="string"
+							maxOccurs="1" minOccurs="0">
+						</element>
+					</sequence>
+				</complexType>
+			</element>
+			<element name="Operator">
+				<complexType>
+					<sequence>
+						<element name="Name" type="string"
+							default="Anonymous">
+						</element>
+						<element name="Date" type="dateTime"></element>
+					</sequence>
+				</complexType>
+			</element>
+			<element name="Notes" type="string" maxOccurs="1" minOccurs="0"></element>
+		</sequence>
+	</complexType>
+</schema>

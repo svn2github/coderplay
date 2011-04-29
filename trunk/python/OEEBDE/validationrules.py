@@ -43,7 +43,7 @@ class ValidationRule(object):
             
 
 # Build the validation rules dictionary, which contains the validation rule objects
-def buildValidationRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
+def buildValidationRules(rulesxml, settingsxml):
     validationRules = {}
     # Read the XML file for validation settings
     tree = bdeutil.readXMLTree(settingsxml)

@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BdeSettings>
+<BdeSettings xsi:noNamespaceSchemaLocation="bdesettings.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Header>
+		<Client>
+			<Name>Unknown Client</Name>
+		</Client>
+		<Operator>
+			<Name>Anonymous</Name>
+			<Date>2001-12-31T12:00:00</Date>
+		</Operator>
+	</Header>
+	<General>
+		<InputFile>good.bde</InputFile>
+		<OutputFile></OutputFile>
+		<Verbose>true</Verbose>
+		<Debug>true</Debug>
+	</General>
 	<Validations>
 		<Action>
 			<Rule Name="RCode"></Rule>
@@ -67,26 +82,26 @@
 			<Category Name="MR">
 				<Rules>
 					<Rule Name="Concatenate">
-						<Variable Name="SIG_DURATION" Type="float" List="0"
+						<Variable Name="SIG_DURATION" Type="float" List="false"
 							Value="0.08333333">
 						</Variable>
-						<Variable Name="SIG_IMPCOUNT" Type="int" List="0" Value="20"></Variable>
+						<Variable Name="SIG_IMPCOUNT" Type="int" List="false" Value="20"></Variable>
 					</Rule>
 				</Rules>
 			</Category>
 			<Category Name="Prod">
 				<Rules>
 					<Rule Name="ConvertIfCode">
-						<Variable Name="from_sumup" Type="str" List="0" Value="Prod"></Variable>
-						<Variable Name="to_sumup" Type="str" List="0" Value="MR"></Variable>
-						<Variable Name="onlycodes" Type="str" List="1" Value="@118"></Variable>
-						<Variable Name="onlycodes" Type="str" List="1" Value="@119"></Variable>
+						<Variable Name="from_sumup" Type="str" List="false" Value="Prod"></Variable>
+						<Variable Name="to_sumup" Type="str" List="false" Value="MR"></Variable>
+						<Variable Name="onlycodes" Type="str" List="true" Value="@118"></Variable>
+						<Variable Name="onlycodes" Type="str" List="true" Value="@119"></Variable>
 					</Rule>
 					<Rule Name="Concatenate">
-						<Variable Name="SIG_DURATION" Type="float" List="0"
+						<Variable Name="SIG_DURATION" Type="float" List="false"
 							Value="0.08333333">
 						</Variable>
-						<Variable Name="SIG_IMPCOUNT" Type="int" List="0" Value="20"></Variable>
+						<Variable Name="SIG_IMPCOUNT" Type="int" List="false" Value="20"></Variable>
 					</Rule>
 				</Rules>
 			</Category>

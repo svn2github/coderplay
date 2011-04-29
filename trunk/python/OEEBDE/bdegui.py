@@ -9,14 +9,16 @@ def notdone():
     showerror('Not implemented', 'Not yet available')
 
 def askopenfilename():
-    filename = tkFileDialog.askopenfilename(filetypes=[('BDE Files','*.bde'),('All files', '*')])
+    filename = tkFileDialog.askopenfilename(
+        title='Select the XML setting file',
+        filetypes=[('XML Files','*.xml'),('All files', '*')])
     if not filename:
         return
     else:
         print 'working on %s' % filename
 
     config = bdeprocessor.ProcessorConfig()
-    config.inputfile = filename
+    config.readXMLConfig(filename)
     bdeprocessor.bdeprocessor(config)
     
 

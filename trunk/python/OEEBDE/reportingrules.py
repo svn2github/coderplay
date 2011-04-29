@@ -45,7 +45,7 @@ class ReportingRule(object):
             routine(idx, sumupList, self, reportingList)
             
 
-def buildReportingRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
+def buildReportingRules(rulesxml, settingsxml):
     reportRules = {}
     tree = bdeutil.readXMLTree(settingsxml)
     node = tree.find('Reporting/Categories')

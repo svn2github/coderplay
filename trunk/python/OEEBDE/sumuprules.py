@@ -7,6 +7,7 @@ import bdeutil
 class SumupRule(object):
     def __init__(self, categoryName):
         self.categoryName = categoryName
+        self.codes = []
         self.startSumupRule = None
         self.terminateSumupRule = None
         self.endSumupRule = None
@@ -52,7 +53,14 @@ class SumupRule(object):
             self.endSumupRoutine(line, self, sumupCurrent, sumupList)
             
 
-def bulidSumupRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
+# The category of a code
+categoryOf = {}
+
+def bulidSumupRules(rulesxml, settingsxml):
+    """
+    Read the XML settings file and build the SumupRule objects based on
+    the content of the file. 
+    """
     sumupRules = {}
     tree = bdeutil.readXMLTree(settingsxml)
     node = tree.find('Sumups/Categories')
@@ -60,6 +68,47 @@ def bulidSumupRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
         categoryName = element.attrib['Name']
         # Create the rule object
         thisRule = SumupRule(categoryName)
+        
+        # Read and build the code list for this sumup
+        for memberElement in element.getiterator('Member'):
+            member = memberElement.attrib['Name']
+            codes = [code for code in activitycode.lookupTable.keys() if activitycode.getName(code) == member]
+            
+            # Process any additional Status requirement
+            for statusElement in memberElement.getiterator('Status'):
+                # Build the contains and except list
+                containsStatus = []
+                exceptStatus = []
+                for containsElement in statusElement.getiterator('Contains'):
+                    containsStatus.append(containsElement.text)
+                for exceptElement in statusElement.getiterator('Except'):
+                    exceptStatus.append(exceptElement.text)
+                # Apply the contains and except 
+                if containsStatus != []:
+                    codes = [code for code in codes if activitycode.getStatus(code) in containsStatus]
+                if exceptStatus != []:
+                    codes = [code for code in codes if activitycode.getStatus(code) not in exceptStatus]
+            
+            # Process any additional Code requirement
+            for codeElement in memberElement.getiterator('Code'):
+                # Build the contains and except list
+                containsCode = []
+                exceptCode = []
+                for containsElement in codeElement.getiterator('Contains'):
+                    containsCode.append(containsElement.text)
+                for exceptElement in codeElement.getiterator('Except'):
+                    exceptCode.append(exceptElement.text)
+                # Apply the contains and except 
+                if containsCode != []:
+                    codes = [code for code in codes if code in containsCode]
+                if exceptCode != []:
+                    codes = [code for code in codes if code not in exceptCode]
+                
+            # Add the codes into this category
+            thisRule.codes.extend(codes)
+            # Map the code to the category for easy search based on code
+            for code in codes:
+                categoryOf[code] = categoryName
         
         # Process the start rule
         ruleElement = element.find('StartRule')
@@ -96,7 +145,12 @@ def bulidSumupRules(rulesxml='bderules.xml', settingsxml='bdesettings.xml'):
             
     return sumupRules
 
-
+def findCategory(code):
+    try:
+        return categoryOf[code]
+    except KeyError:
+        return None
+        
 
 def rule_SR_Whenever(line, sumupRule, sumupCurrent, sumupList):
     categoryName = sumupRule.categoryName
