@@ -33,6 +33,9 @@ class ProcessorConfig(object):
     def readXMLConfig(self, settingsxml=None):
         if settingsxml is None:
             settingsxml = self.settingsxml
+        else:
+            self.settingsxml = settingsxml
+            
         tree = bdeutil.readXMLTree(settingsxml)
         node = tree.find('General')
         
@@ -166,7 +169,7 @@ def bdeprocessor(config):
 
 if __name__ == '__main__':
     config = ProcessorConfig()
-    config.readXMLConfig()
+    config.readXMLConfig('bdesettings_printbound.xml')
     
     result = bdeprocessor(config)
     

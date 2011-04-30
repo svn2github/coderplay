@@ -92,7 +92,7 @@
 			</Category>
 			<Category Name="Prod">
 				<Rules>
-					<Rule Name="ConvertIfCode">
+					<Rule Name="Convert">
 						<Variable Name="from_sumup" Type="str" List="false" Value="Prod"></Variable>
 						<Variable Name="to_sumup" Type="str" List="false" Value="MR"></Variable>
 						<Variable Name="onlycodes" Type="str" List="true" Value="@118"></Variable>

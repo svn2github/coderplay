@@ -93,7 +93,7 @@ def rule_Concatenate(idx, sumupList, reportRule, reportingList):
     duration = theSum.calculateDuration()
     impressionTotal = theSum.calculateImpressionTotal()
     
-    if duration > reportRule.SIG_DURATION and impressionTotal > reportRule.SIG_IMPCOUNT:
+    if duration > reportRule.getattr('SIG_DURATION') and impressionTotal > reportRule.getattr('SIG_IMPCOUNT'):
         reporting.addSumup(theSum)
         reportingList.add(reporting)
         return 
@@ -164,20 +164,21 @@ def rule_MergeAdjacent(idx, sumupList, reportRule, reportingList):
     reportingList.remove(reporting)
     
     
-def rule_ConvertIfCode(idx, sumupList, reportRule, reportingList):
+def rule_Convert(idx, sumupList, reportRule, reportingList):
     theSum = sumupList[idx]
     if theSum.reporting is not None:
         return 
     
     if theSum.name != reportRule.from_sumup:
-        return 
+        return
     
-    for line in theSum.lines:
-        if line.getActivityCode() not in reportRule.onlycodes:
-            return 
-        
+    onlycodes = reportRule.getattr('onlycodes')
+    if onlycodes is not None:
+        for line in theSum.lines:
+            if line.getActivityCode() not in onlycodes:
+                return
+    
+    # Convert the sumup category            
     theSum.name = reportRule.to_sumup
-    
-    return 
     
     

@@ -81,9 +81,9 @@
 			<Rule Name="None" Module="reportingrules" Function="rule_None"><!--Simply add this sumup to the reporting and do nothing else.--></Rule>
 			<Rule Name="Concatenate" Module="reportingrules" Function="rule_Concatenate"><!--Try concatenate its previous and next sumups if itself is a trivial sumup.-->
 			</Rule>
-			<Rule Name="ConvertIfCode" Module="reportingrules" Function="rule_ConvertIfCode"><!--Convert the sumup from one category to another if the activity codes in the sumup are all from a specified set.-->
-			</Rule>
+			<Rule Name="Convert" Module="reportingrules" Function="rule_Convert"><!--Convert the sumup from one category to another category.--></Rule>
 			<Rule Name="MergeAdjacent" Module="reportingrules" Function="rule_MergeAdjacent"><!--Merge adjacent sumups if they are from the same category.--></Rule>
+			
 		</Rules>
 	</Reporting>
 </BdeRules>
