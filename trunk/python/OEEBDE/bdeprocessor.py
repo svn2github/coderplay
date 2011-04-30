@@ -110,7 +110,7 @@ def bdeprocessor(config):
     
     
     # Build the Sumup Rules object
-    sumupRules = sumuprules.bulidSumupRules(config.rulesxml, config.settingsxml)
+    sumupRules = sumuprules.buildSumupRules(config.rulesxml, config.settingsxml)
     
     # The overall sumup list
     sumupList = BdeSumupList()
@@ -169,7 +169,7 @@ def bdeprocessor(config):
 
 if __name__ == '__main__':
     config = ProcessorConfig()
-    config.readXMLConfig('bdesettings_printbound.xml')
+    config.readXMLConfig()
     
     result = bdeprocessor(config)
     

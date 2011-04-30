@@ -93,7 +93,14 @@ def rule_Concatenate(idx, sumupList, reportRule, reportingList):
     duration = theSum.calculateDuration()
     impressionTotal = theSum.calculateImpressionTotal()
     
-    if duration > reportRule.getattr('SIG_DURATION') and impressionTotal > reportRule.getattr('SIG_IMPCOUNT'):
+    SIG_DURATION = reportRule.getattr('SIG_DURATION')
+    if SIG_DURATION is None:
+        SIG_DURATION = 0.08333
+    SIG_IMPCOUNT = reportRule.getattr('SIG_IMPCOUNT')
+    if SIG_IMPCOUNT is None:
+        SIG_IMPCOUNT = 20
+    
+    if duration > SIG_DURATION and impressionTotal > SIG_IMPCOUNT:
         reporting.addSumup(theSum)
         reportingList.add(reporting)
         return 

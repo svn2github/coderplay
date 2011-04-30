@@ -57,14 +57,22 @@
 	<Sumups>
 		<Rules>
 			<StartRules>
-				<Rule Name="Whenever" Module="sumuprules" Function="rule_SR_Whenever"><!--Start whenever the corresponding codes are read.--></Rule>
+				<Rule Name="Whenever" Module="sumuprules" Function="rule_SR_Whenever"><!--Start whenever the corresponding codes are read.--><Variables>
+	<Variable Name="onlyif" Type="str" List="true" DefaultValue=""></Variable>
+	<Variable Name="ifnot" Type="str" List="true" DefaultValue=""></Variable>
+	</Variables></Rule>
 				<Rule Name="OnCode" Module="sumuprules" Function="rule_SR_OnCode"><!--Start only when A specific code is read.-->
+				<Variables>
+	<Variable Name="onlyif" Type="str" List="true" DefaultValue=""></Variable>
+	<Variable Name="ifnot" Type="str" List="true" DefaultValue=""></Variable>
+	</Variables>
 				</Rule>
 				<Rule Name="W-up" Module="sumuprules" Function="rule_SR_Wup"><!--Specialized for W-up only. Working based on the On/Off status of the W-up codes.-->
 				</Rule>
 			</StartRules>
 			<TerminateRules>
-				<Rule Name="All" Module="sumuprules" Function="rule_TR_All"><!--Terminate all other running sumups.-->
+				<Rule Name="All" Module="sumuprules" Function="rule_TR_All"><!--Terminate all other running sumups.--><Variables>
+				<Variable Name="except" Type="str" List="true" DefaultValue=""></Variable></Variables>
 				</Rule>
 				<Rule Name="None" Module="sumuprules" Function="rule_TR_None"><!--Do NOT terminate any other running sumups.--></Rule>
 			</TerminateRules>
@@ -80,8 +88,15 @@
 		<Rules>
 			<Rule Name="None" Module="reportingrules" Function="rule_None"><!--Simply add this sumup to the reporting and do nothing else.--></Rule>
 			<Rule Name="Concatenate" Module="reportingrules" Function="rule_Concatenate"><!--Try concatenate its previous and next sumups if itself is a trivial sumup.-->
+			<Variables>
+			<Variable Name="SIG_DURATION" Type="float" List="false" DefaultValue="0.08333"></Variable>
+			<Variable Name="SIG_IMPCOUNT" Type="int" List="false" DefaultValue="20"></Variable>
+			</Variables>
 			</Rule>
-			<Rule Name="Convert" Module="reportingrules" Function="rule_Convert"><!--Convert the sumup from one category to another category.--></Rule>
+			<Rule Name="Convert" Module="reportingrules" Function="rule_Convert"><!--Convert the sumup from one category to another category.-->
+			<Variables>
+			<Variable Name="onlycodes" Type="str" List="true" DefaultValue=""></Variable>
+			</Variables></Rule>
 			<Rule Name="MergeAdjacent" Module="reportingrules" Function="rule_MergeAdjacent"><!--Merge adjacent sumups if they are from the same category.--></Rule>
 			
 		</Rules>

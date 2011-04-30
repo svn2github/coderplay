@@ -23,8 +23,11 @@ class BdeFile(object):
         self.lines = []
              
     def read(self, filename=None):
-        if filename == None:
+        if filename is None:
             filename = self.filename
+        else:
+            self.filename = filename
+            
         self.lines = []
         lines = csv.reader(open(filename, 'r'), delimiter="\t")
         for ii, line in enumerate(lines):

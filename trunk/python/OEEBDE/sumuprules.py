@@ -5,6 +5,10 @@ from bdefile import BdeSumup
 import bdeutil
 
 class SumupRule(object):
+    
+    # The category of a code
+    categoryOf = {}
+    
     def __init__(self, categoryName):
         self.categoryName = categoryName
         self.codes = []
@@ -54,14 +58,15 @@ class SumupRule(object):
             
 
 # The category of a code
-categoryOf = {}
+#categoryOf = {}
 
-def bulidSumupRules(rulesxml, settingsxml):
+def buildSumupRules(rulesxml, settingsxml):
     """
     Read the XML settings file and build the SumupRule objects based on
     the content of the file. 
     """
     sumupRules = {}
+    SumupRule.categoryOf = {}
     tree = bdeutil.readXMLTree(settingsxml)
     node = tree.find('Sumups/Categories')
     for element in node.getiterator('Category'):
@@ -108,7 +113,7 @@ def bulidSumupRules(rulesxml, settingsxml):
             thisRule.codes.extend(codes)
             # Map the code to the category for easy search based on code
             for code in codes:
-                categoryOf[code] = categoryName
+                SumupRule.categoryOf[code] = categoryName
         
         # Process the start rule
         ruleElement = element.find('StartRule')
@@ -147,37 +152,56 @@ def bulidSumupRules(rulesxml, settingsxml):
 
 def findCategory(code):
     try:
-        return categoryOf[code]
+        return SumupRule.categoryOf[code]
     except KeyError:
         return None
         
 
 def rule_SR_Whenever(line, sumupRule, sumupCurrent, sumupList):
     categoryName = sumupRule.categoryName
+    
     ifnot = sumupRule.getattr('ifnot')
-    if type(ifnot).__name__ == 'list':
+    if ifnot is not None:
         for ifnotcate in ifnot:
             if sumupCurrent[ifnotcate] is not None:
                 return
-    else:
-        if ifnot is not None and sumupCurrent[ifnot] is not None:
+    
+    onlyif = sumupRule.getattr('onlyif')
+    if onlyif is not None:
+        startnow = False
+        for onlyifcate in onlyif:
+            if sumupCurrent[onlyifcate] is not None:
+                startnow = True
+                break;
+        if not startnow:
             return
+        
     sumupCurrent[categoryName] = BdeSumup(categoryName)
     sumupCurrent[categoryName].addLine(line)
 
 def rule_SR_OnCode(line, sumupRule, sumupCurrent, sumupList):
     categoryName = sumupRule.categoryName
+    
     ifnot = sumupRule.getattr('ifnot')
-    if type(ifnot).__name__ == 'list':
+    if ifnot is not None:
         for ifnotcate in ifnot:
             if sumupCurrent[ifnotcate] is not None:
                 return
-    else:
-        if ifnot is not None and sumupCurrent[ifnot] is not None:
+    
+    onlyif = sumupRule.getattr('onlyif')
+    if onlyif is not None:
+        startnow = False
+        for onlyifcate in onlyif:
+            if sumupCurrent[onlyifcate] is not None:
+                startnow = True
+                break;
+        if not startnow:
             return
+        
     if line.getActivityCode() == sumupRule.startCode:
         sumupCurrent[categoryName] = BdeSumup(categoryName)
         sumupCurrent[categoryName].addLine(line)
+        
     
 def rule_SR_Wup(line, sumupRule, sumupCurrent, sumupList):
     categoryName = sumupRule.categoryName
@@ -230,3 +254,6 @@ def rule_ER_Wup(line, sumupRule, sumupCurrent, sumupList):
         sumupList.add(sumupCurrent[categoryName])
         sumupCurrent[categoryName] = None
 
+if __name__ == '__main__':
+    rules = buildSumupRules('bderules.xml', 'bdesettings.xml')
+    print SumupRule.categoryOf
