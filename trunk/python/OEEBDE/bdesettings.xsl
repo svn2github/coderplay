@@ -4,11 +4,11 @@
 
 	<xsl:template match="/">
 		<HTML>
-			<BODY bgcolor="white">
+			<head>
+				<title>OEE BDE File Processing Configurations</title>
+			</head>
 
-				<head>
-					<title>OEE BDE File Processing Configurations</title>
-				</head>
+			<BODY bgcolor="white">
 				<table border="0" cellpadding="0" cellspacing="0">
 					<tr bgcolor="#003A7D">
 						<td>
