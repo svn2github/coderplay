@@ -24,7 +24,7 @@
 				</style>
 			</head>
 
-			<BODY bgcolor="white">
+			<BODY bgcolor="#BDCBDE">
 				<table width="100%" border="0" cellpadding="0" cellspacing="0">
 					<tr bgcolor="#003A7D">
 						<td width="83%" valign="middle">
@@ -56,18 +56,25 @@
 
 					<h4>Sumup Configuration</h4>
 					<table border="1">
-						<tr bgcolor="#BDCBDE">
-							<th>Name</th>
-							<th>Start Rule</th>
-							<th>Terminate Rule</th>
-							<th>End Rule</th>
+						<tr color="#BDCBDE">
+							<th>
+								<font color="#003A7D">Name</font>
+							</th>
+							<th>
+								<font color="#003A7D">Start Rule</font>
+							</th>
+							<th>
+								<font color="#003A7D">Terminate Rule</font>
+							</th>
+							<th>
+								<font color="#003A7D">End Rule</font>
+							</th>
 						</tr>
 						<xsl:for-each select="BdeSettings/Sumups/Categories/Category">
 							<tr>
 								<td>
 									<xsl:value-of select="@Name" />
 								</td>
-
 								<td>
 									<xsl:value-of select="StartRule/@Name" />
 								</td>
@@ -79,15 +86,18 @@
 								</td>
 							</tr>
 						</xsl:for-each>
-
 					</table>
 
 					<br></br>
 					<h4>Reporting Configuration</h4>
 					<table border="1">
 						<tr bgcolor="#BDCBDE">
-							<th>Name</th>
-							<th>Rules</th>
+							<th>
+								<font color="#003A7D">Name</font>
+							</th>
+							<th>
+								<font color="#003A7D">Rules</font>
+							</th>
 						</tr>
 						<xsl:for-each select="BdeSettings/Reporting/Categories/Category">
 							<tr>
@@ -103,7 +113,6 @@
 							</tr>
 						</xsl:for-each>
 					</table>
-
 				</div>
 			</BODY>
 		</HTML>
