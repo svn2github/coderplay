@@ -83,26 +83,24 @@
 			<Category Name="MR">
 				<Rules>
 					<Rule Name="Concatenate">
-						<Variable Name="SIG_DURATION" Type="float" List="false"
-							Value="0.08333333">
+						<Variable Name="SIG_DURATION" Value="0.08333">
 						</Variable>
-						<Variable Name="SIG_IMPCOUNT" Type="int" List="false" Value="20"></Variable>
+						<Variable Name="SIG_IMPCOUNT" Value="20"></Variable>
 					</Rule>
 				</Rules>
 			</Category>
 			<Category Name="Prod">
 				<Rules>
 					<Rule Name="Convert">
-						<Variable Name="from_sumup" Type="str" List="false" Value="Prod"></Variable>
-						<Variable Name="to_sumup" Type="str" List="false" Value="MR"></Variable>
-						<Variable Name="onlycodes" Type="str" List="true" Value="@118"></Variable>
-						<Variable Name="onlycodes" Type="str" List="true" Value="@119"></Variable>
+						<Variable Name="from_sumup" Value="Prod"></Variable>
+						<Variable Name="to_sumup" Value="MR"></Variable>
+						<Variable Name="onlycodes" Value="@118"></Variable>
+						<Variable Name="onlycodes" Value="@119"></Variable>
 					</Rule>
 					<Rule Name="Concatenate">
-						<Variable Name="SIG_DURATION" Type="float" List="false"
-							Value="0.08333333">
+						<Variable Name="SIG_DURATION" Value="0.08333333">
 						</Variable>
-						<Variable Name="SIG_IMPCOUNT" Type="int" List="false" Value="20"></Variable>
+						<Variable Name="SIG_IMPCOUNT" Value="20"></Variable>
 					</Rule>
 				</Rules>
 			</Category>

@@ -3,13 +3,27 @@
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 	<xsl:template match="/">
-		<HTML>
-			<head>
-				<title>OEE BDE File Processing Configurations</title>
-			</head>
+
+            <HTML xmlns="http://www.w3.org/1999/xhtml" >
+            <head>
+                <title>OEE BDE File Processing Configurations</title>
+                <style type="text/css">
+                    .style1
+                    {
+                        width: 100%;
+                        background-color: #003A7D;
+                    }
+                    body {
+                        margin-left: 0px;
+                        margin-top: 0px;
+                        margin-right: 0px;
+                        margin-bottom: 0px;
+                    }
+                </style>
+            </head>
 
 			<BODY bgcolor="white">
-				<table border="0" cellpadding="0" cellspacing="0">
+				<table border="0" cellpadding="0" cellspacing="0" class="style1">
 					<tr bgcolor="#003A7D">
 						<td>
 							<img

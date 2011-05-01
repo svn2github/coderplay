@@ -54,16 +54,13 @@ def buildReportingRules(rulesxml, settingsxml):
         thisRule = ReportingRule(categoryName)
         for ruleElement in element.find('Rules').getiterator('Rule'):
             thisRule.addReportRule(ruleElement.attrib['Name'])
-            # Looking for the rule description
-            for r in bdeutil.readXMLTree(rulesxml).find('Reporting/Rules').getiterator('Rule'):
-                if r.attrib['Name'] == ruleElement.attrib['Name']:
-                    moduleName = r.attrib['Module']
-                    functionName = r.attrib['Function']
-                    moduleName = __import__(moduleName)
-                    thisRule.addReportRoutine(getattr(moduleName, functionName))
-                    break
+            # Read rule definition
+            ruleDef = bdeutil.readRuleDefintiion(
+                ruleElement.attrib['Name'],
+                bdeutil.readXMLTree(rulesxml).find('Reporting/Rules'))
+            thisRule.addReportRoutine(ruleDef.routine)
             # Read any variables
-            bdeutil.readRuleVars(ruleElement, thisRule)
+            bdeutil.readRuleVars2(ruleElement, thisRule, ruleDef)
             
         # This rule is now complete
         reportRules[categoryName] = thisRule

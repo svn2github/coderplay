@@ -170,6 +170,8 @@ def bdeprocessor(config):
 if __name__ == '__main__':
     config = ProcessorConfig()
     config.readXMLConfig()
+    config.verbose = False
+    config.debug = False
     
     result = bdeprocessor(config)
     

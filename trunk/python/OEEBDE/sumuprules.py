@@ -119,31 +119,38 @@ def buildSumupRules(rulesxml, settingsxml):
         ruleElement = element.find('StartRule')
         # The rule name
         thisRule.startSumupRule = ruleElement.attrib['Name']
-        # Get any additional variables
-        bdeutil.readRuleVars(ruleElement, thisRule)
+        ruleDef = bdeutil.readRuleDefintiion(
+            ruleElement.attrib['Name'],
+            bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/StartRules'))
         # Set the routine 
-        thisRule.startSumupRoutine = bdeutil.readRuleRoutine(ruleElement.attrib['Name'],
-                                                             bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/StartRules'))
+        thisRule.startSumupRoutine = ruleDef.routine
+        # Get any additional variables
+        bdeutil.readRuleVars2(ruleElement, thisRule, ruleDef)
+        
         
         # Process the terminate rule
         ruleElement = element.find('TerminateRule')
         # The rule name
         thisRule.terminateSumupRule = ruleElement.attrib['Name']
-        # Get any additional variables
-        bdeutil.readRuleVars(ruleElement, thisRule)
+        ruleDef = bdeutil.readRuleDefintiion(
+            ruleElement.attrib['Name'],
+            bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/TerminateRules'))
         # Set the routine 
-        thisRule.terminateSumupRoutine = bdeutil.readRuleRoutine(ruleElement.attrib['Name'],
-                                                                 bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/TerminateRules'))
+        thisRule.terminateSumupRoutine = ruleDef.routine
+        # Get any additional variables
+        bdeutil.readRuleVars2(ruleElement, thisRule, ruleDef)
         
         # Process the end rule
         ruleElement = element.find('EndRule')
         # The rule name
         thisRule.endSumupRule = ruleElement.attrib['Name']
-        # Get any additional variables
-        bdeutil.readRuleVars(ruleElement, thisRule)
+        ruleDef = bdeutil.readRuleDefintiion(
+            ruleElement.attrib['Name'],
+            bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/EndRules'))
         # Set the routine 
-        thisRule.endSumupRoutine = bdeutil.readRuleRoutine(ruleElement.attrib['Name'],
-                                                           bdeutil.readXMLTree(rulesxml).find('Sumups/Rules/EndRules'))
+        thisRule.endSumupRoutine = ruleDef.routine
+        # Get any additional variables
+        bdeutil.readRuleVars2(ruleElement, thisRule, ruleDef)
         
         # This one rule is now complete
         sumupRules[categoryName] = thisRule

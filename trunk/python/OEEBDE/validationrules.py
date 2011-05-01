@@ -52,16 +52,18 @@ def buildValidationRules(rulesxml, settingsxml):
         ruleName = ruleElement.attrib['Name']
         # create the rule object
         thisRule = ValidationRule(ruleName)
+        # Set the routine defintion by reading the rules xml
+        ruleDef = bdeutil.readRuleDefintiion(
+            ruleElement.attrib['Name'],
+            bdeutil.readXMLTree(rulesxml).find('Validations/Rules'))
+        # The routine for the rule
+        thisRule.routine = ruleDef.routine
         # get any additional variables
-        bdeutil.readRuleVars(ruleElement, thisRule)
-        # Set the routine by reading the rules xml
-        thisRule.routine = bdeutil.readRuleRoutine(ruleElement.attrib['Name'],
-                                                   bdeutil.readXMLTree(rulesxml).find('Validations/Rules'))
+        bdeutil.readRuleVars2(ruleElement, thisRule, ruleDef)
         # Fill the rule dictionary
         validationRules[ruleName] = thisRule
         
     return validationRules
-            
 
 
 

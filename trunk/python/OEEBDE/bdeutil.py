@@ -28,23 +28,72 @@ def getConcatenatableSumup(sumup1, sumup2):
     return [element for element in sumup1 if element.name in commonNames], \
            [element for element in sumup2 if element.name in commonNames]
     
-def readRuleVars(ruleElement, ruleobj):
-    convertDict = {'int': int, 'float': float, 'str': str}
+def readRuleVars2(ruleElement, ruleobj, ruledef):
+    
+    allvars = ruledef.variables.keys()
     for varElement in ruleElement.getiterator('Variable'):
         varname = varElement.attrib['Name']
-        vartype = varElement.attrib['Type']
-        varvalue = convertDict[vartype](varElement.attrib['Value'])
-        # Whether this variable is an element of a list        
-        if varElement.attrib['List'] == 'true': # list
+        varvalue = ruledef.variables[varname].type(varElement.attrib['Value'])
+        if ruledef.variables[varname].isList:
             ruleobj.addListAttr(varname, varvalue)
         else: # scalar
             ruleobj.setattr(varname, varvalue)
+        try:
+            allvars.remove(varname)
+        except ValueError:
+            continue
+    # Set default value for any unprovided variables
+    for varname in allvars:
+        if ruledef.variables[varname].value is not None:
+            if ruledef.variables[varname].isList:
+                ruleobj.addListAttr(varname, ruledef.variables[varname].value)
+            else: # scalar
+                ruleobj.setattr(varname, ruledef.variables[varname].value)
+
+
+class RuleVariable(object):
+    
+    def __init__(self, varname, vartype, isList, varvalue):
+        self.name = varname
+        self.type = vartype
+        self.isList = isList
+        self.value = varvalue
         
-def readRuleRoutine(ruleName, rulesNode):
+class RuleDefinition(object):
+    
+    def __init__(self, ruleName, ruleRoutine, variables={}):
+        self.name = ruleName
+        self.routine = ruleRoutine
+        self.variables = variables
+        
+
+def readRuleDefintiion(ruleName, rulesNode):
     for r in rulesNode.getiterator('Rule'):
         if r.attrib['Name'] == ruleName:
             moduleName = r.attrib['Module']
             functionName = r.attrib['Function']
             moduleName = __import__(moduleName)
-            return getattr(moduleName, functionName)
+            # Read any additional variables for the rule
+            variables = {}
+            convertDict = {'int': int, 'float': float, 'str': str}
+            varsNode = r.find('Variables')
+            if varsNode is not None:
+                for varElement in varsNode.getiterator('Variable'):
+                    varname = varElement.attrib['Name']
+                    vartype = varElement.attrib['Type']
+                    if varElement.attrib['List'] == 'true':
+                        isList = True
+                    else:
+                        isList = False
+                    varvalue = varElement.attrib['DefaultValue']
+                    if varvalue == '':
+                        varvalue = None
+                    else:
+                        varvalue = convertDict[vartype](varvalue)
+                    variables[varname] = RuleVariable(varname, convertDict[vartype], isList, varvalue)
+            
+            # Now we have the full definition of the rule
+            return RuleDefinition(ruleName, getattr(moduleName, functionName), variables)
+
+
 

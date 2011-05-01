@@ -95,6 +95,8 @@
 			</Rule>
 			<Rule Name="Convert" Module="reportingrules" Function="rule_Convert"><!--Convert the sumup from one category to another category.-->
 			<Variables>
+			<Variable Name="from_sumup" Type="str" List="false" DefaultValue=""></Variable>
+			<Variable Name="to_sumup" Type="str" List="false" DefaultValue=""></Variable>
 			<Variable Name="onlycodes" Type="str" List="true" DefaultValue=""></Variable>
 			</Variables></Rule>
 			<Rule Name="MergeAdjacent" Module="reportingrules" Function="rule_MergeAdjacent"><!--Merge adjacent sumups if they are from the same category.--></Rule>

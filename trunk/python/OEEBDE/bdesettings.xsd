@@ -46,17 +46,7 @@
 	</complexType>
 
 	<complexType name="VariableType">
-		<attribute name="Name" type="string"></attribute>
-		<attribute name="Type">
-			<simpleType>
-				<restriction base="string">
-					<enumeration value="int"></enumeration>
-					<enumeration value="float"></enumeration>
-					<enumeration value="str"></enumeration>
-				</restriction>
-			</simpleType>
-		</attribute>
-		<attribute name="List" type="boolean"></attribute>
+		<attribute name="Name" type="string"></attribute>
 		<attribute name="Value" type="string"></attribute>
 	</complexType>
 
