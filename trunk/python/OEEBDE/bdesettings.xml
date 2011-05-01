@@ -92,7 +92,6 @@
 			<Category Name="Prod">
 				<Rules>
 					<Rule Name="Convert">
-						<Variable Name="from_sumup" Value="Prod"></Variable>
 						<Variable Name="to_sumup" Value="MR"></Variable>
 						<Variable Name="onlycodes" Value="@118"></Variable>
 						<Variable Name="onlycodes" Value="@119"></Variable>

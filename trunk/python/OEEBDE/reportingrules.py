@@ -173,9 +173,6 @@ def rule_Convert(idx, sumupList, reportRule, reportingList):
     if theSum.reporting is not None:
         return 
     
-    if theSum.name != reportRule.from_sumup:
-        return
-    
     onlycodes = reportRule.getattr('onlycodes')
     if onlycodes is not None:
         for line in theSum.lines:
@@ -183,6 +180,6 @@ def rule_Convert(idx, sumupList, reportRule, reportingList):
                 return
     
     # Convert the sumup category            
-    theSum.name = reportRule.to_sumup
+    theSum.name = reportRule.getattr('to_sumup')
     
     

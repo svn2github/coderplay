@@ -3,7 +3,7 @@
 import os
 import sys
 from bdeerror import BdeErrorLog
-from bdefile import BdeFile, BdeSumup, BdeSumupList, BdeReporting, BdeReportingList
+from bdefile import BdeFile, BdeSumupList, BdeReportingList
 from bdedb import BdeDB
 import bdeutil
 import validationrules
