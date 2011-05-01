@@ -4,53 +4,52 @@
 
 	<xsl:template match="/">
 
-            <HTML xmlns="http://www.w3.org/1999/xhtml" >
-            <head>
-                <title>OEE BDE File Processing Configurations</title>
-                <style type="text/css">
-                    .style1
-                    {
-                        width: 100%;
-                        background-color: #003A7D;
-                    }
-                    body {
-                        margin-left: 0px;
-                        margin-top: 0px;
-                        margin-right: 0px;
-                        margin-bottom: 0px;
-                    }
-                </style>
-            </head>
+		<HTML xmlns="http://www.w3.org/1999/xhtml">
+			<head>
+				<title>OEE BDE File Processing Configurations</title>
+				<style type="text/css">
+					body {
+					margin-left: 0px;
+					margin-top: 0px;
+					margin-right: 0px;
+					margin-bottom: 0px;
+					}
+					.style1 {
+					font-family: Arial,
+					Helvetica, sans-serif;
+					font-weight: bold;
+					}
+					.style2 {font-size: 24px}
+					.style3 {color: #FFFFFF}
+				</style>
+			</head>
 
 			<BODY bgcolor="white">
-				<table border="0" cellpadding="0" cellspacing="0" class="style1">
+				<table width="100%" border="0" cellpadding="0" cellspacing="0">
 					<tr bgcolor="#003A7D">
-						<td>
-							<img
-								src="http://www.au.heidelberg.com/www/img/560x13_hdm_area_top.gif" />
+						<td width="83%" valign="middle">
+							<div align="left" class="style1 style2">
+								<div align="center" class="style3">OEE BDE File Processing
+									Configurations
+								</div>
+							</div>
 						</td>
-						<td>
+						<td width="17%" valign="middle">
 							<img src="http://www.au.heidelberg.com/www/img/logo.gif" />
 						</td>
 					</tr>
 				</table>
+				<div>
 
-					<h2>
-						<font color="#003A7D">OEE BDE File Processing Configurations</font>
-					</h2>
 					<xsl:for-each select="BdeSettings/Header/Client">
 						<P>
-							<B>
-								<xsl:text>Client: </xsl:text>
-							</B>
+							<B>Client: </B>
 							<xsl:value-of select="Name" />
 						</P>
 					</xsl:for-each>
 					<xsl:for-each select="BdeSettings/Header/Operator">
 						<P>
-							<B>
-								<xsl:text>Operator: </xsl:text>
-							</B>
+							<B>Operator: </B>
 							<xsl:value-of select="Name"></xsl:value-of>
 						</P>
 					</xsl:for-each>
@@ -105,6 +104,7 @@
 						</xsl:for-each>
 					</table>
 
+				</div>
 			</BODY>
 		</HTML>
 	</xsl:template>
