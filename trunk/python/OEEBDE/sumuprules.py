@@ -165,6 +165,12 @@ def findCategory(code):
         
 
 def rule_SR_Whenever(line, sumupRule, sumupCurrent, sumupList):
+    '''
+    Start the sumup whenever corresponding codes are read. This behavoir
+    can be fined tuned by ifnot and onlyif variables.
+    ifnot, means the sumup will start if certain sumups are NOT currenlty running.
+    onlyif, means the sumup will start only if certain sumups are currently running.
+    '''
     categoryName = sumupRule.categoryName
     
     ifnot = sumupRule.getattr('ifnot')
@@ -179,7 +185,7 @@ def rule_SR_Whenever(line, sumupRule, sumupCurrent, sumupList):
         for onlyifcate in onlyif:
             if sumupCurrent[onlyifcate] is not None:
                 startnow = True
-                break;
+                break
         if not startnow:
             return
         
@@ -201,7 +207,7 @@ def rule_SR_OnCode(line, sumupRule, sumupCurrent, sumupList):
         for onlyifcate in onlyif:
             if sumupCurrent[onlyifcate] is not None:
                 startnow = True
-                break;
+                break
         if not startnow:
             return
         
@@ -211,6 +217,9 @@ def rule_SR_OnCode(line, sumupRule, sumupCurrent, sumupList):
         
     
 def rule_SR_Wup(line, sumupRule, sumupCurrent, sumupList):
+    '''
+    Special starting rule specifically for W-up sumup.
+    '''
     categoryName = sumupRule.categoryName
     if activitycode.getStatus(line.getActivityCode()) == 'ON':
         sumupCurrent[categoryName] = BdeSumup(categoryName)
@@ -218,22 +227,34 @@ def rule_SR_Wup(line, sumupRule, sumupCurrent, sumupList):
         sumupCurrent[categoryName].status += 1
 
 def rule_TR_All(line, sumupRule, sumupCurrent, sumupList):
+    '''
+    Terminate all other runing sumups. The sumups to be terminated
+    can be fine tuned through include and except variables.
+    '''
     categoryName = sumupRule.categoryName
-    for tname in sumupCurrent.keys():
-        if tname == categoryName:
-            continue
-        exceptCategory = sumupRule.getattr('except')
-        if exceptCategory is not None:
-            if type(exceptCategory).__name__ == 'list' and tname in exceptCategory:
-                continue
-            elif tname == exceptCategory:
-                continue
+    theSumsTobeTerminated = sumupCurrent.keys()
+    # Do not terminate self
+    theSumsTobeTerminated.remove(categoryName)
+    # The include and except variables    
+    includeCategory = sumupRule.getattr('include')
+    exceptCategory = sumupRule.getattr('except')
+    # tailor the sumups to be terminated by the include and except    
+    if includeCategory is not None:
+        theSumsTobeTerminated = [tname for tname in theSumsTobeTerminated if tname in includeCategory]
+    if exceptCategory is not None:
+        theSumsTobeTerminated = [tname for tname in theSumsTobeTerminated if tname not in exceptCategory]
+    
+    for tname in theSumsTobeTerminated:
         if sumupCurrent[tname] is not None:
             sumupCurrent[tname].addLine(line) # add the terminate line
             sumupList.add(sumupCurrent[tname])
             sumupCurrent[tname] = None
     
+    
 def rule_TR_None(line, sumupRule, sumupCurrent, sumupList):
+    '''
+    Simply add the Sumup into the reporting list. No special treament is required.
+    '''
     pass
 
 def rule_ER_ByOthers(line, sumupRule, sumupCurrent, sumupList):

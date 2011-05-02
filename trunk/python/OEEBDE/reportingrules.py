@@ -170,16 +170,26 @@ def rule_MergeAdjacent(idx, sumupList, reportRule, reportingList):
     
 def rule_Convert(idx, sumupList, reportRule, reportingList):
     theSum = sumupList[idx]
+    # This sumup must not be processed to any reporting before conversion
     if theSum.reporting is not None:
         return 
     
     onlycodes = reportRule.getattr('onlycodes')
+    
+    conditional = True
+    
     if onlycodes is not None:
         for line in theSum.lines:
             if line.getActivityCode() not in onlycodes:
-                return
+                conditional = False
+                break
     
     # Convert the sumup category            
-    theSum.name = reportRule.getattr('to_sumup')
+    if conditional: # If the condition is met
+        theSum.name = reportRule.getattr('to_sumup')
+    else: # If the condition is not met, we convert to else_sumup or remain unchanged.
+        name = reportRule.getattr('else_sumup')
+        if name is not None:
+            theSum.name = name
     
     
