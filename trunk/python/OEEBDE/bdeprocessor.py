@@ -1,5 +1,44 @@
 #!/usr/bin/env python
 
+"""
+Apr. 15, 2011
+
+@autor Yang Wang
+
+Followings are for doctest.
+
+>>> main()
+Data validation PASSED.
+Data sumup finished.
+Data reporting finished.
+0, 1, 2010-08-02 16:00:29, 66604, MR, 0.70, 1222
+0, 63, 2010-08-02 16:31:34, 66604, W-up, 0.18, 934
+0, 92, 2010-08-02 16:42:25, 66604, Prod, 1.10, 1816
+0, 99, 2010-08-02 16:42:33, 66604, W-up, 1.10, 1816
+0, 123, 2010-08-02 16:48:57, 66604, Downtime, 0.99, 1308
+0, 285, 2010-08-02 17:48:36, 66604, MR, 0.46, 939
+0, 340, 2010-08-02 18:16:18, 66604, Prod, 0.24, 1824
+0, 382, 2010-08-02 18:28:37, 66604, W-up, 0.04, 0
+0, 388, 2010-08-02 18:29:01, 66604, Downtime, 0.03, 0
+0, 398, 2010-08-02 18:31:14, 66604, MR, 0.33, 374
+0, 446, 2010-08-02 18:51:12, 66604, Prod, 0.36, 2330
+0, 521, 2010-08-02 19:08:43, 66604, W-up, 0.07, 0
+0, 527, 2010-08-02 19:09:00, 66604, Downtime, 0.06, 0
+0, 539, 2010-08-02 19:12:43, 66604, MR, 0.97, 2775
+0, 607, 2010-08-02 19:47:15, 66604, Downtime, 0.06, 0
+0, 608, 2010-08-02 19:47:23, 66604, W-up, 0.06, 0
+0, 665, 2010-08-02 20:11:07, 66604, Prod, 0.42, 2739
+0, 711, 2010-08-02 20:33:20, 66604, W-up, 0.05, 0
+0, 717, 2010-08-02 20:34:00, 66604, Downtime, 0.04, 0
+0, 728, 2010-08-02 20:36:07, 66604, MR, 0.26, 258
+0, 767, 2010-08-02 20:51:33, 66604, Prod, 0.30, 2434
+0, 799, 2010-08-02 21:05:33, 66604, Downtime, 0.07, 0
+0, 801, 2010-08-02 21:06:56, 66604, W-up, 0.05, 0
+0, 816, 2010-08-02 21:09:48, 66604, MR, 0.77, 2754
+0, 888, 2010-08-02 21:43:10, 66604, W-up, 0.13, 0
+0, 900, 2010-08-02 21:44:00, 66604, Downtime, 0.12, 0
+"""
+
 import os
 import sys
 from bdeerror import BdeErrorLog
@@ -10,11 +49,6 @@ import validationrules
 import sumuprules
 import reportingrules
 
-'''
-Created on 15/04/2011
-
-@author: yang
-'''
 
 class ProcessorConfig(object):
     
@@ -166,13 +200,15 @@ def bdeprocessor(config):
 
     return result
 
-
-if __name__ == '__main__':
+def main():
     config = ProcessorConfig()
     config.readXMLConfig()
     config.verbose = False
     config.debug = False
-    
     result = bdeprocessor(config)
+    
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(verbose=True)
     
 

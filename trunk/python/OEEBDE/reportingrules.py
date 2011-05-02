@@ -169,6 +169,12 @@ def rule_MergeAdjacent(idx, sumupList, reportRule, reportingList):
     
     
 def rule_Convert(idx, sumupList, reportRule, reportingList):
+    '''
+    Convert a Sumup from one category to another. The behavior can be fine
+    tuned by providing test conditions.
+    To make sense, the conversion has to be done as the first step as a
+    report processing.
+    '''
     theSum = sumupList[idx]
     # This sumup must not be processed to any reporting before conversion
     if theSum.reporting is not None:
