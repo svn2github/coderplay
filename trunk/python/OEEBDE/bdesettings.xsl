@@ -4,11 +4,12 @@
 
 	<xsl:template match="/">
 
-		<HTML xmlns="http://www.w3.org/1999/xhtml">
+		<html xmlns="http://www.w3.org/1999/xhtml">
 			<head>
 				<title>OEE BDE File Processing Configurations</title>
 				<style type="text/css">
 					body {
+					background-color: #BDCBDE;
 					margin-left: 0px;
 					margin-top: 0px;
 					margin-right: 0px;
@@ -24,7 +25,7 @@
 				</style>
 			</head>
 
-			<BODY bgcolor="#BDCBDE">
+			<body>
 				<table width="100%" border="0" cellpadding="0" cellspacing="0">
 					<tr bgcolor="#003A7D">
 						<td width="83%" valign="middle">
@@ -42,20 +43,20 @@
 				<div>
 
 					<xsl:for-each select="BdeSettings/Header/Client">
-						<P>
-							<B>Client: </B>
+						<p>
+							<b>Client: </b>
 							<xsl:value-of select="Name" />
-						</P>
+						</p>
 					</xsl:for-each>
 					<xsl:for-each select="BdeSettings/Header/Operator">
-						<P>
-							<B>Operator: </B>
+						<p>
+							<b>Operator: </b>
 							<xsl:value-of select="Name"></xsl:value-of>
-						</P>
+						</p>
 					</xsl:for-each>
 
-					<h4>Sumup Configuration</h4>
 					<table border="1">
+						<caption><b>Sumup Configuration</b></caption>
 						<tr color="#BDCBDE">
 							<th>
 								<font color="#003A7D">Name</font>
@@ -72,9 +73,9 @@
 						</tr>
 						<xsl:for-each select="BdeSettings/Sumups/Categories/Category">
 							<tr>
-								<td>
+								<th>
 									<xsl:value-of select="@Name" />
-								</td>
+								</th>
 								<td>
 									<xsl:value-of select="StartRule/@Name" />
 								</td>
@@ -89,8 +90,8 @@
 					</table>
 
 					<br></br>
-					<h4>Reporting Configuration</h4>
 					<table border="1">
+						<caption><b>Reporting Configuration</b></caption>
 						<tr bgcolor="#BDCBDE">
 							<th>
 								<font color="#003A7D">Name</font>
@@ -101,9 +102,9 @@
 						</tr>
 						<xsl:for-each select="BdeSettings/Reporting/Categories/Category">
 							<tr>
-								<td>
+								<th>
 									<xsl:value-of select="@Name"></xsl:value-of>
-								</td>
+								</th>
 								<td>
 									<xsl:for-each select="Rules/Rule">
 										<xsl:value-of select="@Name" />
@@ -114,8 +115,8 @@
 						</xsl:for-each>
 					</table>
 				</div>
-			</BODY>
-		</HTML>
+			</body>
+		</html>
 	</xsl:template>
 
 
