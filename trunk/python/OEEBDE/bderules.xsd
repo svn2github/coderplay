@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="BdeRules">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="Validations" />
+                <xs:element ref="Sumups" />
+                <xs:element ref="Reporting" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Validations">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Rules" type="RulesType" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="RulesType">
+        <xs:sequence>
+            <xs:element name="Rule" maxOccurs="unbounded" >
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="Code" type="xs:integer" />
+                        <xs:element name="Description" type="xs:string" />
+                    </xs:all>
+                    <xs:attribute name="Name" type="xs:string" use="required" />
+                    <xs:attribute name="Function" type="xs:NMTOKEN" use="required" />
+                    <xs:attribute name="Module" type="xs:NMTOKEN" use="required" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <xs:element name="Sumups">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Rules" type="SumupRulesType" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="SumupRulesType" >
+        <xs:sequence>
+            <xs:element name="StartRules" type="SumupRuleType" />
+            <xs:element name="TerminateRules" type="SumupRuleType" />
+            <xs:element name="EndRules" type="SumupRuleType" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="SumupRuleType">
+        <xs:sequence>
+            <xs:element name="Rule" type="RuleType" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="RuleType">
+        <xs:sequence>
+            <xs:element ref="Variables" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required" />
+        <xs:attribute name="Function" type="xs:NMTOKEN" use="required" />
+        <xs:attribute name="Module" type="xs:NMTOKEN" use="required" />
+    </xs:complexType>
+
+    <xs:element name="Reporting" >
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Rules" type="ReportingRulesType" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="ReportingRulesType">
+        <xs:sequence>
+            <xs:element name="Rule" type="RuleType" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="Variables">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="Variable" maxOccurs="unbounded" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Variable">
+        <xs:complexType>
+            <xs:attribute name="Name" type="xs:NMTOKEN" use="required" />
+            <xs:attribute name="DefaultValue" type="xs:string" use="required" />
+            <xs:attribute name="Type" type="xs:NMTOKEN" use="required" />
+            <xs:attribute name="List" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+    </xs:element>
+
+
+</xs:schema>

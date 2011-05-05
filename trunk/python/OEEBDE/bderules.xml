@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BdeRules>
+<BdeRules xsi:noNamespaceSchemaLocation="bderules.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<Validations>
 		<Rules>
 			<Rule Name="RCode" Module="validationrules" Function="rule_1">
