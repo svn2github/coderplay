@@ -1,191 +1,181 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema"
-	targetNamespace="http://www.example.org/NewXMLSchema"
-	xmlns:tns="http://www.example.org/NewXMLSchema"
-	elementFormDefault="qualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-	<element name="BdeSettings" type="tns:BdeSettingsType"></element>
+	<xs:element name="BdeSettings">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Header" type="HeaderType"></xs:element>
+				<xs:element name="General" type="GeneralType"></xs:element>
+				<xs:element name="Validations" type="ValidationsType"></xs:element>
+				<xs:element name="Sumups" type="SumupsType"></xs:element>
+				<xs:element name="Reporting" type="ReportingType"></xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
 
-
-
-
-	<complexType name="BdeSettingsType">
-		<sequence>
-            <element ref="tns:Header"></element>
-            <element ref="tns:General"></element>
-			<element name="Validations" type="tns:ValidationsType"></element>
-			<element name="Sumups" type="tns:SumupsType"></element>
-			<element name="Reporting" type="tns:ReportingType"></element>
-		</sequence>
-	</complexType>
-
-	<complexType name="ValidationsType">
-		<sequence>
-			<element name="Action" type="tns:ActionType"></element>
-		</sequence>
-	</complexType>
-
-	<complexType name="ActionType">
-		<sequence>
-			<element name="Rule" type="tns:RuleType"
-				maxOccurs="unbounded" minOccurs="0">
-				<simpleType>
-					<restriction base="string"></restriction>
-				</simpleType>
-			</element>
-		</sequence>
-	</complexType>
-
-	<complexType name="RuleType">
-		<sequence>
-			<element name="Variable" type="tns:VariableType"
-				maxOccurs="unbounded" minOccurs="0">
-			</element>
-		</sequence>
-		<attribute name="Name" type="string"></attribute>
-	</complexType>
-
-	<complexType name="VariableType">
-		<attribute name="Name" type="string"></attribute>
-		<attribute name="Value" type="string"></attribute>
-	</complexType>
-
-	<complexType name="SumupsType">
-		<sequence>
-			<element name="Categories" type="tns:SumupCategoriesType"></element>
-		</sequence>
-	</complexType>
-
-	<complexType name="CategoriesType">
-		<sequence>
-			<element name="Category" type="tns:ReportingCategoryType" maxOccurs="unbounded" minOccurs="1"></element>
-		</sequence>
-	</complexType>
-
-	<complexType name="ReportingType">
-		<sequence>
-			<element name="Categories" type="tns:CategoriesType"></element>
-		</sequence>
-	</complexType>
-
-	<complexType name="SumupCategoryType">
-		<sequence>
-			<element name="Member" maxOccurs="unbounded"
-				minOccurs="1">
-				<complexType>
-					<sequence>
-						<element name="Status" maxOccurs="unbounded" minOccurs="0">
-							<complexType>
-								<sequence>
-									<element name="Contains"
-										type="string" maxOccurs="unbounded" minOccurs="0">
-									</element>
-									<element name="Except" type="string"
-										maxOccurs="unbounded" minOccurs="0">
-									</element>
-								</sequence>
-							</complexType>
-						</element>
-						<element name="Code" maxOccurs="unbounded" minOccurs="0">
-							<complexType>
-								<sequence>
-									<element name="Contains"
-										type="string" maxOccurs="unbounded" minOccurs="0">
-									</element>
-									<element name="Except" type="string"
-										maxOccurs="unbounded" minOccurs="0">
-									</element>
-								</sequence>
-							</complexType>
-						</element>
-					</sequence>
-					<attribute name="Name" type="string"></attribute>
-				</complexType>
-			</element>
-			<element name="StartRule" type="tns:RuleType"></element>
-			<element name="TerminateRule" type="tns:RuleType"></element>
-			<element name="EndRule" type="tns:RuleType"></element>
-		</sequence>
-		<attribute name="Name" type="string"></attribute>
-	</complexType>
-
-
-	<complexType name="ReportingCategoryType">
-		<sequence>
-			<element name="Rules">
-				<complexType>
-					<sequence>
-						<element name="Rule" type="tns:RuleType" maxOccurs="unbounded" minOccurs="1"></element>
-					</sequence>
-				</complexType>
-			</element>
-		</sequence>
-		<attribute name="Name" type="string"></attribute>
-	</complexType>
-
-
-	<complexType name="SumupCategoriesType">
-		<sequence>
-			<element name="Category" type="tns:SumupCategoryType" maxOccurs="unbounded" minOccurs="1"></element>
-		</sequence>
-	</complexType>
-
-	<element name="General" type="tns:GeneralType"></element>
-
-	<complexType name="GeneralType">
-		<sequence>
-			<element name="InputFile">
-				<simpleType>
-					<restriction base="string">
-						<whiteSpace value="collapse"></whiteSpace>
-					</restriction>
-				</simpleType>
-			</element>
-			<element name="OutputFile">
-				<simpleType>
-					<restriction base="string">
-						<whiteSpace value="collapse"></whiteSpace>
-					</restriction>
-				</simpleType>
-			</element>
-			<element name="Verbose" type="boolean"></element>
-			<element name="Debug" type="boolean"></element>
-		</sequence>
-	</complexType>
-
-	<element name="Header" type="tns:HeaderType"></element>
-
-	<complexType name="HeaderType">
-		<sequence>
-			<element name="Client">
-				<complexType>
-					<sequence>
-						<element name="Name" type="string"
-							default="Unknown Client">
-						</element>
-						<element name="ID" type="string" maxOccurs="1"
+	<xs:complexType name="HeaderType">
+		<xs:sequence>
+			<xs:element name="Client">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Name" type="xs:string" default="Unknown Client">
+						</xs:element>
+						<xs:element name="ID" type="xs:string" maxOccurs="1" minOccurs="0">
+						</xs:element>
+						<xs:element name="Address" type="xs:string" maxOccurs="1"
 							minOccurs="0">
-						</element>
-						<element name="Address" type="string"
-							maxOccurs="1" minOccurs="0">
-						</element>
-						<element name="Contact" type="string"
-							maxOccurs="1" minOccurs="0">
-						</element>
-					</sequence>
-				</complexType>
-			</element>
-			<element name="Operator">
-				<complexType>
-					<sequence>
-						<element name="Name" type="string"
-							default="Anonymous">
-						</element>
-						<element name="Date" type="dateTime"></element>
-					</sequence>
-				</complexType>
-			</element>
-			<element name="Notes" type="string" maxOccurs="1" minOccurs="0"></element>
-		</sequence>
-	</complexType>
-</schema>
+						</xs:element>
+						<xs:element name="Contact" type="xs:string" maxOccurs="1"
+							minOccurs="0">
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Operator">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Name" type="xs:string" default="Anonymous">
+						</xs:element>
+						<xs:element name="Date" type="xs:dateTime"></xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Notes" type="xs:string" maxOccurs="1" minOccurs="0"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+
+	<xs:complexType name="GeneralType">
+		<xs:sequence>
+			<xs:element name="InputFile">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:whiteSpace value="collapse"></xs:whiteSpace>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="OutputFile">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:whiteSpace value="collapse"></xs:whiteSpace>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Verbose" type="xs:boolean"></xs:element>
+			<xs:element name="Debug" type="xs:boolean"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+
+	<xs:complexType name="ValidationsType">
+		<xs:sequence>
+			<xs:element name="Action" type="ActionType"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="ActionType">
+		<xs:sequence>
+			<xs:element name="Rule" type="RuleType" maxOccurs="unbounded"
+				minOccurs="0">
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="RuleType">
+		<xs:sequence>
+			<xs:element name="Variable" type="VariableType" maxOccurs="unbounded"
+				minOccurs="0">
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="Name" type="xs:string" use="required"></xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="VariableType">
+		<xs:attribute name="Name" type="xs:string" use="required"></xs:attribute>
+		<xs:attribute name="Value" type="xs:string" use="required"></xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="SumupsType">
+		<xs:sequence>
+			<xs:element name="Categories" type="SumupCategoriesType"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="CategoriesType">
+		<xs:sequence>
+			<xs:element name="Category" type="ReportingCategoryType"
+				maxOccurs="unbounded" minOccurs="1"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="ReportingType">
+		<xs:sequence>
+			<xs:element name="Categories" type="CategoriesType"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="SumupCategoryType">
+		<xs:sequence>
+			<xs:element name="Member" maxOccurs="unbounded" minOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Status" maxOccurs="unbounded" minOccurs="0">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="Contains" type="xs:string" maxOccurs="unbounded"
+										minOccurs="0">
+									</xs:element>
+									<xs:element name="Except" type="xs:string" maxOccurs="unbounded"
+										minOccurs="0">
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="Code" maxOccurs="unbounded" minOccurs="0">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="Contains" type="xs:string" maxOccurs="unbounded"
+										minOccurs="0">
+									</xs:element>
+									<xs:element name="Except" type="xs:string" maxOccurs="unbounded"
+										minOccurs="0">
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="Name" type="xs:string"></xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="StartRule" type="RuleType"></xs:element>
+			<xs:element name="TerminateRule" type="RuleType"></xs:element>
+			<xs:element name="EndRule" type="RuleType"></xs:element>
+		</xs:sequence>
+		<xs:attribute name="Name" type="xs:string"></xs:attribute>
+	</xs:complexType>
+
+
+	<xs:complexType name="ReportingCategoryType">
+		<xs:sequence>
+			<xs:element name="Rules">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Rule" type="RuleType" maxOccurs="unbounded"
+							minOccurs="1"></xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="Name" type="xs:string"></xs:attribute>
+	</xs:complexType>
+
+
+	<xs:complexType name="SumupCategoriesType">
+		<xs:sequence>
+			<xs:element name="Category" type="SumupCategoryType" maxOccurs="unbounded"
+				minOccurs="1"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+
+</xs:schema>
