@@ -67,8 +67,10 @@
 								<p>
 									<b>Client: </b>
 									<xsl:value-of select="Name" />
+                                    <!---
 									<button type="button" onClick="changeClientName()">...
 									</button>
+                                    -->
 								</p>
 							</xsl:for-each>
 							<xsl:for-each select="BdeSettings/Header/Operator">
