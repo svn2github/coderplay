@@ -2,29 +2,49 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
+
 <head>
+	<hta:application id="SETUP" applicationname="SETUP" icon="resources/favicon.ico" />
     <title>Setup</title>
     <link rel="Stylesheet" type="text/css" href="setup.css" />
     <script type="text/jscript" language="jscript"  src="setup.js"></script>
 </head>
-<body>
-    <input type="button" value="click" onclick="readBdeSettings()" />
+
+<body onLoad="jscript:window.resizeTo(800,800)">
+
+
+
     <table class="nobordertable" style="width: 100%; background-color: #BDCBDE">
         <tr style="background-color: #003A7D;">
             <td class="titlestyle" style="padding-bottom: 7px;">
                 OEE BDE File Processing Configurations
             </td>
             <td>
-                <!-- <img alt="heidelberg" src="http://www.au.heidelberg.com/www/img/logo.gif" /> -->
+                <img alt="heidelberg" src="http://www.au.heidelberg.com/www/img/logo.gif" />
             </td>
         </tr>
 
         <tr>
-        <td>Client: <span id="clientName"></span></td>
+        <td>Client: <span id="clientName" ondblclick="getinput(clientName)"></span></td>
         </tr>
+        
+        <tr><td>Analyst: <span id="analystName"></span></td>
+        <td>Date: <span id="date"></span></td>
+        </tr>
+        <tr><td colspan="2"> <hr /></td></tr>
+
+        <tr><td>Basic Validations</td></tr>
+
+ 
+
+
+
 
 
     </table>
+
+    <br />
+    <input type="button" value="click" onclick="readBdeSettings()" />
 
 </body>
 </html>

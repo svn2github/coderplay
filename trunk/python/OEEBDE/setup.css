@@ -7,6 +7,11 @@
     font-weight: bold;
 }
 
+.textinput
+{
+    font-size: 12px;
+}
+
 .nobordertable
 {
     margin: 0px;
@@ -14,14 +19,16 @@
     padding: 0px;
     border-collapse: collapse;
     border-spacing: 0px;
+    font-size: 12px;
 }
 
 .titlestyle
 {
     text-align: center;
     width: 83%;
-    valign: middle;
-    font-size: 24px;
+    vertical-align: middle;
+    font-size: 20px;
     font-weight: bold;
     color: #FFFFFF;
 }
+

@@ -1,8 +1,9 @@
 
+var settingsTemplate
 
 function readBdeSettings() {
 
-    var settingsTemplate
+    
     //settingsTemplate = new ActiveXObject("Msxml2.DOMDocument.3.0")
     settingsTemplate = new ActiveXObject("Microsoft.XMLDOM")
     settingsTemplate.async = false
@@ -12,19 +13,50 @@ function readBdeSettings() {
     nodeBdeSettings = settingsTemplate.documentElement
 
     nodeHeader = nodeBdeSettings.getElementsByTagName("Header")[0]
+    nodeClient = nodeHeader.getElementsByTagName("Client")[0]
+    nodeAnalyst = nodeHeader.getElementsByTagName("Analyst")[0]
+
+    thisNode = nodeClient.firstChild
+    clientName.innerHTML = thisNode.firstChild.nodeValue
+    
+
+    thisNode = nodeAnalyst.firstChild
+    analystName.innerHTML = thisNode.firstChild.nodeValue
+
+    now = new Date()
+    dateString = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate()
+    date.innerHTML = dateString
+    // Update the XML DOM
+    thisNode = thisNode.nextSibling
+    thisNode.firstChild.nodeValue = dateString
 
    
 
-    displayText = nodeBdeSettings.firstChild.firstChild.firstChild.firstChild.nodeValue
-
-    other = nodeHeader.nodeName
 
 
-    nodeClientName = nodeBdeSettings.firstChild.firstChild.firstChild.firstChild
-    nodeClientName.nodeValue = "Changed"
 
-    settingsTemplate.save("new.xml")
 
-    clientName.innerHTML = displayText + other
 
+
+
+
+
+    
+
+    // settingsTemplate.save("new.xml")
+
+
+
+
+}
+
+function getinput(obj) {
+    oldValue = obj.innerHTML;
+    displayText = "<input type=\"text\" class=\"textinput\" name=\"" + obj.id+"_input" + "\" size=\"15\" value=\"" + oldValue + "\" />";
+    obj.innerHTML = displayText;
+}
+
+
+function test() {
+    alert(arguments.callee.caller.toString());
 }

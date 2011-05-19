@@ -5,10 +5,10 @@
 		<Client>
 			<Name>Unknown Client</Name>
 		</Client>
-		<Operator>
+		<Analyst>
 			<Name>Anonymous</Name>
 			<Date>2001-12-31T12:00:00</Date>
-		</Operator>
+		</Analyst>
 	</Header>
 	<General>
 		<InputFile>good.bde</InputFile>

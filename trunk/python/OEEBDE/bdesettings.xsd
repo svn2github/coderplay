@@ -31,7 +31,7 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-			<xs:element name="Operator">
+			<xs:element name="Analyst">
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="Name" type="xs:string" default="Anonymous">

@@ -73,9 +73,9 @@
                                     -->
 								</p>
 							</xsl:for-each>
-							<xsl:for-each select="BdeSettings/Header/Operator">
+							<xsl:for-each select="BdeSettings/Header/Analyst">
 								<p>
-									<b>Operator: </b>
+									<b>Analyst: </b>
 									<xsl:value-of select="Name"></xsl:value-of>
 								</p>
 							</xsl:for-each>
