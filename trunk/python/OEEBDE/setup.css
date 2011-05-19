@@ -7,12 +7,48 @@
     font-weight: bold;
 }
 
-.textinput
+input.textinput
 {
+    vertical-align:middle;
 	border-style: solid;
 	border-width: 1px;
-	border-color: red;
+	border-color: #003A7D;
     font-size: 12px;
+    font-weight:normal;
+    
+}
+
+img.yes
+{
+    vertical-align:middle;
+    overflow: auto;
+    width: 16px;
+    height: 16px;
+    background:url('resources/tick_cross_icon.gif') 0 0;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #BDCBDE;
+}
+img.yes:hover 
+{
+    border-color: #003A7D;
+}
+
+img.no
+{
+    vertical-align:middle;
+    overflow: auto;
+    width: 16px;
+    height: 16px;
+    background:url('resources/tick_cross_icon.gif') -15px 0;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #BDCBDE;
+}
+
+img.no:hover
+{
+    border-color: #003A7D;
 }
 
 .nobordertable
@@ -32,6 +68,13 @@
     vertical-align: middle;
     font-size: 20px;
     font-weight: bold;
+    font-variant: small-caps;
+    font-family: Arial, Helvetica, sans-serif;
     color: #FFFFFF;
+}
+
+span
+{
+    font-weight:normal;
 }
 
