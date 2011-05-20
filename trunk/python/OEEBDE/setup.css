@@ -9,38 +9,47 @@
 
 input.textinput
 {
-    vertical-align:middle;
-	border-style: solid;
-	border-width: 1px;
-	border-color: #003A7D;
+    vertical-align: middle;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #003A7D;
     font-size: 12px;
-    font-weight:normal;
-    
+    font-weight: normal;
+}
+
+select
+{
+    vertical-align: middle;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #003A7D;
+    font-size: 12px;
+    font-weight: normal;
 }
 
 img.yes
 {
-    vertical-align:middle;
+    vertical-align: middle;
     overflow: auto;
     width: 16px;
     height: 16px;
-    background:url('resources/tick_cross_icon.gif') 0 0;
+    background: url('resources/tick_cross_icon.gif') 0 0;
     border-style: solid;
     border-width: 1px;
     border-color: #BDCBDE;
 }
-img.yes:hover 
+img.yes:hover
 {
     border-color: #003A7D;
 }
 
 img.no
 {
-    vertical-align:middle;
+    vertical-align: middle;
     overflow: auto;
     width: 16px;
     height: 16px;
-    background:url('resources/tick_cross_icon.gif') -15px 0;
+    background: url('resources/tick_cross_icon.gif') -15px 0;
     border-style: solid;
     border-width: 1px;
     border-color: #BDCBDE;
@@ -51,7 +60,7 @@ img.no:hover
     border-color: #003A7D;
 }
 
-.nobordertable
+table.noborder
 {
     margin: 0px;
     border: 0px;
@@ -73,8 +82,94 @@ img.no:hover
     color: #FFFFFF;
 }
 
-span
+.subtitle
 {
-    font-weight:normal;
+    padding-left: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    font-variant: small-caps;
 }
 
+span.editable
+{
+    font-weight: normal;
+}
+
+table.frame
+{
+    border: 2px solid #000000;
+    border-collapse: collapse;
+    border-spacing: 2px;
+    margin: 2px;
+    
+}
+
+table.frame td,th
+{
+    border: 1px solid #000000;
+    padding-left: 5px;
+    padding-right: 20px;
+}
+
+table.frame th
+{
+    color: #003A7D;
+}
+
+span.collapseExpand
+{
+    color: #003A7D;
+    vertical-align:top;
+}
+
+span.collapseExpand:hover
+{
+    color: Yellow;
+    cursor: pointer;
+    
+}
+    
+    
+    
+/*---------- bubble tooltip -----------*/
+a.tt
+{
+    position:relative;
+    z-index:24;
+    color:#3CA3FF;
+	font-weight:normal;
+    text-decoration:none;
+}
+a.tt span.tooltip{ display: none; }
+
+/*background:; ie hack, something must be changed in a for ie to execute it*/
+a.tt:hover{ z-index:25; color: #aaaaff; background:;}
+a.tt:hover span.tooltip{
+    display:block;
+    position:absolute;
+    top:0px; left:0;
+	padding: 15px 0 0 0;
+	width:200px;
+	color: #993300;
+    text-align: center;
+	filter: alpha(opacity:90);
+	KHTMLOpacity: 0.90;
+	MozOpacity: 0.90;
+	opacity: 0.90;
+}
+a.tt:hover span.top{
+	display: block;
+	padding: 30px 8px 0;
+    background: url(resources/bubble.gif) no-repeat top;
+}
+a.tt:hover span.middle{ /* different middle bg for stretch */
+	display: block;
+	padding: 0 8px; 
+	background: url(resources/bubble_filler.gif) repeat bottom; 
+}
+a.tt:hover span.bottom{
+	display: block;
+	padding:3px 8px 10px;
+	color: #548912;
+    background: url(resources/bubble.gif) no-repeat bottom;
+}
