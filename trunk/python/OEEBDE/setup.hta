@@ -7,6 +7,7 @@
     <title>Setup</title>
     <link rel="Stylesheet" type="text/css" href="setup.css" />
     <script type="text/jscript" language="jscript" src="setup.js"></script>
+    <script type="text/javascript" language="javascript" src="resources/fx.js"></script>
 </head>
 <body onload="jscript:window.resizeTo(800,800);readRulesXML();readBdeSettings()">
     <table class="noborder" style="width: 100%; background-color: #BDCBDE">
@@ -19,82 +20,78 @@
             </td>
         </tr>
         <tr>
-            <td title="Double click to edit" ondblclick="getTextInput(clientName)">
-                Client: <span class="editable" id="clientName"></span>
-            </td>
-        </tr>
-        <tr>
-            <td title="Double click to edit" ondblclick="getTextInput(analystName)">
-                Analyst: <span class="editable" id="analystName"></span>
-            </td>
-            <td title="Double click to edit" ondblclick="getTextInput(date)">
-                Date: <span class="editable" id="date"></span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <hr />
-            </td>
-        </tr>
-        <tr>
-            <td class="subtitle" colspan="2">
-                Basic Validations
-            </td>
-        </tr>
-        <tr>
-            <td id="validations">
-            </td>
-        </tr>
-           <tr>
-            <td colspan="2">
-                <hr />
-            </td>
-        </tr>
-        <tr>
-            <td class="subtitle" colspan="2">
-                Data Sumups
-            </td>
-        </tr>
-        <tr>
-            <td id="sumups">
-            </td>
-        </tr>
-           <tr>
-            <td colspan="2">
-                <hr />
-            </td>
-        </tr>
-         <tr>
-            <td class="subtitle" colspan="2">
-                Analysis Reporting
-            </td>
-        </tr>
-        <tr>
-            <td id="reporting">
+            <td id="mainEditArea" colspan="2">
+                <table class="noborder" style="width: 100%; background-color: #BDCBDE">
+                    <tr>
+                        <td title="Double click to edit" ondblclick="getTextInput(clientName)">
+                            Client: <span class="editable" id="clientName"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td title="Double click to edit" ondblclick="getTextInput(analystName)">
+                            Analyst: <span class="editable" id="analystName"></span>
+                        </td>
+                        <td title="Double click to edit" ondblclick="getTextInput(date)">
+                            Date: <span class="editable" id="date"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="subtitle" colspan="2">
+                            Basic Validations
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id="validations">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="subtitle" colspan="2">
+                            Data Sumups
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id="sumups">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="subtitle" colspan="2">
+                            Analysis Reporting
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id="reporting">
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>
     <br />
-    <input type="button" value="Refresh" onclick="readBdeSettings()" />
+    <input class="button" type="button" value="Reset" onclick="readBdeSettings()" />
+    <input class="button" type="button" value="fade" onclick="fade()" />
     <div>
         <code id="debugarea"></code>
     </div>
-    <span style="color: white; font-size: 10px;">&#9650;&#9660;</span>
+
     <!--
-    -->
+    
     <a href="#" class="tt">asdfas<span class="tooltip"><span class="top"></span><span
         class="middle">Double click to edit the client name.</span><span class="bottom"></span></span></a>
-    <table>
-        <tr>
-            <td>
-                test
-            </td>
-        </tr>
-        <tr>
-            <td>
-                2nd
-            </td>
-        </tr>
-    </table>
+    -->
 </body>
 </html>

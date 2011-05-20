@@ -300,3 +300,39 @@ function noSelectInput(obj) {
     isEditing.setItem(obj.id, false);
     obj.parentElement.title = "Double click to edit";
 }
+
+
+
+
+
+
+function fade() {
+    mainEditArea.hiddenValue = mainEditArea.innerHTML;
+    
+    $fx('#mainEditArea').fxAdd({type: 'opacity', from: 100, to:1, step: -5, delay:10}).fxRun(null,1);
+}
+
+
+
+
+
+
+/*
+RUN Program on Local client machine
+<script> 
+function go()
+{
+w = new ActiveXObject("WScript.Shell");
+w.run('notepad.exe');
+return true;
+} 
+</script>
+
+
+<form>
+Run Notepad (Window with explorer only)
+<input type="button" value="Go" onClick="return go()">
+</form>
+
+
+*/
