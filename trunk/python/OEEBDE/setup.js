@@ -307,9 +307,11 @@ function noSelectInput(obj) {
 
 
 function fade() {
-    mainEditArea.hiddenValue = mainEditArea.innerHTML;
+    //mainEditArea.hiddenValue = mainEditArea.innerHTML;
+
+    //$fx('#mainEditArea').fxAdd({type: 'opacity', from: 100, to:1, step: -5, delay:10}).fxRun(null,1);
+
     
-    $fx('#mainEditArea').fxAdd({type: 'opacity', from: 100, to:1, step: -5, delay:10}).fxRun(null,1);
 }
 
 
