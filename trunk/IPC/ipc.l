@@ -1,10 +1,8 @@
 %{
 /*
- * IDL-Python-C (IPC) Mix programming language for fun and maybe real practice.
+ * IDL-Python-C (IPC) Mix programming language for fun.
  */
 
-#include <string.h>
-#include "y.tab.h"
 
 %}
 
@@ -16,12 +14,13 @@ WHITESPACE      [\t ]+
 
 %%
 
-\n                  {return 0; }
+\n                  { printf("End of line.\n"); }
 
-print               {return PRINT;}
-\"[^"\n]*["\n]      {return STRING;}
-"//".*              {} /* Skip comments */
-{WHITESPACE}        {} /* Do nothing */
+print               { printf("Print\n"); }
+{IDENTIFIER}        { printf("An identifier: %s\n", yytext); }
+\"[^"\n]*["\n]      { printf("A string literal\n"); }
+"//".*              { printf("A comment line\n"); } 
+{WHITESPACE}        { printf("white spaces\n"); }
 
 .                   ;
 
