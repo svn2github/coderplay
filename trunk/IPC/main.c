@@ -11,6 +11,9 @@ yyerror (char *msg)
 }
 */
 
+extern enum INTEGER;
+extern int yylval;
+
 int
 main (int argc, char **argv)
 {
@@ -20,5 +23,13 @@ main (int argc, char **argv)
       yyparse ();
     }
 */
-    yylex();
+    int tok;
+
+    while(tok = yylex()) {
+        printf("%d", tok);
+        if (tok == INTEGER) 
+            printf(" = %d\n", yylval);
+        else 
+            printf("\n");
+    }
 }

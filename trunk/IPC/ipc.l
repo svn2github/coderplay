@@ -3,26 +3,36 @@
  * IDL-Python-C (IPC) Mix programming language for fun.
  */
 
+#include "ipc.tab.h"
+
+int yylval;
+
 
 %}
 
 LETTER          [a-zA-Z_]
-DIGIT           [0-9]
-IDENTIFIER      {LETTER}({LETTER}|{DIGIT})*
+INTEGER         [0-9]+
+IDENTIFIER      {LETTER}({LETTER}|{INTEGER})*
 WHITESPACE      [\t ]+
 
 
 %%
 
-\n                  { printf("End of line.\n"); }
+"+"                 { return ADD; }
+"-"                 { return SUB; }
+"*"                 { return MUL; }
+"/"                 { return DIV; }
+"|"                 { return ABS; }
+{INTEGER}           { yylval = atoi(yytext); return INTEGER; }
 
-print               { printf("Print\n"); }
-{IDENTIFIER}        { printf("An identifier: %s\n", yytext); }
-\"[^"\n]*["\n]      { printf("A string literal\n"); }
-"//".*              { printf("A comment line\n"); } 
-{WHITESPACE}        { printf("white spaces\n"); }
+\n                  { return EOL; }
+print               { return PRINT; }
+{IDENTIFIER}        { printf("IDENTIFIER: %s\n", yytext); }
+\"[^"\n]*["\n]      { return STRING; }
+"//".*              { printf("COMMENT\n"); } 
+{WHITESPACE}        { }
 
-.                   ;
+.                   { printf("Unrecognized character %s\n", yytext); }
 
 %%
 
