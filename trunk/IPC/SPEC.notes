@@ -1,0 +1,6 @@
+IDL-Python-C Mix Language for Fun (LFG)
+
+1. Variable Type
+    a) Number: This is the single type for any numerical values, including
+       integer, floating point numbers, etc. Preserve given precision.
+    b) String: For any strings.

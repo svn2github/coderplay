@@ -7,18 +7,10 @@ YACC = bison
 
 all: ipc
 
-ipc: lex.yy.o ipc.tab.o
-	$(CC) -lfl -o ipc lex.yy.o ipc.tab.o
-
-ipc.tab.o: ipc.tab.c
-
-lex.yy.o: lex.yy.c
-
-lex.yy.c: ipc.l
+ipc: ipc.y ipc.l
+	$(YACC) --defines --verbose ipc.y
 	$(LEX) ipc.l
-
-ipc.tab.c: ipc.y
-	$(YACC) -d ipc.y
+	$(CC) -o $@ ipc.tab.c lex.yy.c -lfl
 
 clean:
-	rm -f ipc *.o lex.yy.c
+	rm -f ipc *.o lex.yy.c ipc.tab.h ipc.tab.c

@@ -6,12 +6,16 @@
 #include "ipc.tab.h"
 
 int yylval;
+int lineno = 1;
 
 
 %}
 
+%option noyywrap nodefault yylineno
+
 LETTER          [a-zA-Z_]
-INTEGER         [0-9]+
+INTEGER         -?[0-9]+
+FLOAT           -?[0-9]+\.[0-9]*([eE][-+]?[0-9]+)?
 IDENTIFIER      {LETTER}({LETTER}|{INTEGER})*
 WHITESPACE      [\t ]+
 
@@ -23,13 +27,17 @@ WHITESPACE      [\t ]+
 "*"                 { return MUL; }
 "/"                 { return DIV; }
 "|"                 { return ABS; }
-{INTEGER}           { yylval = atoi(yytext); return INTEGER; }
 
-\n                  { return EOL; }
+{INTEGER}           { yylval = atoi(yytext); return INTEGER; }
+{FLOAT}             { printf("FLOAT\n"); }
+
 print               { return PRINT; }
-{IDENTIFIER}        { printf("IDENTIFIER: %s\n", yytext); }
-\"[^"\n]*["\n]      { return STRING; }
+\"[^\"]*\"          { return STRING; }
+\n                  { lineno++; return EOL; }
+"("                 { return OP; }
+")"                 { return CP; }
 "//".*              { printf("COMMENT\n"); } 
+{IDENTIFIER}        { printf("IDENTIFIER: %s\n", yytext); }
 {WHITESPACE}        { }
 
 .                   { printf("Unrecognized character %s\n", yytext); }
