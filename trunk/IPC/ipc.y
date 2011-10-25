@@ -2,23 +2,29 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include "ipc.h"
 
 extern FILE *yyin;
 
 %}
 
+%error-verbose
+
+/* Define operator precedence frow lowest to highest */
+%left '+' '-'
+%left '*' '/'
+%nonassoc '|'
+
 %token PRINT STRING
 %token INTEGER
-%token ADD SUB MUL DIV ABS
 %token EOL
-%token OP CP /* open close paranthesis */
 
 %%
 
 statement_list
     : /* empty */
     | statement_list statement { printf("= %d\n> ", $2); }
-    | statement_list EOL { printf("> "); }
+    | statement_list EOL { printf("> "); } /* blank line or comment */
     ; 
 
 statement
@@ -27,18 +33,18 @@ statement
     ;
 
 int_math_exp: factor
-    | int_math_exp ADD factor { $$ = $1 + $3; }
-    | int_math_exp SUB factor { $$ = $1 - $3; }
+    | int_math_exp '+' factor { $$ = $1 + $3; }
+    | int_math_exp '-' factor { $$ = $1 - $3; }
     ;
 
 factor: term
-    | factor MUL term { $$ = $1 * $3; }
-    | factor DIV term { $$ = $1 / $3; }
+    | factor '*' term { $$ = $1 * $3; }
+    | factor '/' term { $$ = $1 / $3; }
     ;
 
 term: INTEGER
-    | ABS term { $$ = $2>=0?$2:-$2; }
-    | OP int_math_exp CP { $$ = $2; }
+    | '|' term { $$ = $2>=0?$2:-$2; }
+    | '(' int_math_exp ')' { $$ = $2; }
     ;
 
 /*
@@ -67,19 +73,14 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void
-print_error(char *format, ...) {
-    va_list args;
-
-    va_start(args, format);
-    vfprintf(stdout, format, args);
-    va_end(args);
-    printf("\n");
-}
-
-yyerror(char* s)
+void 
+yyerror(char *s, ...)
 {
-    // fprintf(stderr, "error: %s\n", s);
-    print_error(s);
+    va_list ap;
+    va_start(ap, s);
+
+    fprintf(stderr, "%d: error: ", yylineno);
+    vfprintf(stderr, s, ap);
+    fprintf(stderr, "\n");
 }
 

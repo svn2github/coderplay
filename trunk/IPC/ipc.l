@@ -4,9 +4,9 @@
  */
 
 #include "ipc.tab.h"
+#include "ipc.h"
 
 int yylval;
-int lineno = 1;
 
 
 %}
@@ -15,32 +15,32 @@ int lineno = 1;
 
 LETTER          [a-zA-Z_]
 INTEGER         -?[0-9]+
-FLOAT           -?[0-9]+\.[0-9]*([eE][-+]?[0-9]+)?
+FLOAT           -?[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?
 IDENTIFIER      {LETTER}({LETTER}|{INTEGER})*
 WHITESPACE      [\t ]+
 
 
 %%
 
-"+"                 { return ADD; }
-"-"                 { return SUB; }
-"*"                 { return MUL; }
-"/"                 { return DIV; }
-"|"                 { return ABS; }
+"+" |                
+"-" |                
+"*" |               
+"/" |              
+"|" |             
+"(" |            
+")"                 { return yytext[0]; }
 
 {INTEGER}           { yylval = atoi(yytext); return INTEGER; }
-{FLOAT}             { printf("FLOAT\n"); }
+{FLOAT}             { yylval = atof(yytext); printf("FLOAT\n"); }
 
 print               { return PRINT; }
 \"[^\"]*\"          { return STRING; }
-\n                  { lineno++; return EOL; }
-"("                 { return OP; }
-")"                 { return CP; }
+\n                  { return EOL; }
 "//".*              { printf("COMMENT\n"); } 
 {IDENTIFIER}        { printf("IDENTIFIER: %s\n", yytext); }
 {WHITESPACE}        { }
 
-.                   { printf("Unrecognized character %s\n", yytext); }
+.                   { printf("Unrecognized character %c\n", *yytext); }
 
 %%
 

@@ -1,0 +1,2 @@
+1. yyerror has to be explicitly provided by the user and declared properly in
+   a header file.
