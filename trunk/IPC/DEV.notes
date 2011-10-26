@@ -1,2 +1,5 @@
 1. yyerror has to be explicitly provided by the user and declared properly in
    a header file.
+2. Somehow, strncpy keeps getting reported as memory leaks. No idea why.
+3. To use both ";" and "\n" as the punctuator, I have to return a Single EOL
+   for the combo and ";"{WHITESPACE}"\n"

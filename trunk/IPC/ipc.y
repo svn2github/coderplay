@@ -27,14 +27,32 @@ extern FILE *yyin;
 %token <sVal> STRING
 %token EOL
 
-%type <pnode> expr stmt
+%type <pnode> line stmt_list stmt expr
 
 %%
 program
-    : /* empty */
-    | program EOL { printf("[%d]> ", yylineno); }
-    | program stmt EOL { printf(" = %f\n", eval($2)); PRINTLN; delete_node($2); }
+    : /* empty */ 
+    | program line  { 
+                        if ($2) {
+                            printf("= %f\n", eval($2));
+                            PRINTLN; 
+                            delete_node($2);
+                        } else {
+                            printf("[%d]> ", yylineno); 
+                        }
+                    }
     | program error EOL { yyerrok; printf("[%d]> ", yylineno); }
+    ;
+
+line
+    : EOL           { $$ = NULL; }
+    | stmt_list EOL { $$ = $1; } 
+    ;
+
+stmt_list
+    : stmt          { $$ = $1; }
+    | stmt ';' stmt_list
+                    { $$ = $1; }
     ;
 
 stmt
@@ -54,7 +72,6 @@ expr
     | ID            { $$ = new_strnode($1); }
     ;
 
-
 %%
 
 int main(int argc, char **argv)
@@ -69,8 +86,6 @@ int main(int argc, char **argv)
     }
     yyparse();
 
-    //if (yylval.sVal) free(yylval.sVal);
-    //if (yylval.pnode) free(yylval.pnode);
     return 0;
 }
 

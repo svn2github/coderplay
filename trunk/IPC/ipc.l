@@ -53,6 +53,7 @@ print               { return PRINT; }
                         return ID; 
                     }
 
+";"{WHITESPACE}*"\n" |
 "\n"                { return EOL; }
 
 "//".*              /* ignore comments */

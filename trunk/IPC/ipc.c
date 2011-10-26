@@ -76,12 +76,13 @@ delete_node (tnode_t * pnode)
   free (pnode);
 }
 
-double
+double 
 eval (tnode_t * pnode)
 {
   if (!pnode)
     {
       fprintf (stderr, "Internal error: cannot evaluate null node");
+      return;
     }
 
   switch (pnode->nodeType)
@@ -90,8 +91,7 @@ eval (tnode_t * pnode)
       return ((numnode_t *) pnode)->val;
       break;
     case STRING_LITERAL:
-      printf("%s\n", ((strnode_t *) pnode)->val);
-      PRINTLN;
+      printf("= %s\n", ((strnode_t *) pnode)->val);
       return 0;
       break;
     case ADD:
@@ -120,3 +120,5 @@ eval (tnode_t * pnode)
       fprintf (stderr, "Internal error: unknown node type");
     }
 }
+
+

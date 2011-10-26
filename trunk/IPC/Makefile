@@ -10,7 +10,7 @@ YACC = bison
 all: ipc
 
 ipc: ipc.y ipc.l ipc.h ipc.c
-	$(YACC) -d ipc.y
+	$(YACC) --defines -v ipc.y
 	$(LEX) ipc.l
 	$(CC) -o ipc ipc.tab.c lex.yy.c ipc.c -lfl
 

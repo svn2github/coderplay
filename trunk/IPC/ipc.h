@@ -34,7 +34,7 @@ tnode_t *new_numnode(double val);
 tnode_t *new_strnode(char* val);
 void delete_node(tnode_t *pnode);
 
-enum nodetype {
+typedef enum {
     NUMBER_CONSTANT = 258,
     STRING_LITERAL,
     ADD,
@@ -43,7 +43,6 @@ enum nodetype {
     DIV,
     MOD,
     PRN
-};
+} treenodetype;
 
-double eval (tnode_t *pnode);
-
+double eval(tnode_t *pnode);
