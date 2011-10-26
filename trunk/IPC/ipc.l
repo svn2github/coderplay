@@ -27,6 +27,7 @@ WHITESPACE      [\t ]+
 "*" |               
 "/" |              
 "%" |             
+"=" |
 "," |
 ";" |
 "(" |            
@@ -34,22 +35,18 @@ WHITESPACE      [\t ]+
 
 
 
-({INTEGER}|{FLOAT})             { yylval.dVal = atof(yytext); return NUMBER; }
+({INTEGER}|{FLOAT})             { yylval.d = atof(yytext); return NUMBER; }
 
 print               { return PRINT; }
 
 \"[^\"]*\"          { 
-                        yylval.sVal = strdup(yytext+1);
-                        yylval.sVal[yyleng-2] = 0;
-                        //yylval.sVal = malloc((strlen(yytext)+1)*sizeof(char));
-                        //strncpy(yylval.sVal, yytext+1, sizeof(yytext+1)); 
+                        yylval.s = strdup(yytext+1);
+                        yylval.s[yyleng-2] = 0;
                         return STRING; 
                     }
 
 {IDENTIFIER}        { 
-                        yylval.sVal = strdup(yytext);
-                        //yylval.sVal = malloc((strlen(yytext)+1)*sizeof(char));
-                        //strcpy(yylval.sVal, yytext); 
+                        yylval.sym = lookup(yytext);
                         return ID; 
                     }
 

@@ -1,6 +1,7 @@
 %{
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include "ipc.h"
 
@@ -11,30 +12,34 @@ extern FILE *yyin;
 %error-verbose
 
 %union {
-    char *sVal;
-    double dVal;
+    char *s;
+    double d;
     tnode_t *pnode;
+    symbol_t *sym;
 }
 
 /* Define operator precedence frow lowest to highest */
+%right '='
 %left '+' '-' '%'
 %left '*' '/'
 /* %nonassoc '|'*/
 
 %token PRINT
-%token <sVal> ID
-%token <dVal> NUMBER 
-%token <sVal> STRING
+%token <sym> ID
+%token <d> NUMBER 
+%token <s> STRING
 %token EOL
 
 %type <pnode> line stmt_list stmt expr
+
+%start program
 
 %%
 program
     : /* empty */ 
     | program line  { 
                         if ($2) {
-                            printf("= %f\n", eval($2));
+                            printf("= %g\n", eval($2));
                             PRINTLN; 
                             delete_node($2);
                         } else {
@@ -61,15 +66,16 @@ stmt
     ;
 
 expr
-    : NUMBER        { $$ = new_numnode($1); }
-    | STRING        { $$ = new_strnode($1); }
-    | expr '+' expr { $$ = new_tnode(ADD, $1, $3); }
+    : expr '+' expr { $$ = new_tnode(ADD, $1, $3); }
     | expr '-' expr { $$ = new_tnode(SUB, $1, $3); }
     | expr '*' expr { $$ = new_tnode(MUL, $1, $3); }
     | expr '/' expr { $$ = new_tnode(DIV, $1, $3); }
     | expr '%' expr { $$ = new_tnode(MOD, $1, $3); }
     | '(' expr ')'  { $$ = $2; }
-    | ID            { $$ = new_strnode($1); }
+    | NUMBER        { $$ = new_numnode($1); }
+    | STRING        { $$ = new_strnode($1); }
+    | ID            { $$ = new_symnode($1); }
+    | ID '=' expr   { $$ = new_asnnode($1, $3); }
     ;
 
 %%

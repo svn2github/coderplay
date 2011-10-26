@@ -3,3 +3,5 @@
 2. Somehow, strncpy keeps getting reported as memory leaks. No idea why.
 3. To use both ";" and "\n" as the punctuator, I have to return a Single EOL
    for the combo and ";"{WHITESPACE}"\n"
+4. Once a new operator is added. We need to define its precedence and 
+   associative. Otherwise, Bison may report many conflicts.
