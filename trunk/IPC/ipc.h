@@ -1,15 +1,6 @@
+#define PRINTLN printf("[%d]> ", yylineno)
 
-enum nodetype {
-    NUMBER_CONSTANT = 258,
-    STRING_LITERAL,
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    MOD,
-    PRN
-}
-
+extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);
 
 /* Define all types of nodes that can exist in the syntax tree */
@@ -43,4 +34,16 @@ tnode_t *new_numnode(double val);
 tnode_t *new_strnode(char* val);
 void delete_node(tnode_t *pnode);
 
+enum nodetype {
+    NUMBER_CONSTANT = 258,
+    STRING_LITERAL,
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    PRN
+};
+
+double eval (tnode_t *pnode);
 

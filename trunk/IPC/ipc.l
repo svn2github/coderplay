@@ -3,11 +3,11 @@
  * IDL-Python-C (IPC) Mix programming language for fun.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "ipc.h"
 #include "ipc.tab.h"
-
-int yylval;
-
 
 %}
 
@@ -34,19 +34,25 @@ WHITESPACE      [\t ]+
 
 
 
-{INTEGER}           { yylval.dVal = atoi(yytext); return NUMBER; }
-{FLOAT}             { yylval.dVal = atof(yytext); return NUMBER; }
+({INTEGER}|{FLOAT})             { yylval.dVal = atof(yytext); return NUMBER; }
 
 print               { return PRINT; }
+
 \"[^\"]*\"          { 
-                        yylval.sVal = malloc(strlen(yytext)*sizeof(char));
-                        strncpy(yylval.sVal, yytext+1, strlen(yytext)-2);
-                        return STRING; }
+                        yylval.sVal = strdup(yytext+1);
+                        yylval.sVal[yyleng-2] = 0;
+                        //yylval.sVal = malloc((strlen(yytext)+1)*sizeof(char));
+                        //strncpy(yylval.sVal, yytext+1, sizeof(yytext+1)); 
+                        return STRING; 
+                    }
+
 {IDENTIFIER}        { 
-                        yylval.sVal = malloc((strlen(yytext)+1)*sizeof(char));
-                        strcpy(yylval.sVal, yytext); 
+                        yylval.sVal = strdup(yytext);
+                        //yylval.sVal = malloc((strlen(yytext)+1)*sizeof(char));
+                        //strcpy(yylval.sVal, yytext); 
                         return ID; 
                     }
+
 "\n"                { return EOL; }
 
 "//".*              /* ignore comments */

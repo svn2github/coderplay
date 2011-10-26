@@ -32,7 +32,9 @@ extern FILE *yyin;
 %%
 program
     : /* empty */
-    | program stmt  { eval($2); delete_node($2); }
+    | program EOL { printf("[%d]> ", yylineno); }
+    | program stmt EOL { printf(" = %f\n", eval($2)); PRINTLN; delete_node($2); }
+    | program error EOL { yyerrok; printf("[%d]> ", yylineno); }
     ;
 
 stmt
@@ -63,10 +65,12 @@ int main(int argc, char **argv)
         }
     } else {
         printf("IPC for fun\n");
-        printf("> ");
+        printf("[%d]> ", yylineno);
     }
     yyparse();
 
+    //if (yylval.sVal) free(yylval.sVal);
+    //if (yylval.pnode) free(yylval.pnode);
     return 0;
 }
 
