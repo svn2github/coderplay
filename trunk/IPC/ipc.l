@@ -3,8 +3,8 @@
  * IDL-Python-C (IPC) Mix programming language for fun.
  */
 
-#include "ipc.tab.h"
 #include "ipc.h"
+#include "ipc.tab.h"
 
 int yylval;
 
@@ -26,21 +26,34 @@ WHITESPACE      [\t ]+
 "-" |                
 "*" |               
 "/" |              
-"|" |             
+"%" |             
+"," |
+";" |
 "(" |            
 ")"                 { return yytext[0]; }
 
-{INTEGER}           { yylval = atoi(yytext); return INTEGER; }
-{FLOAT}             { yylval = atof(yytext); printf("FLOAT\n"); }
+
+
+{INTEGER}           { yylval.dVal = atoi(yytext); return NUMBER; }
+{FLOAT}             { yylval.dVal = atof(yytext); return NUMBER; }
 
 print               { return PRINT; }
-\"[^\"]*\"          { return STRING; }
-\n                  { return EOL; }
-"//".*              { printf("COMMENT\n"); } 
-{IDENTIFIER}        { printf("IDENTIFIER: %s\n", yytext); }
-{WHITESPACE}        { }
+\"[^\"]*\"          { 
+                        yylval.sVal = malloc(strlen(yytext)*sizeof(char));
+                        strncpy(yylval.sVal, yytext+1, strlen(yytext)-2);
+                        return STRING; }
+{IDENTIFIER}        { 
+                        yylval.sVal = malloc((strlen(yytext)+1)*sizeof(char));
+                        strcpy(yylval.sVal, yytext); 
+                        return ID; 
+                    }
+"\n"                { return EOL; }
 
-.                   { printf("Unrecognized character %c\n", *yytext); }
+"//".*              /* ignore comments */
+
+{WHITESPACE}        /* ignore white space */
+
+.                   { yyerror("Unrecognized character %c\n", *yytext); }
 
 %%
 

@@ -10,51 +10,48 @@ extern FILE *yyin;
 
 %error-verbose
 
-/* Define operator precedence frow lowest to highest */
-%left '+' '-'
-%left '*' '/'
-%nonassoc '|'
+%union {
+    char *sVal;
+    double dVal;
+    tnode_t *pnode;
+}
 
-%token PRINT STRING
-%token INTEGER
+/* Define operator precedence frow lowest to highest */
+%left '+' '-' '%'
+%left '*' '/'
+/* %nonassoc '|'*/
+
+%token PRINT
+%token <sVal> ID
+%token <dVal> NUMBER 
+%token <sVal> STRING
 %token EOL
 
+%type <pnode> expr stmt
+
 %%
-
-statement_list
+program
     : /* empty */
-    | statement_list statement { printf("= %d\n> ", $2); }
-    | statement_list EOL { printf("> "); } /* blank line or comment */
-    ; 
-
-statement
-    : int_math_exp EOL { $$ = $1; }
-    | string EOL { $$ = $1; }
+    | program stmt  { eval($2); delete_node($2); }
     ;
 
-int_math_exp: factor
-    | int_math_exp '+' factor { $$ = $1 + $3; }
-    | int_math_exp '-' factor { $$ = $1 - $3; }
+stmt
+    : PRINT expr    { $$ = new_tnode(PRN, $2, NULL);}
+    | expr
     ;
 
-factor: term
-    | factor '*' term { $$ = $1 * $3; }
-    | factor '/' term { $$ = $1 / $3; }
+expr
+    : NUMBER        { $$ = new_numnode($1); }
+    | STRING        { $$ = new_strnode($1); }
+    | expr '+' expr { $$ = new_tnode(ADD, $1, $3); }
+    | expr '-' expr { $$ = new_tnode(SUB, $1, $3); }
+    | expr '*' expr { $$ = new_tnode(MUL, $1, $3); }
+    | expr '/' expr { $$ = new_tnode(DIV, $1, $3); }
+    | expr '%' expr { $$ = new_tnode(MOD, $1, $3); }
+    | '(' expr ')'  { $$ = $2; }
+    | ID            { $$ = new_strnode($1); }
     ;
 
-term: INTEGER
-    | '|' term { $$ = $2>=0?$2:-$2; }
-    | '(' int_math_exp ')' { $$ = $2; }
-    ;
-
-/*
-statement:
-    | PRINT string { printf("here\n"); $$ = $2; }
-    ;
-*/
-
-string: STRING { printf("STRING\n"); $$ = $1; }
-      ;
 
 %%
 
