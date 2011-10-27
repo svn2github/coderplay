@@ -12,7 +12,6 @@ create_dataobj (datatypeEnum type, void *data)
     newdo = (dataobj_t *) malloc (sizeof (dataobj_t));
     newdo->dataType = type;
     newdo->data = data;
-    data = NULL;
     return newdo;
 }
 
@@ -43,12 +42,15 @@ eval (tnode_t * pnode)
       {
       case NUM:
           dobj = create_dataobj (DT_NUM, pnode->data);
+          pnode->data = NULL;
           break;
       case STR:
           dobj = create_dataobj (DT_STR, pnode->data);
+          pnode->data = NULL;
           break;
       case SYM:
           dobj = create_dataobj (DT_SYM, pnode->data);
+          pnode->data = NULL;
           break;
       case ASN:
           dobj = eval (pnode->l);
