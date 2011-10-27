@@ -76,7 +76,6 @@ print_dataobj (dataobj_t * dobj)
           fprintf (stderr, "Internal error: unknown data type\n");
           break;
       }
-    PRINTLN;
 }
 
 dataobj_t *

@@ -45,9 +45,10 @@ program
                                 printf("= ");
                                 print_dataobj(dobj);
                                 delete_dataobj(dobj);
-                            } else PRINTLN;
+                            } 
                             delete_node($2);
-                        } else PRINTLN;
+                        } 
+                        PRINTLN;
                     }
     | program error EOL { yyerrok; printf("[%d]> ", yylineno); }
     ;
