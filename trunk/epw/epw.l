@@ -17,10 +17,8 @@
 %option noyywrap nodefault yylineno
 
 LETTER          [a-zA-Z_]
-INTEGER         -?[0-9]+
-FLOAT           -?[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?
 EXP ([Ee][-+]?[0-9]+) 
-IDENTIFIER      {LETTER}({LETTER}|{INTEGER})*
+IDENTIFIER      {LETTER}({LETTER}|[0-9])*
 WHITESPACE      [\t ]+
 
 
