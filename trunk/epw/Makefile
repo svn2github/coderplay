@@ -9,9 +9,9 @@ YACC = bison
 
 all: epw
 
-epw: epw.h epw.c lexer.o symtab.o syntree.o
+epw: epw.h epw.c lexer.o symtab.o syntree.o datatype.o
 	$(CC) -g -c epw.c
-	$(CC) -o epw parser.o lexer.o epw.o symtab.o syntree.o -lfl
+	$(CC) -o epw parser.o lexer.o epw.o symtab.o syntree.o datatype.o -lfl
 
 lexer.o: epw.l epw.y
 	$(YACC) -d --report=all -g --output=parser.c epw.y
@@ -24,5 +24,8 @@ symtab.o: symtab.c symtab.h
 syntree.o: syntree.c syntree.h
 	$(CC) -g -c syntree.c
 
+datatype.o: datatype.c datatype.h
+	$(CC) -g -c datatype.c
+
 clean:
-	rm -f epw *.o parser.* lexer.c *.*~ core.*
+	rm -f epw *.o parser.* lexer.c *.*~ core*

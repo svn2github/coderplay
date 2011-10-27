@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include "symtab.h"
 #include "syntree.h"
+#include "datatype.h"
 #include "epw.h"
 
 extern FILE *yyin;

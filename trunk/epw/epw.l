@@ -8,6 +8,7 @@
 #include <string.h>
 #include "symtab.h"
 #include "syntree.h"
+#include "datatype.h"
 #include "epw.h"
 #include "parser.h"
 
