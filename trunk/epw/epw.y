@@ -42,7 +42,10 @@ program
     | program line  { 
                         if ($2) {
                             dataobj_t *dobj = eval($2);
-                            if (dobj) print_dataobj(eval($2));
+                            if (dobj) {
+                                printf("= ");
+                                print_dataobj(dobj);
+                            }
                             delete_node($2);
                         } else {
                             printf("[%d]> ", yylineno); 

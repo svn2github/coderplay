@@ -6,7 +6,7 @@
 #include "epw.h"
 
 dataobj_t *
-createDataObj (datatypeEnum type, void *data)
+create_dataobj (datatypeEnum type, void *data)
 {
     dataobj_t *newdo;
     newdo = (dataobj_t *) malloc (sizeof (dataobj_t));
@@ -42,13 +42,13 @@ eval (tnode_t * pnode)
     switch (pnode->nodeType)
       {
       case NUM:
-          dobj = createDataObj (DT_NUM, pnode->data);
+          dobj = create_dataobj (DT_NUM, pnode->data);
           break;
       case STR:
-          dobj = createDataObj (DT_STR, pnode->data);
+          dobj = create_dataobj (DT_STR, pnode->data);
           break;
       case SYM:
-          dobj = createDataObj (DT_SYM, pnode->data);
+          dobj = create_dataobj (DT_SYM, pnode->data);
           break;
       case ASN:
           dobj = eval (pnode->l);
@@ -69,28 +69,28 @@ eval (tnode_t * pnode)
           to2 = eval (pnode->r);
           res = (double *) malloc (sizeof (double));
           *res = *(double *) to1->data + *(double *) to2->data;
-          dobj = createDataObj (DT_NUM, res);
+          dobj = create_dataobj (DT_NUM, res);
           break;
       case SUB:
           to1 = eval (pnode->l);
           to2 = eval (pnode->r);
           res = (double *) malloc (sizeof (double));
           *res = *(double *) to1->data - *(double *) to2->data;
-          dobj = createDataObj (DT_NUM, res);
+          dobj = create_dataobj (DT_NUM, res);
           break;
       case MUL:
           to1 = eval (pnode->l);
           to2 = eval (pnode->r);
           res = (double *) malloc (sizeof (double));
           *res = *(double *) to1->data * *(double *) to2->data;
-          dobj = createDataObj (DT_NUM, res);
+          dobj = create_dataobj (DT_NUM, res);
           break;
       case DIV:
           to1 = eval (pnode->l);
           to2 = eval (pnode->r);
           res = (double *) malloc (sizeof (double));
           *res = *(double *) to1->data / *(double *) to2->data;
-          dobj = createDataObj (DT_NUM, res);
+          dobj = create_dataobj (DT_NUM, res);
           break;
       case MOD:
           to1 = eval (pnode->l);
@@ -98,7 +98,7 @@ eval (tnode_t * pnode)
           res = (double *) malloc (sizeof (double));
           *res =
               ((int) *(double *) to1->data) / ((int) *(double *) to2->data);
-          dobj = createDataObj (DT_NUM, res);
+          dobj = create_dataobj (DT_NUM, res);
           break;
       case PRN:
           to1 = eval (pnode->l);
@@ -119,13 +119,13 @@ print_dataobj (dataobj_t * dobj)
     switch (dobj->dataType)
       {
       case DT_NUM:
-          printf ("= %g\n", *(double *) dobj->data);
+          printf ("%g\n", *(double *) dobj->data);
           break;
       case DT_STR:
-          printf ("= %s\n", (char *) dobj->data);
+          printf ("%s\n", (char *) dobj->data);
           break;
       case DT_SYM:
-          printf ("= %s = ", ((symbol_t *) dobj->data)->name);
+          printf ("%s = ", ((symbol_t *) dobj->data)->name);
           switch (((symbol_t *) dobj->data)->symType)
             {
             case SYM_NUM:
@@ -140,7 +140,7 @@ print_dataobj (dataobj_t * dobj)
             }
           break;
       case DT_NUL:
-          printf ("= NULL\n");
+          printf ("NULL\n");
           break;
       default:
           fprintf (stderr, "Internal error: unknown data type\n");

@@ -18,7 +18,8 @@ typedef struct {
     void *data;
 } dataobj_t;
 
-dataobj_t *createDataObj(datatypeEnum type, void *data);
+dataobj_t *create_dataobj (datatypeEnum type, void *data);
+void delete_dataobj (dataobj_t * dobj);
+void print_dataobj (dataobj_t * dobj);
 
 dataobj_t *eval (tnode_t * pnode);
-void print_dataobj(dataobj_t * dobj);
