@@ -8,8 +8,6 @@
 #include "datatype.h"
 #include "epw.h"
 
-extern FILE *yyin;
-
 %}
 
 %error-verbose
@@ -47,11 +45,9 @@ program
                                 printf("= ");
                                 print_dataobj(dobj);
                                 delete_dataobj(dobj);
-                            }
+                            } else PRINTLN;
                             delete_node($2);
-                        } else {
-                            printf("[%d]> ", yylineno); 
-                        }
+                        } else PRINTLN;
                     }
     | program error EOL { yyerrok; printf("[%d]> ", yylineno); }
     ;
@@ -87,25 +83,7 @@ expr
 
 %%
 
-int main(int argc, char **argv)
-{
-    if (argc > 1) {
-        if (!(yyin = fopen(argv[1], "r"))) {
-            perror(argv[1]);
-        }
-    } else {
-        printf("Emma Peiran Wang says hi\n");
-        printf("[%d]> ", yylineno);
-    }
-    yyparse();
-
-    /* release the resources used by the symbol table */
-    delete_symtab();
-
-    return 0;
-}
-
-void 
+void
 yyerror(char *s, ...)
 {
     va_list ap;

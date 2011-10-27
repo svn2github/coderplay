@@ -61,7 +61,7 @@ eval (tnode_t * pnode)
           break;
       case PRN:
           to1 = eval (pnode->l);
-          print_dataobj(to1);
+          if (to1) print_dataobj(to1); 
           break;
       default:
           fprintf (stderr, "Internal error: unknown node type\n");
@@ -99,7 +99,7 @@ op_arithmetic(dataobj_t *d1, dataobj_t *d2, int operation)
 
     dtype = o1->dataType;
     if (dtype != o2->dataType) {
-        fprintf(stderr,  "operands are different type");
+        fprintf(stderr,  "operands are different type\n");
         if (freeo1) delete_dataobj(o1);
         if (freeo2) delete_dataobj(o2);
         return NULL;
@@ -157,4 +157,23 @@ op_arithmetic(dataobj_t *d1, dataobj_t *d2, int operation)
     if (freeo2) delete_dataobj(o2);
     return dobj;
 }
+
+int main(int argc, char **argv)
+{
+    if (argc > 1) {
+        if (!(yyin = fopen(argv[1], "r"))) {
+            perror(argv[1]);
+        }
+    } else {
+        printf("Emma Peiran Wang says hi\n");
+        printf("[%d]> ", yylineno);
+    }
+    yyparse();
+
+    /* release the resources used by the symbol table */
+    delete_symtab();
+
+    return 0;
+}
+
 
