@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ipc.h"
-#include "ipc.tab.h"
+#include "parser.h"
 
 %}
 
@@ -29,10 +29,10 @@ WHITESPACE      [\t ]+
 "%" |             
 "=" |
 "," |
-";" |
 "(" |            
 ")"                 { return yytext[0]; }
 
+({WHITESPACE}*";"{WHITESPACE}*)* { return ';'; }
 
 
 ({INTEGER}|{FLOAT})             { yylval.d = atof(yytext); return NUMBER; }
@@ -50,8 +50,7 @@ print               { return PRINT; }
                         return ID; 
                     }
 
-";"{WHITESPACE}*"\n" |
-"\n"                { return EOL; }
+({WHITESPACE}*";"{WHITESPACE}*)*"\n" { return EOL; }
 
 "//".*              /* ignore comments */
 

@@ -1,6 +1,7 @@
 CC = gcc
 LEX = flex
 YACC = bison
+MV = mv -f 
 
 # Delete the default suffixes
 .SUFFIXES:  
@@ -9,10 +10,15 @@ YACC = bison
 
 all: ipc
 
-ipc: ipc.y ipc.l ipc.h ipc.c
-	$(YACC) --defines -v ipc.y
+ipc: ipc.h ipc.c lexer.o
+	$(CC) -c ipc.c
+	$(CC) -o ipc parser.o lexer.o ipc.o -lfl
+
+lexer.o: ipc.l ipc.y
+	$(YACC) -d --report=all -g --output=parser.c ipc.y
 	$(LEX) ipc.l
-	$(CC) -o ipc ipc.tab.c lex.yy.c ipc.c -lfl
+	$(MV) lex.yy.c lexer.c
+	$(CC) -c parser.c lexer.c
 
 clean:
-	rm -f ipc *.o lex.yy.c ipc.tab.h ipc.tab.c ipc.output
+	rm -f ipc *.o parser.* lexer.c
