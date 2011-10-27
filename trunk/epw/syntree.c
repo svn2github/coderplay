@@ -42,6 +42,7 @@ delete_node (tnode_t * pnode)
           break;
       case SYM:
           break;
+      case UMI:
       case ASN:
       case PRN:
       case ADD:

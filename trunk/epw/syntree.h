@@ -10,6 +10,7 @@ typedef struct symbol symbol_t;
 typedef enum
 {
     NUM = 258,
+    UMI, /* uminus */
     STR,
     SYM,
     ASN,

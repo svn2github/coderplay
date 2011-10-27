@@ -19,6 +19,7 @@
 LETTER          [a-zA-Z_]
 INTEGER         -?[0-9]+
 FLOAT           -?[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?
+EXP ([Ee][-+]?[0-9]+) 
 IDENTIFIER      {LETTER}({LETTER}|{INTEGER})*
 WHITESPACE      [\t ]+
 
@@ -38,7 +39,8 @@ WHITESPACE      [\t ]+
 print               { return PRINT; }
 
 
-({INTEGER}|{FLOAT}) {
+[0-9]+"."[0-9]*{EXP}? |
+"."?[0-9]+{EXP}?    {
                         yylval.d = malloc(sizeof(double)); 
                         *yylval.d = atof(yytext); 
                         return NUMBER; 

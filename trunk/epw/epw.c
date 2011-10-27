@@ -25,6 +25,11 @@ eval (tnode_t * pnode)
           dobj = create_dataobj (DT_NUM, pnode->data, FREE_DATA_PTR_WHEN_DELETE);
           pnode->data = NULL;
           break;
+      case UMI:
+          to1 = eval (pnode->l);
+          to2 = create_dataobj_zero();
+          dobj = op_arithmetic(to2, to1, SUB);
+          break;
       case STR:
           dobj = create_dataobj (DT_STR, pnode->data, FREE_DATA_PTR_WHEN_DELETE);
           pnode->data = NULL;

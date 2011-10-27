@@ -96,3 +96,11 @@ get_data_from_symbol(symbol_t *sym) {
     return dobj;
 }
 
+dataobj_t *
+create_dataobj_zero ()
+{
+    double *data = (double *)malloc(sizeof(double));
+    *data = 0.0;
+    return  create_dataobj(DT_NUM, data, FREE_DATA_PTR_WHEN_DELETE);
+}
+

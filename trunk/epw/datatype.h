@@ -38,5 +38,6 @@ dataobj_t *create_dataobj(datatypeEnum type, void *data, int gcdata);
 void delete_dataobj(dataobj_t *dobj);
 void print_dataobj (dataobj_t * dobj);
 dataobj_t * get_data_from_symbol(symbol_t *sym); 
+dataobj_t * create_dataobj_zero ();
 
 

@@ -23,7 +23,7 @@
 %right '='
 %left '+' '-' '%'
 %left '*' '/'
-/* %nonassoc '|'*/
+%nonassoc UMINUS
 
 %token PRINT
 %token <sym> ID
@@ -74,6 +74,7 @@ expr
     | expr '*' expr { $$ = new_tnode(MUL, NULL, $1, $3); }
     | expr '/' expr { $$ = new_tnode(DIV, NULL, $1, $3); }
     | expr '%' expr { $$ = new_tnode(MOD, NULL, $1, $3); }
+    | '-' expr %prec UMINUS { $$ = new_tnode(UMI, NULL, $2, NULL); }
     | '(' expr ')'  { $$ = $2; }
     | NUMBER        { $$ = new_tnode(NUM, $1, NULL, NULL); }
     | STRING        { $$ = new_tnode(STR, $1, NULL, NULL); }
