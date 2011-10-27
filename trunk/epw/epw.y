@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "ipc.h"
+#include "epw.h"
 
 extern FILE *yyin;
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ipc.h"
+#include "epw.h"
 
 void *
 safe_malloc (size_t size)

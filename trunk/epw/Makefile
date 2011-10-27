@@ -1,24 +1,22 @@
 CC = gcc
 LEX = flex
 YACC = bison
-MV = mv -f 
 
 # Delete the default suffixes
 .SUFFIXES:  
 
 .PHONY: all clean
 
-all: ipc
+all: epw
 
-ipc: ipc.h ipc.c lexer.o
-	$(CC) -c ipc.c
-	$(CC) -o ipc parser.o lexer.o ipc.o -lfl
+epw: epw.h epw.c lexer.o
+	$(CC) -c epw.c
+	$(CC) -o epw parser.o lexer.o epw.o -lfl
 
-lexer.o: ipc.l ipc.y
-	$(YACC) -d --report=all -g --output=parser.c ipc.y
-	$(LEX) ipc.l
-	$(MV) lex.yy.c lexer.c
+lexer.o: epw.l epw.y
+	$(YACC) -d --report=all -g --output=parser.c epw.y
+	$(LEX) -olexer.c epw.l
 	$(CC) -c parser.c lexer.c
 
 clean:
-	rm -f ipc *.o parser.* lexer.c
+	rm -f epw *.o parser.* lexer.c
