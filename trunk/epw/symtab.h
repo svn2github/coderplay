@@ -43,5 +43,6 @@ symbol_t symtab[NMAX_SYMBOL];
 /* Look up a name in the symbol table or create a new entry if no match is found */
 symbol_t *lookup (char *);
 
+void reset_symbol(symbol_t *sym);
 void delete_symbol(symbol_t *sym);
-
+void delete_symtab();

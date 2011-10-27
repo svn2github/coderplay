@@ -20,6 +20,8 @@ delete_dataobj (dataobj_t * dobj)
 {
     if (!dobj)
         return;
+    /* Do not free the pointer if it is symbol */
+    /* Symbol is managed separately */
     if (dobj->data && dobj->dataType != DT_SYM)
         free (dobj->data);
     free (dobj);
@@ -35,6 +37,7 @@ eval (tnode_t * pnode)
       }
 
     dataobj_t *dobj = NULL;
+    /* temporary data object pointer */
     dataobj_t *to1 = NULL, *to2 = NULL;
     double *res;
 
@@ -60,7 +63,10 @@ eval (tnode_t * pnode)
                 fprintf (stderr, "cannot assign to an expression\n");
                 break;
             }
+          /* clear the contents of the symbol for new value */
+          reset_symbol((symbol_t *)dobj->data);
           ((symbol_t *)dobj->data)->value = to2->data;
+          to2->data = NULL;
           if (to2->dataType == DT_NUM)
               ((symbol_t *)dobj->data)->symType = SYM_NUM;
           else if (to2->dataType == DT_STR)
@@ -110,8 +116,8 @@ eval (tnode_t * pnode)
           fprintf (stderr, "Internal error: unknown node type\n");
       }
 
-    //delete_dataobj (to1);
-    //delete_dataobj (to2);
+    delete_dataobj (to1);
+    delete_dataobj (to2);
     return dobj;
 }
 

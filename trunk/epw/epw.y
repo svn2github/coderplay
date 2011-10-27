@@ -45,6 +45,7 @@ program
                             if (dobj) {
                                 printf("= ");
                                 print_dataobj(dobj);
+                                delete_dataobj(dobj);
                             }
                             delete_node($2);
                         } else {
@@ -92,7 +93,7 @@ int main(int argc, char **argv)
             perror(argv[1]);
         }
     } else {
-        printf("IPC for fun\n");
+        printf("Emma Peiran Wang says hi\n");
         printf("[%d]> ", yylineno);
     }
     yyparse();

@@ -45,6 +45,17 @@ lookup (char *name)
     exit (EXIT_FAILURE);        /* tried them all, table is full */
 }
 
+void reset_symbol(symbol_t *sym)
+{
+    if (!sym->name) return;
+    if (sym->value) free(sym->value);
+    if (sym->st) free(sym->st);
+    if (sym->plist) free(sym->plist);
+    sym->value = NULL;
+    sym->st = NULL;
+    sym->plist = NULL;
+}
+
 void 
 delete_symbol(symbol_t *sym) 
 {
