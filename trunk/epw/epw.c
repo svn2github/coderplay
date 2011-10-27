@@ -45,7 +45,7 @@ eval (tnode_t * pnode)
           dobj = createDataObj (DT_NUM, pnode->data);
           break;
       case STR:
-          dobj = createDataObj (DT_NUM, pnode->data);
+          dobj = createDataObj (DT_STR, pnode->data);
           break;
       case SYM:
           dobj = createDataObj (DT_SYM, pnode->data);
