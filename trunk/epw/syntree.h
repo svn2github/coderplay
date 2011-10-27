@@ -7,7 +7,8 @@ typedef struct symbol symbol_t;
 #endif
 
 /* Define all types of nodes that can exist in the syntax tree */
-typedef enum {
+typedef enum
+{
     NUM = 258,
     STR,
     SYM,
@@ -18,49 +19,22 @@ typedef enum {
     DIV,
     MOD,
     PRN
-} treenodetype;
+} nodetypeEnum;
 
 /* The standard tree node */
 struct tnode
 {
-    int nodeType;
-    tnode_t *l; /* left operand */
-    tnode_t *r; /* right operand */
+    nodetypeEnum nodeType;
+    /* 
+     * The data can be a constant of numbers, string
+     * or a symbol table entry. 
+     */
+    void *data;
+    tnode_t *l;                 /* left operand */
+    tnode_t *r;                 /* right operand */
 };
 
-/* The number constant node */
-typedef struct
-{
-    int nodeType;
-    double val;
-} numnode_t;
+tnode_t *new_tnode (int nodeType, void *data, tnode_t * l, tnode_t * r);
 
-/* The string constant node */
-typedef struct
-{
-    int nodeType;
-    char *val;
-} strnode_t;
-
-/* The symbol node */
-typedef struct
-{
-    int nodeType;
-    symbol_t *sym;
-} symnode_t;
-
-typedef struct
-{
-    int nodeType;
-    symbol_t *l;
-    tnode_t *r;
-} asnnode_t;
-
-tnode_t *new_tnode(int nodeType, tnode_t *l, tnode_t *r);
-tnode_t *new_numnode(double val);
-tnode_t *new_strnode(char* val);
-tnode_t *new_symnode(symbol_t *sym);
-tnode_t *new_asnnode(symbol_t *l, tnode_t *r);
-
-void delete_node(tnode_t *pnode);
+void delete_node (tnode_t * pnode);
 

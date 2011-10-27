@@ -15,7 +15,7 @@ extern FILE *yyin;
 
 %union {
     char *s;
-    double d;
+    double *d;
     tnode_t *pnode;
     symbol_t *sym;
 }
@@ -41,8 +41,8 @@ program
     : /* empty */ 
     | program line  { 
                         if ($2) {
-                            printf("= %g\n", eval($2));
-                            PRINTLN; 
+                            dataobj_t *dobj = eval($2);
+                            if (dobj) print_dataobj(eval($2));
                             delete_node($2);
                         } else {
                             printf("[%d]> ", yylineno); 
@@ -63,21 +63,21 @@ stmt_list
     ;
 
 stmt
-    : PRINT expr    { $$ = new_tnode(PRN, $2, NULL);}
+    : PRINT expr    { $$ = new_tnode(PRN, NULL, $2, NULL);}
     | expr
     ;
 
 expr
-    : expr '+' expr { $$ = new_tnode(ADD, $1, $3); }
-    | expr '-' expr { $$ = new_tnode(SUB, $1, $3); }
-    | expr '*' expr { $$ = new_tnode(MUL, $1, $3); }
-    | expr '/' expr { $$ = new_tnode(DIV, $1, $3); }
-    | expr '%' expr { $$ = new_tnode(MOD, $1, $3); }
+    : expr '+' expr { $$ = new_tnode(ADD, NULL, $1, $3); }
+    | expr '-' expr { $$ = new_tnode(SUB, NULL, $1, $3); }
+    | expr '*' expr { $$ = new_tnode(MUL, NULL, $1, $3); }
+    | expr '/' expr { $$ = new_tnode(DIV, NULL, $1, $3); }
+    | expr '%' expr { $$ = new_tnode(MOD, NULL, $1, $3); }
     | '(' expr ')'  { $$ = $2; }
-    | NUMBER        { $$ = new_numnode($1); }
-    | STRING        { $$ = new_strnode($1); }
-    | ID            { $$ = new_symnode($1); }
-    | ID '=' expr   { $$ = new_asnnode($1, $3); }
+    | NUMBER        { $$ = new_tnode(NUM, $1, NULL, NULL); }
+    | STRING        { $$ = new_tnode(STR, $1, NULL, NULL); }
+    | ID            { $$ = new_tnode(SYM, $1, NULL, NULL); }
+    | ID '=' expr   { $$ = new_tnode(ASN, NULL, new_tnode(SYM, $1, NULL, NULL), $3); }
     ;
 
 %%
@@ -93,6 +93,9 @@ int main(int argc, char **argv)
         printf("[%d]> ", yylineno);
     }
     yyparse();
+
+    /* release the resources used by the symbol table */
+    delete_symtab();
 
     return 0;
 }

@@ -11,3 +11,6 @@
      the header file in multiple source files.
    * Use a simple forward declaration such as struct a; is enough if all we need
      in another file is using a pointer to the struct.
+6. It is perfectly OK to free a void pointer and it frees it correctly no matter
+   what type of data the pointer actually points to. In fact, the free function
+   ever sees is a void pointer.

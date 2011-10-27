@@ -34,12 +34,14 @@ WHITESPACE      [\t ]+
 "(" |            
 ")"                 { return yytext[0]; }
 
-({WHITESPACE}*";"{WHITESPACE}*)* { return ';'; }
-
-
-({INTEGER}|{FLOAT})             { yylval.d = atof(yytext); return NUMBER; }
-
 print               { return PRINT; }
+
+
+({INTEGER}|{FLOAT}) {
+                        yylval.d = malloc(sizeof(double)); 
+                        *yylval.d = atof(yytext); 
+                        return NUMBER; 
+                    }
 
 \"[^\"]*\"          { 
                         yylval.s = strdup(yytext+1);
@@ -48,9 +50,12 @@ print               { return PRINT; }
                     }
 
 {IDENTIFIER}        { 
+                        /* We either get the symbol from the symbol table or create a new entry */
                         yylval.sym = lookup(yytext);
                         return ID; 
                     }
+
+({WHITESPACE}*";"{WHITESPACE}*)* { return ';'; }
 
 ({WHITESPACE}*";"{WHITESPACE}*)*"\n" { return EOL; }
 
