@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include "symtab.h"
+#include "syntree.h"
 #include "epw.h"
 
 extern FILE *yyin;

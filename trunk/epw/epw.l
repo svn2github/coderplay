@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "symtab.h"
+#include "syntree.h"
 #include "epw.h"
 #include "parser.h"
 
