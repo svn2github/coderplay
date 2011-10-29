@@ -48,9 +48,9 @@ program
                             } 
                             delete_node($2);
                         } 
-                        PRINTLN;
+                        //PRINTLN;
                     }
-    | program error EOL { yyerrok; printf("[%d]> ", yylineno); }
+    | program error EOL { yyerrok; /* printf("[%d]> ", yylineno);*/ }
     ;
 
 line

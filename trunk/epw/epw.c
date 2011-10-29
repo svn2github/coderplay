@@ -171,7 +171,7 @@ int main(int argc, char **argv)
         }
     } else {
         printf("Emma Peiran Wang says hi\n");
-        printf("[%d]> ", yylineno);
+        //PRINTLN;
     }
     yyparse();
 

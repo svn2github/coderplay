@@ -1,4 +1,6 @@
 CC = gcc
+C_INCLUDE_PATH=/user/local/Cellar/readline/6.2.1/include
+LIBRARY_PATH=/user/local/Cellar/readline/6.2.1/lib
 LEX = flex
 YACC = bison
 
@@ -11,12 +13,12 @@ all: epw
 
 epw: epw.h epw.c lexer.o symtab.o syntree.o datatype.o
 	$(CC) -g -c epw.c
-	$(CC) -o epw parser.o lexer.o epw.o symtab.o syntree.o datatype.o -lfl
+	$(CC) -lfl -lreadline parser.o lexer.o epw.o symtab.o syntree.o datatype.o -o epw
 
 lexer.o: epw.l epw.y
 	$(YACC) -d --report=all -g --output=parser.c epw.y
 	$(LEX) -olexer.c epw.l
-	$(CC) -g -c parser.c lexer.c
+	$(CC) $(CFLAGS) -g -c parser.c lexer.c 
 
 symtab.o: symtab.c symtab.h
 	$(CC) -g -c symtab.c
