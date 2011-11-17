@@ -3,6 +3,8 @@
  */
 package src;
 
+import java.util.ArrayList;
+
 /**
  * @author ywang
  * 
@@ -12,6 +14,7 @@ public class MSMain {
 	private static int nsize = 10;
 	private static boolean isConstrained = false;
 	private static int prow = 0, pcol = 0;
+	private static ArrayList<int[]> closed = new ArrayList<int[]>();
 	private static long matrix;
 
 	/**
@@ -56,9 +59,16 @@ public class MSMain {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		
 		if (parseOpt(args) == 0)
 			System.exit(1);
+		
+		int ii, jj;
+		int lsidx, rsidx; // left/right row index
+		int leidx, reidx; // left/right element index
 
+		
 		System.out.println("-n " + nsize);
 		System.out.println("-c " + isConstrained);
 		System.out.println("-p " + prow + " " + pcol);
@@ -67,15 +77,30 @@ public class MSMain {
 		MSMatrix mat = new MSMatrix(nsize, isConstrained, prow, pcol);
 		mat.print();
 		mat.printsums();
+		Integer [] idxsort = mat.getIdxSortSums();
+		for (Integer idx: idxsort) {
+			System.out.print(" "+idx);
+		}
+		System.out.println();
 
 		// calculate the sums and stats of the initial matrix
 
 		// main loop of the search
 		do {
+			
+			idxsort = mat.getIdxSortSums();
 
 			// Generate and enqueue a new matrix
-			if (true) {
-				// Fast descent to low state space
+			if (mat.getDistance() > mat.getUpbound0()) { // Fast descent to low state space
+				for (ii=0;ii<nsize+nsize+2;ii++) {
+					
+					for (jj=0;jj<nsize+nsize;jj++) {
+					
+					}
+				}
+				
+				
+				
 			} else {
 				// Perform either paired swap or simple swap in low state space
 
@@ -84,7 +109,7 @@ public class MSMain {
 			// update the sums and stats for the new matrix based on the old
 			// matrix data
 
-		} while (false);
+		} while (false); // while (mat.getDistance() != 0);
 
 		// end here
 
