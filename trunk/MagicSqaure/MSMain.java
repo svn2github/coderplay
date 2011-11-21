@@ -1,7 +1,6 @@
 /**
  * 
  */
-package src;
 
 import java.util.ArrayList;
 
@@ -66,6 +65,7 @@ public class MSMain {
 		int ii, jj;
 		int lsidx, rsidx; // left/right row index
 		int leidx, reidx; // left/right element index
+		int ldiff, rdiff;
 		int lgval, rgval;
 		int lgidx, rgidx;
 
@@ -86,8 +86,6 @@ public class MSMain {
 		Integer[] idxsort = mat.getIdxSortSums();
 		int nuniquesums;
 		boolean[] fcons = mat.getFcons();
-		int[] idxforsum1 = new int[nsize];
-		int[] idxforsum2 = new int[nsize];
 		Integer[] idxforsum1_sort;
 		Integer[] idxforsum2_sort;
 
@@ -98,16 +96,23 @@ public class MSMain {
 
 		// calculate the sums and stats of the initial matrix
 
-		int minv, maxv;
 		boolean findit, candidateSwap;
+		int[] matrixBest;
+		long distanceBest;
+		int[] sumsBest;
+		int symetricBest;
+		long distanceCurrent;
+		int symetricCurrent;
+		Integer[] idxsortNew;
 		int temp;
-		temp = 100;
+		temp = 50;
 
 		// main loop of the search
 		do {
 
 			idxsort = mat.getIdxSortSums();
-			nuniquesums = mat.countNuniqueSumsExceptZero(idxsort);
+			distanceCurrent = mat.getDistance();
+			symetricCurrent = mat.countSymetric(idxsort);
 
 			// Generate and enqueue a new matrix
 			if (mat.getDistance() > mat.getUpbound0()) { // Fast descent to low
@@ -167,6 +172,11 @@ public class MSMain {
 
 			} else {
 
+				matrixBest = null;
+				symetricBest = -1;
+				distanceBest = Long.MAX_VALUE;
+				sumsBest = null;
+
 				lsidx = idxsort[0];
 				rsidx = idxsort[idxsort.length - 1];
 				idxforsum1_sort = mat.getSortedIndexOfSingleSumElements(lsidx);
@@ -189,12 +199,18 @@ public class MSMain {
 						continue;
 					}
 
-					lgval = mat.getSums()[lsidx] - mat.getGoalsum();
-					rgval = mat.getSums()[rsidx] - mat.getGoalsum();
+					ldiff = mat.getSums()[lsidx] - mat.getGoalsum();
+					rdiff = mat.getSums()[rsidx] - mat.getGoalsum();
+					
+					lgval = mat.getMatrix()[idxforsum1_sort[leidx].intValue()] - ldiff;
+					rgval = mat.getMatrix()[idxforsum2_sort[reidx].intValue()] - rdiff;
 
 					lgidx = mat.getIndexForElement(lgval);
 					rgidx = mat.getIndexForElement(rgval);
 
+					
+					// System.out.println(lgval+", "+rgval+"   ->"+lgidx+"; "+rgidx+ "   -> "+leidx+", "+reidx);
+					
 					candidateSwap = true;
 					if (lgidx != -1 && rgidx != -1) {
 						for (jj = 0; jj < nsize; jj++) {
@@ -207,18 +223,58 @@ public class MSMain {
 								break;
 							}
 						}
+					} else {
+						candidateSwap = false;
 					}
 
 					if (candidateSwap) {
+						// System.out.println("paired swap");
 						// try paired swap
 						mat.updatePairedSwap(idxforsum1_sort[leidx].intValue(),
 								lgidx, idxforsum1_sort[leidx].intValue(), rgidx);
 					} else {
+						//System.out.println("simple swap");
 						// try simple swap
 						mat.update(idxforsum1_sort[leidx].intValue(),
 								idxforsum2_sort[reidx].intValue());
 					}
 
+					if (!closed.contains(mat.getMatrix())) {
+						if (matrixBest == null) {
+							matrixBest = mat.getMatrix().clone();
+							distanceBest = mat.getDistance();
+							sumsBest = mat.getSums().clone();
+							symetricBest = mat.countSymetric(idxsort);
+						} else {
+							idxsortNew = mat.getIdxSortSums();
+							if (mat.countSymetric(idxsortNew) > symetricBest) {
+								matrixBest = mat.getMatrix().clone();
+								distanceBest = mat.getDistance();
+								sumsBest = mat.getSums().clone();
+								symetricBest = mat.countSymetric(idxsortNew);
+							} else {
+								if (mat.getDistance() < distanceBest) {
+									matrixBest = mat.getMatrix().clone();
+									distanceBest = mat.getDistance();
+									sumsBest = mat.getSums().clone();
+									symetricBest = mat
+											.countSymetric(idxsortNew);
+								}
+							}
+						}
+					}
+
+					mat.revertUpdate();
+
+				}
+
+				if (matrixBest != null) {
+					mat.setMatrix(matrixBest);
+					mat.setDistance(distanceBest);
+					mat.setSums(sumsBest);
+				} else {
+					System.out.println("Error 3");
+					System.exit(1);
 				}
 
 			}
@@ -228,14 +284,26 @@ public class MSMain {
 			// update the sums and stats for the new matrix based on the old
 			// matrix data
 			temp--;
-			System.out.println(temp);
-		} while (temp > 0); // while (mat.getDistance() != 0);
+
+			mat.print();
+			mat.printsums();
+			System.out.println(mat.getDistance());
+			System.out.println("close size "+closed.size());
+			System.out.println(mat.getMatrix());
+			System.out.println("temp = " + temp);
+			int [] test1 = {1, 2, 3, 4};
+			int [] test2 = {1,2,3,4};
+			System.out.println(test1.equals(test2));
+			
+
+		} while (mat.getDistance() != 0); // while (mat.getDistance() != 0);
 
 		// end here
 
 		mat.print();
 		mat.printsums();
 		System.out.println(mat.getDistance());
+		System.out.println("temp = " + temp);
 
 	}
 

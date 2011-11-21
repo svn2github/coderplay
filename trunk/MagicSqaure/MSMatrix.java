@@ -1,7 +1,7 @@
 /**
  * 
  */
-package src;
+
 
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -121,7 +121,7 @@ public class MSMatrix {
 		}
 		// diagonal 2
 		if (q + m == nsize - 1) {
-			idxSumChange[3] = nsize2 + 1;
+			idxSumChange[nchanges] = nsize2 + 1;
 			nchanges++;
 		}
 		return nchanges;
@@ -253,24 +253,46 @@ public class MSMatrix {
 	 * @return
 	 */
 	public int countNuniqueSumsExceptZero(Integer[] idxsort) {
-		int ii, count, thesum, exceptZero;
-
-		thesum = sums[idxsort[0]];
+		int ii, count, runsum, thissum, exceptZero;
+		
+		runsum = sums[idxsort[0]];
 		count = 1;
 		exceptZero = 0;
 		for (ii = 1; ii < sums.length; ii++) {
-			if (sums[ii] == 0)
+			thissum = sums[idxsort[ii]];
+			if (thissum == 0)
 				exceptZero = 1;
-			if (thesum == sums[ii]) {
+			if (runsum == thissum) {
 				continue;
 			} else {
-				thesum = sums[ii];
+				runsum = thissum;
 				count++;
 			}
 		}
 		count -= exceptZero;
 		return count;
 	}
+	
+	
+	public int countSymetric(Integer[] idxsort) {
+		int ii, thissum1 , thissum2, accumu;
+		
+		accumu = 0;
+		for (ii=1;ii<sums.length/2;ii++) {
+			thissum1 = -sums[idxsort[ii]];
+			thissum2 = sums[idxsort[sums.length-1-ii]];
+			if (thissum1 != thissum2) {
+				return 0;
+			}
+			accumu += thissum1 + thissum2;
+		}
+		
+		if (accumu == 0)
+			return 2;
+		else 
+			return 1;
+	}
+	
 
 	public void populateIdxforsum() {
 		int ii, jj, idxpin;
@@ -359,6 +381,24 @@ public class MSMatrix {
 
 	public long getUpbound0() {
 		return upbound0;
+	}
+
+	public void setMatrix(int[] matrix) {
+		int ii;
+		for (ii=0;ii<matrix.length;ii++) {
+			this.matrix[ii] = matrix[ii];
+		}
+	}
+
+	public void setDistance(long distance) {
+		this.distance = distance;
+	}
+
+	public void setSums(int[] sums) {
+		int ii;
+		for (ii=0;ii<sums.length;ii++) {
+			this.sums[ii] = sums[ii];
+		}
 	}
 
 	public boolean[] getFcons() {
