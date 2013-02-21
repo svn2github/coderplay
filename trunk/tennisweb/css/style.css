@@ -1,0 +1,304 @@
+body {
+    font:12px Verdana, Arial, Helvetica, sans-serif;
+    background-image: url('../img/bg-melbourne-court.jpg');
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    background-color: #0c2635;
+    margin: 0;
+    text-align:center;
+    color:#fff;
+    z-index: -100;
+}
+
+#overall_box {
+    width: 960px;
+    background: rgba(38, 72, 111, 0.5);
+    margin: 0 auto; 
+    padding: 0;
+    text-align: left;
+    border-radius: 3px;
+    position: relative;
+    display: inline-block;
+    z-index: 0;
+}
+
+#header {
+    background-color: #0c2635;
+	width: 940px;
+	margin-left: 10px;
+	padding: 0;
+	position: relative;
+    display: inline-block;
+    border-radius: 3px;
+}
+
+/** camp section **/
+#camp {
+    width: 940px;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: inline-block;
+}
+
+#logo_cont {
+    float:left;
+    width:300px;
+    padding-top: 20px;
+    margin: 0 20px; 
+}
+.logo {
+    font-family:'Minion Pro', 'times New Roman';
+    line-height:1em;
+    font-size:24px;
+    color:#fff;
+    font-weight:bold;
+}
+.logo1 {
+    color:#d0cdc4;
+}
+
+.tollfree_cont {
+    margin:0 0 0 680px;
+    padding: 0;
+}
+.tollfree {
+    margin: 0;
+    padding:25px 18px 18px 55px; 
+    color:#fff;
+    font-size:20px;
+}
+
+
+/** Navigation **/
+#navigation {
+    background-color: rgb(221, 216, 250);
+    margin: 0 5px 5px;
+	height: 44px;
+	padding: 0 0 0 0px;
+	left: 0;
+    border-radius: 3px;
+}
+#navigation ul {
+	display: inline-block;
+	height: 37px;
+	width: 688px;
+	list-style: none;
+	margin: 0;
+	padding: 4px 0 3px;
+    float: left;
+}
+#navigation li {
+	float: left;
+	font-size: 16px;
+	line-height: 37px;
+	margin: 0 5px;
+	text-align: center;
+}
+#navigation li.first_selected {
+	background-color: #b7c2c8;
+}
+
+#navigation a {
+	color: #092f44;
+	font-weight: bold;
+	padding: 0 10px;
+	text-decoration: none;
+	text-shadow: 1px 1px 0 #eaeaea;
+    display: block;
+}
+#navigation a:hover {
+	color: #000;
+    background-color: #ff0;
+}
+
+
+
+
+
+/* slides section */
+
+#s_container {
+	width:770px;
+	padding:10px;
+	margin:0 auto;
+	position:relative;
+	z-index:0;
+}
+
+#example {
+	width:790px;
+	height:250px;
+	position:relative;
+}
+
+
+/*
+	Slideshow
+*/
+
+#slides {
+	position:absolute;
+	top:15px;
+	left:4px;
+	z-index:100;
+}
+
+/*
+	Slides container
+	Important:
+	Set the width of your slides container
+	Set to display none, prevents content flash
+*/
+
+.slides_container {
+	width: 760px;
+	overflow: hidden;
+	position:relative;
+	display:none;
+}
+
+/*
+	Each slide
+	Important:
+	Set the width of your slides
+	If height not specified height will be set by the slide content
+	Set to display block
+*/
+
+.slides_container a {
+	width:760px;
+	height:204px;
+	display:block;
+}
+
+.slides_container a img {
+	display:block;
+}
+
+/*
+	Next/prev buttons
+*/
+
+#slides .next,#slides .prev {
+	position:absolute;
+	top:77px;
+	left:-25px;
+	width:24px;
+	height:43px;
+	display:block;
+	z-index:101;
+}
+
+#slides .next {
+	left:761px;
+}
+
+/*
+	Pagination
+*/
+
+.pagination {
+	margin:10px auto 0;
+	width:100px;
+}
+
+.pagination li {
+	float:left;
+	margin:0 1px;
+	list-style:none;
+}
+
+.pagination li a {
+	display:block;
+	width:12px;
+	height:0;
+	padding-top:12px;
+	background-image:url(../img/pagination.png);
+	background-position:0 0;
+	float:left;
+	overflow:hidden;
+}
+
+.pagination li.current a {
+	background-position:0 -12px;
+}
+
+/* Main Contents */
+#main_content {
+    background-color: #0c2635;
+	width: 940px;
+    margin-top: 20px;
+	margin-left: 10px;
+	padding: 0;
+	position: relative;
+    border-radius: 3px;
+}
+
+
+
+#header {
+    background-color: #0c2635;
+	width: 940px;
+	margin-left: 10px;
+	padding: 0;
+	position: relative;
+    display: inline-block;
+    border-radius: 3px;
+}
+
+
+
+/* Footer  */
+#footer {
+    width: 940px; 
+    display: inline-block;
+    margin-top: 20px;
+    margin-left: 10px;
+    background-color: #0c2635;
+    border-radius: 3px;
+    line-height: 20px;
+}
+
+#footer ul.contacts {
+	float: left;
+    font-size: 12px;
+	list-style: none;
+	width: 300px;
+	padding: 0 20px;
+}
+#footer ul.contacts h3 {
+	font-size: 13px;
+	margin: 0 0 10px;
+	text-transform: uppercase;
+}
+#footer ul.contacts li span {
+	float: left;
+	width: 50px;
+}
+#footer ul.contacts li p {
+	margin: 0;
+}
+
+#connect {
+	float: right;
+	list-style: none;
+	width: 140px;
+	margin: 0 50px 0;
+	padding: 0;
+}
+#connect h3 {
+	font-size: 13px;
+	margin: 0 0 10px;
+	text-transform: uppercase;
+}
+#connect li {
+	padding: 0 0 5px;
+}
+#connect li a {
+	font-size: 12px;
+	text-decoration: none;
+}
+
