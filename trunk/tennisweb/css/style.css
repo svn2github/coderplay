@@ -18,7 +18,7 @@ body {
     margin: 0 auto; 
     padding: 0;
     text-align: left;
-    border-radius: 3px;
+    border-radius: 5px;
     position: relative;
     display: inline-block;
     z-index: 0;
@@ -31,7 +31,7 @@ body {
 	padding: 0;
 	position: relative;
     display: inline-block;
-    border-radius: 3px;
+    border-radius: 0px 0px 5px 5px;
 }
 
 /** camp section **/
@@ -87,7 +87,7 @@ body {
 	height: 44px;
 	padding: 0 0 0 0px;
 	left: 0;
-    border-radius: 3px;
+    border-radius: 5px;
 }
 #navigation ul {
 	display: inline-block;
@@ -243,7 +243,7 @@ body {
 	padding-bottom: 5px;
 	position: relative;
     display: inline-block;
-    border-radius: 3px;
+    border-radius: 5px;
 }
 
 #sidebar1 {
@@ -281,7 +281,7 @@ body {
     margin-top: 20px;
     margin-left: 10px;
     background-color: #0c2635;
-    border-radius: 3px;
+    border-radius: 5px 5px 0 0;
     line-height: 20px;
 }
 
@@ -305,27 +305,27 @@ body {
 	margin: 0;
 }
 
-#connect {
+#footer ul.connect {
 	float: right;
+    font-size: 12px;
 	list-style: none;
 	width: 140px;
-	margin: 0 50px 0;
-	padding: 0;
+	padding: 0 20px;
 }
-#connect h3 {
+#footer ul.connect h3 {
 	font-size: 13px;
 	margin: 0 0 10px;
 	text-transform: uppercase;
 }
-#connect li {
+#footer ul.connect li {
 	padding: 0 0 5px;
 }
-#connect li a {
+#footer ul.connect li a {
 	font-size: 12px;
     color: #fff;
 	text-decoration: underline;
 }
-#connect li a:hover {
+#footer ul.connect li a:hover {
     color: #fff;
 	text-decoration: none;
     font-weight: bold;
