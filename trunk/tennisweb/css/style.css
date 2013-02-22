@@ -64,9 +64,17 @@ body {
     margin:0 0 0 680px;
     padding: 0;
 }
-.tollfree {
+#fblike {
+    float: right;
+    border: none;
+    overflow: hidden;
+    width: 120px;
+    height: 30px;
     margin: 0;
-    padding:25px 18px 18px 55px; 
+}
+.tollfree {
+    margin: 10px;
+    padding:25px 18px 5px 55px; 
     color:#fff;
     font-size:20px;
 }
@@ -232,22 +240,37 @@ body {
 	width: 940px;
     margin-top: 20px;
 	margin-left: 10px;
-	padding: 0;
-	position: relative;
-    border-radius: 3px;
-}
-
-
-
-#header {
-    background-color: #0c2635;
-	width: 940px;
-	margin-left: 10px;
-	padding: 0;
+	padding-bottom: 5px;
 	position: relative;
     display: inline-block;
     border-radius: 3px;
 }
+
+#sidebar1 {
+    float: right;
+    width: 220px;
+    padding: 15px 20px 15px 5px;
+    margin-bottom: 10px;
+}
+
+#sidebar2 {
+    margin: 10px 250px 10px 20px;
+}
+
+.top_cont {
+    border-bottom: 1px solid #a4c6eb;
+    margin-bottom: 5px;
+}
+.left_cont {
+    width: 260px;
+    float: left;
+    border-right: 1px solid #a4c6eb;
+    padding-right: 5px;
+}
+.right_cont {
+    margin-left: 285px;
+}
+
 
 
 
@@ -299,6 +322,12 @@ body {
 }
 #connect li a {
 	font-size: 12px;
+    color: #fff;
+	text-decoration: underline;
+}
+#connect li a:hover {
+    color: #fff;
 	text-decoration: none;
+    font-weight: bold;
 }
 
