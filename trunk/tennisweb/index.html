@@ -6,8 +6,7 @@
         <title>Tennis Camp</title>
         <link rel="stylesheet" type="text/css" href="css/style.css" />
 
-        <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-        <script src="http://gsgd.co.uk/sandbox/jquery/easing/jquery.easing.1.3.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script src="js/slides.min.jquery.js"></script>
         <script>
             $(function(){
@@ -16,9 +15,32 @@
                     preloadImage: 'img/loading.gif',
                     play: 5000,
                     pause: 2500,
-                    hoverPause: true
+                    hoverPause: true,
+                    animationStart: function(current){
+                        $('.caption').animate({
+                            bottom:-35
+                        },100);
+                        if (window.console && console.log) {
+                            // example return of current slide number
+                            console.log('animationStart on slide: ', current);
+                        };
+                    },
+                    animationComplete: function(current){
+                        $('.caption').animate({
+                            bottom:0
+                        },200);
+                        if (window.console && console.log) {
+                            // example return of current slide number
+                            console.log('animationComplete on slide: ', current);
+                        };
+                    },
+                    slidesLoaded: function() {
+                        $('.caption').animate({
+                            bottom:0
+                        },200);
+                    }
                 });
-            });
+            }); 
         </script>
     </head>
 
@@ -49,8 +71,8 @@
                         <li><a href="testimonials.html">Testimonials</a></li>
                         <li><a href="contact.html">Contact us</a></li>
                     </ul>
-                </div> <!-- navigation -->
-            </div> <!-- header -->
+                </div> 
+            </div> 
 
             <div id="main_content">
 
@@ -58,16 +80,36 @@
                     <div id="example">
                         <div id="slides">
                             <div class="slides_container">
-                                <a href="" title=""><img src="img/slide_1.jpg" width="760" height="204" alt="Slide 1"></a>
-                                <a href="" title=""><img src="img/slide_2.jpg" width="760" height="204" alt="Slide 2"></a>
-                                <a href="" title=""><img src="img/slide_3.jpg" width="760" height="204" alt="Slide 3"></a>
-                                <a href="" title=""><img src="img/slide_4.jpg" width="760" height="204" alt="Slide 4"></a>
+                                <div class="slide">
+                                    <a href="" title=""><img src="img/slide_1.jpg" width="760" height="204" alt="Slide 1"></a>
+                                    <div class="caption" style="bottom:0">
+                                        <p>Picture 1</p>
+                                    </div>
+                                </div>
+                                <div class="slide">
+                                    <a href="" title=""><img src="img/slide_2.jpg" width="760" height="204" alt="Slide 2"></a>
+                                    <div class="caption">
+                                        <p>Picture 2</p>
+                                    </div>
+                                </div>
+                                <div class="slide">
+                                    <a href="" title=""><img src="img/slide_3.jpg" width="760" height="204" alt="Slide 3"></a>
+                                    <div class="caption">
+                                        <p>Picture 3</p>
+                                    </div>
+                                </div>
+                                <div class="slide">
+                                    <a href="" title=""><img src="img/slide_4.jpg" width="760" height="204" alt="Slide 4"></a>
+                                    <div class="caption">
+                                        <p>Picture 4</p>
+                                    </div>
+                                </div>
                             </div>
                             <a href="#" class="prev"><img src="img/arrow-prev.png" width="24" height="43" alt="Arrow Prev"></a>
                             <a href="#" class="next"><img src="img/arrow-next.png" width="24" height="43" alt="Arrow Next"></a>
-                        </div>
-                    </div>
-                </div> 
+                        </div> <!-- slides -->
+                    </div> <!-- example -->
+                </div>  <!-- s_container -->
 
 
 
