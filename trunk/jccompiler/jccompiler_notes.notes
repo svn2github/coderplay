@@ -1,0 +1,119 @@
+* Read upto chapter 2 that talks Expression that contains +,-,*,/ and before 
+  the parenthesis.
+    - The computer works with registers and a stack
+        - A register is used to read an item from the input stream
+        - A stack is used to store the item previously in a register. It is
+          called push into the stack when we move the item from a register to
+          the stack.
+    - The Look character is called "look ahead" for a reason. It is because the
+      program needs to look at its content and decide what to do do next withOUT
+      consuming it. When it is consumed, we must immediately read in a new Look
+      character from the stream. So we always have a character in the Look
+      variable unless the input stream runs out. In another word, the Look 
+      character should be ahead of the current parsing (once it is parsed, a new
+      value is read in).
+    - As for the components of the input Language, from the more general level
+      to the detailed level is as follows:
+            Expression  (low)
+            Term
+            Factor (high)
+    - The assembly code can be emitted from any levels when necessary
+    - Lower levels call higher levels to complete the parsing
+    - * and / are in Term level, while + and - are in Expression level. That
+      is why * and / are done before + and - and thus obey the implicit
+      operator precedence.
+    - Only in the Factor level, a new item from input stream is moved into a
+      register.
+    - Both Expression and Term can perform arthimatic operations using two
+      items, one from the stack and the other from a register. Once the
+      operation is done, the result stays in the register. 
+    - Both Expression and Term can move an item from register to stack. This
+      operation empties the register and enables the Expression and Term to 
+      look futher in the input stream, by calling Term and Factor, 
+      respectively.
+    - The Match routine ensure the current Look character matches the given
+      character parameter. It then consumes the current Look character and get
+      the next character from the input stream into the Look variable. So far
+      the Match routine is only used to match the arithmatic operators,
+      +,-,*,/.
+
+* Now I have finished chapter 2, which added parenthesis and unary operator
+  support on top of the above features.
+    - The parenthesis is where the recursive parsing comes in. The entire
+      parenthesis'd item can be seen as a single Factor. So inside this Factor
+      (inside the parenthesis), we have again have Expressions! 
+      So the Langauge structure from low level to high level compoments now
+      looks like:
+            Expression <------
+            Term             |
+            Factor     -------
+      So the lesson here is that the definition of language compoments always
+      goes recursively, from the most general to the most detailed. Then from
+      the most detailed it can again contain the most general one.
+    - The parenthesis sign is matched in the Factor routine, which is not a
+      surprise since it is part of a single Factor.
+    - The unary sign, e.g. -, is supported by adding an imaginary Zero before
+      it. This is not the best solution. But it works for now.
+
+* Finished chapter 3, which added variable, function call, and multi-character
+  identifier support. The parser can now also skip whitespace.
+    - The variable and function both start with a letter. So with the a single
+      time lookahead, the parser cannot decide whether it is a variable or
+      function (e.g. they both start with a letter "f"). What the parser does is
+      to call a new subroutine which deals with identifier. The new subroutine
+      completes the name of identifier and lookahead to see if there is "(". If
+      there is, it is a function. Otherwise, it is a variable.
+    - Whitespaces are consumed immediately whenever the parser finished some
+      reading, no matter that it is a match, a number, a name etc. The initial
+      whitespaces are consumed untill the parser gets a first valid lookahead
+      character.
+
+* Finished chapter 5, which adds the control constructs.
+    - It is important to utilize the recursive calls of the modern programming
+      language. So we can save alot uses of stacks to keep the order of the
+      calling and break outs.
+* Finished chapter 6, which adds the boolean expression.
+    - The author choose to have explicit precedence order of boolean expression
+      and arithmatic expression, which put arithmatic expression above boolean
+      expression. This approach is simple and avoid complicate entanglement of
+      boolean and arithmatic expression. However, it does not allow us to use
+      parenthesis with boolean expression. This is something we probably want to
+      support for a real language.
+* Now we are at Chapter 7, which talks about Lexical Scanner.
+    - The basic idea is to replace the previous simple parser with a dedicate
+      Lexical Scanner which return two variables. One is a Symbol Type, i.e. what
+      is the type of this Token, Keyword, Variable Name, Number, Operator etc.
+      The other is the actual value of the Symbol.
+    - For the Keywords, the Symbol Type usually names individually for each
+      keyword. For an example, Keyword "IF" has a type as "IfSym" and Keyword
+      "ELSE" has a type as "ElseSym".
+    - Note that ideally the Symbol Type should be implemented as Enumerate Type.
+      However, IDL does not have such data type. So I used String for the Symbol
+      Type.
+
+* Chapter 10, with the Tiny Compiler
+    - Note when BoolExpression is the top level item, itself is not recursive
+      when it reachs the bottom of the expansion (unlike expression). This does
+      create a problem that we cannot mix bool expression once a pattern is
+      recognized as arithmatic expression. So the code "pvxbx=1+!2e." will not
+      run. The bool expression can only be the top item, such as "pvxbx=!1+2e.".
+    - We have to be very careful with the Scan and GetName routines to make sure
+      they do not each other's input. When starting parsing a statement, we need
+      to analyze carefully whether the item has been read and utilized. Do not
+      skip items (and make parsing errors).
+    - The Token and Value are not always sync'ed. A lot times, Value is several
+      items ahead of the Token. This is because the Token is only needed when
+      we need to change what we are parsing. For an example, if we have decided
+      this is a IF statement, the Token could stay as "IF" until the rest of the
+      statement is parsed. In another word, Token is only changed at the
+      begining of a new statement. This is also a reflection of the distributed
+      scanner. That is the lexical scanner is also used at the begining of a
+      statement to find out the type of the statement. The rest of the statement
+      can be simply "matched" with rules of the particular statement type.
+* Chapter 11, a more conventional lexer is added to Tiny
+    - Even with this simplified compiler, at the end, it is still necessary to
+      have a centralized lexer to feed tokens to the parser instead of a single
+      lookahead character. 
+
+
+
