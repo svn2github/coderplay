@@ -43,6 +43,9 @@ class TokenList():
             sys.stderr.write('Expected '+repr(tag_to_match)+'\n')
             sys.exit(1)
 
+    def next(self):
+        self.pos += 1
+
     def __repr__(self):
         ret = [repr(t) for t in self.tlist]
         if len(ret):

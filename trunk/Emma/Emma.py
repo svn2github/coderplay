@@ -3,6 +3,7 @@ import sys
 import specs
 import file
 from lexer import Lexer, LexError
+import parser
 
 '''
 Emma is a computer language designed to be flexible and easy to use. 
@@ -55,8 +56,15 @@ if __name__ == '__main__':
                 if len(tokens):
                     line_number += 1
                     print tokens
+                    ast = parser.parse_file(tokens)
+                    print ast
+
             except LexError as e:
                 sys.stderr.write('%%%s: %s  (L%d, C%d)\n' % e.args)
                 line_number += 1
+
+
+
+
 
 
