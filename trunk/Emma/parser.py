@@ -15,14 +15,15 @@ simple_stmt ::=
             expression
                 | assign_stmt
                 | print_stmt
-
+                | empty_stmt
+                
 compound_stmt ::=
             if_stmt
                 | while_stmt
                 | for_stmt
 
 stmt_list ::=
-            [empty_stmt] simple_stmt (empty_stmt simple_stmt)* [empty_stmt]
+            simple_stmt (empty_stmt simple_stmt)* [empty_stmt]
 
 statement ::=
             stmt_list <EOL> | compound_stmt
@@ -31,120 +32,126 @@ file_input ::=
             (<EOL> | statement)*
 '''
 
-def match_token(token, tokens, pos):
-    token_value, token_tag = tokens[pos]
-    if token == token_tag:
-        return pos
-    else:
-        sys.stderr.write("no match\n")
-        sys.exit(1)
+def is_addop(token):
+    return 1 if token.tag in [EPW_OP_ADD, EPW_OP_SUB] else 0
 
 
-def parse_file(tokens, pos):
+def is_mulop(token):
+    return 1 if token.tag in [EPW_OP_MUL, EPW_OP_DIV] else 0
 
-    while pos <= len(tokens):
+
+def is_number(token):
+    return 1 if token.tag in [EPW_OP_INT, EPW_OP_FLOAT] else 0
+
+
+# The starting point for parsing a file input
+def parse_file(tokenlist):
+
+    while pos < len(tokenlist):
         # This is the same as the lookahead token
-        token_value, token_tag = tokens[pos]
+        token = tokenlist.get()
 
-        if token_tag == EPW_OP_EOL:
-            pos += 1
+        if token.tag == EPW_OP_EOL:
+            tokenlist.match(EPW_OP_EOL)
         else:
-            pos = parse_statement(tokens, pos)
+            parse_statement(tokenlist)
     
 
-def parse_statement(tokens, pos):
+def parse_statement(tokenlist):
 
-    token_value, token_tag = tokens[pos]
+    token = tokenlist.get()
         
-    if token_tag in [EPW_KW_IF, EPW_KW_WHILE, EPW_KW_FOR]:
-        pos = parse_compound_stmt(tokens, pos)
+    if token.tag in [EPW_KW_IF, EPW_KW_WHILE, EPW_KW_FOR]:
+        parse_compound_stmt(tokenlist)
     else:
-        pos = parse_stmt_list(tokens, pos)
-        pos = match_token('EPW_OP_EOL', tokens, pos)
-
-    return pos
+        parse_stmt_list(tokenlist)
+        tokenlist.match(EPW_OP_EOL)
 
 
-def parse_compound_stmt(tokens, pos):
+def parse_compound_stmt(tokenlist):
     pass
 
 
-def parse_stmt_list(tokens, pos):
-
-    # The optional semicolon at the beginning
-    token_value, token_tag = tokens[pos]
-    if token_value == EPW_OP_TERMINATOR:
-        pos = parse_empty_stmt(tokens, pos)
+def parse_stmt_list(tokenlist):
 
     # the first simple stmt
-    pos = parse_simple_stmt(tokens, pos)
+    parse_simple_stmt(tokenlist)
 
+    # Match the 0 or more (empty_stmt simple_stmt)
     # This also matches the optional semicolon at the end
-    while pos <= len(tokens):
-        pos = parse_empty_stmt(tokens, pos)
-        if pos <= len(tokens):
-            pos = parse_simple_stmt(tokens, pos)
+    while tokenlist.get().tag == EPW_OP_SEMICOLON:
+        parse_empty_stmt(tokenlist)
+        if tokenlist.has_more():
+            parse_simple_stmt(tokenlist)
         else:
             break
 
-    return pos
 
+def parse_empty_stmt(tokenlist):
 
-def parse_empty_stmt(tokens, pos):
-
-    token_value, token_tag = tokens[pos]
-    pos = match_token(EPW_OP_TERMINATOR, tokens, pos)
+    tokenlist.match(EPW_OP_SEMICOLON)
     # match any consecutive semicolons
-    while pos <= len(tokens):
-        token_value, token_tag = tokens[pos]
-        if token_tag == EPW_OP_TERMINATOR:
-            pos = match_token(EPW_OP_TERMINATOR, tokens, pos)
-        else:
-            break
-    return pos
-                
+    while tokenlist.get().tag == EPW_OP_SEMICOLON:
+        tokenlist.match(EPW_OP_SEMICOLON)
 
-def parse_simple_stmt(tokens, pos):
+def parse_simple_stmt(tokenlist):
 
-    token_value, token_tag = tokens[pos]
+    token = tokenlist.get()
 
-    if token_tag == EPW_KW_PRINT:
-        pos = parse_print_stmt(tokens, pos)
-    elif token_tag in [EPW_INT, EPW_FLOAT]:
-        pos = parse_expression(tokens, pos)
+    if token.tag == EPW_KW_PRINT:
+        parse_print_stmt(tokenlist)
+
+    elif token.tag in [EPW_INT, EPW_FLOAT]:
+        parse_expression(tokenlist)
+
+    elif token.tag == EPW_OP_SEMICOLON:
+        parse_empty_stmt(tokenlist)
+
     else:
-        # It must be a expression if it is the last token
-        if pos == len(tokens):
-            pos = parse_expression(tokens, pos)
-
-        token_value, token_tag = tokens[pos+1]
-        if token_tag == EPW_OP_ASSIGN:
-            pos = parse_assign_stmt(tokens, pos)
+        # if the next token is a "=", it is an assignment
+        token = tokenlist.get(pos+1)
+        if token.tag == EPW_OP_ASSIGN:
+            parse_assign_stmt(tokenlist)
         else:
-            pos = parse_expression(tokens, pos)
-
-    return pos
+            parse_expression(tokenlist)
 
 
-def parse_print_stmt(tokens, pos):
+def parse_print_stmt(tokenlist):
     pass
 
 
-def parse_expression(tokens, pos):
+def parse_expression(tokenlist):
 
-    pos = parse_term(tokens, pos)
+    parse_term(tokenlist)
 
-    while pos <= len(tokens):
-        pos = parse_addop(tokens, pos)
-        if pos <= len(tokens):
-            pos = parse_term(tokens, pos)
-        else:
-            sys.stderr.write("missing operand at the end\n")
-            sys.exit(1)
+    while is_addop(tokenlist.get()):
+        parse_addop(tokenlist)
+        parse_term(tokenlist)
 
 
+def parse_term(tokenlist):
+    parse_factor(tokenlist)
 
-def parse_assign_stmt(tokens, pos):
+    while is_mulop(tokenlist.get()):
+        parse_mulop(tokenlist)
+        parse_factor(tokenlist)
+
+def parse_factor(tokenlist):
+
+    token = tokenlist.get()
+
+    if is_number(token):
+        parse_number(tokenlist)
+
+    elif token.tag == EPW_OP_L_PAREN:
+        tokenlist.match(EPW_OP_L_PAREN)
+        parse_expression(tokenlist)
+        tokenlist.match(EPW_OP_R_PAREN)
+
+    else:
+        parse_variable(tokenlist)
+
+def parse_assign_stmt(tokenlist):
     pass
 
 

@@ -3,29 +3,31 @@ The specification of Emma language
 '''
 
 # Token Type
-EPW_WHITE           = 0
-EPW_COMMENT         = 0
+EPW_WHITE           = 'WHITE'
+EPW_COMMENT         = 'WHITE'
 
-EPW_KW_IF           = 1
-EPW_KW_ELSE         = 2
-EPW_KW_WHILE        = 3
-EPW_KW_FOR          = 4
-EPW_KW_PRINT        = 5
+EPW_KW_IF           = 'IF'
+EPW_KW_ELSE         = 'ELSE'
+EPW_KW_WHILE        = 'WHILE'
+EPW_KW_FOR          = 'FOR'
+EPW_KW_PRINT        = 'PRINT'
 
-EPW_OP_ADD          = 101
-EPW_OP_SUB          = 102
-EPW_OP_MUL          = 103
-EPW_OP_DIV          = 104
-EPW_OP_L_PAREN      = 105
-EPW_OP_R_PAREN      = 106
-EPW_OP_ASSIGN       = 107
-EPW_OP_EOL          = 108
-EPW_OP_TERMINATOR   = 109
+EPW_OP_ADD          = '+'
+EPW_OP_SUB          = '-'
+EPW_OP_MUL          = '*'
+EPW_OP_DIV          = '/'
+EPW_OP_L_PAREN      = '('
+EPW_OP_R_PAREN      = ')'
+EPW_OP_ASSIGN       = '='
+EPW_OP_EOL          = 'EOL'
+EPW_OP_SEMICOLON    = ';'
+EPW_OP_L_CURLY      = '{'
+EPW_OP_R_CURLY      = '}'
 
-EPW_INT             = 1001 
-EPW_FLOAT           = 1002
-EPW_STR             = 1003
-EPW_ID              = 1004
+EPW_INT             = 'INT'
+EPW_FLOAT           = 'FLOAT'
+EPW_STR             = 'STR'
+EPW_ID              = 'ID'
 
 # The order of the token_type_list does matter. Keyword should be positioned
 # before ID, otherwise ID would match every keywords. It is not necessary to
@@ -45,9 +47,11 @@ token_type_list = [
     (r'/',          EPW_OP_DIV),
     (r'\(',         EPW_OP_L_PAREN),
     (r'\)',         EPW_OP_R_PAREN),
+    (r'\{',         EPW_OP_L_CURLY),
+    (r'\}',         EPW_OP_R_CURLY),
     (r'=',          EPW_OP_ASSIGN),
     (r'\n',         EPW_OP_EOL),
-    (r';',          EPW_OP_TERMINATOR),
+    (r';',          EPW_OP_SEMICOLON),
     (r'if',         EPW_KW_IF),
     (r'else',       EPW_KW_ELSE),
     (r'while',      EPW_KW_WHILE),

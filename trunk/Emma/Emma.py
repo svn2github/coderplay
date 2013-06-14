@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
             try:
                 tokens = lex(file.Line(text, line_number))
-                if tokens:
+                if len(tokens):
                     line_number += 1
                     print tokens
             except LexError as e:
