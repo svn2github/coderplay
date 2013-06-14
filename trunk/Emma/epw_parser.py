@@ -62,7 +62,6 @@ def parse_file(tokenlist):
             ast_node.append(next_node)
 
     return ast_node
-    
 
 def parse_statement(tokenlist):
 
@@ -135,7 +134,7 @@ def parse_simple_stmt(tokenlist):
         else:
             ast_node = parse_expression(tokenlist)
 
-     return ast_node
+    return ast_node
 
 
 def parse_print_stmt(tokenlist):
