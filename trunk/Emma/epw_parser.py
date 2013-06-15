@@ -6,7 +6,9 @@ Emma Grammer
 
 empty_stmt ::= (";")+
 
-factor = number | variable | "(" expression ")"
+factor = [<unary_op>] ( number 
+                        | variable 
+                        | "(" expression ")")
 
 term ::= factor (<mulop> factor)*
 
@@ -24,10 +26,10 @@ compound_stmt ::=
                 | for_stmt
 
 stmt_list ::=
-            simple_stmt (empty_stmt simple_stmt)* [empty_stmt]
+            simple_stmt (empty_stmt simple_stmt)* [empty_stmt] <EOL>
 
 statement ::=
-            stmt_list <EOL> | compound_stmt
+            stmt_list | compound_stmt
 
 file_input ::=
             (<EOL> | statement)*
@@ -40,7 +42,6 @@ def is_addop(token):
 
 def is_mulop(token):
     return 1 if token.tag in [EPW_OP_MUL, EPW_OP_DIV] else 0
-
 
 def is_number(token):
     return 1 if token.tag in [EPW_INT, EPW_FLOAT] else 0
@@ -72,7 +73,6 @@ def parse_statement(tokenlist):
         ast_node = parse_compound_stmt(tokenlist)
     else:
         ast_node = parse_stmt_list(tokenlist)
-        tokenlist.match(EPW_OP_EOL)
 
     return ast_node
 
@@ -95,15 +95,17 @@ def parse_stmt_list(tokenlist):
     while tokenlist.get().tag == EPW_OP_SEMICOLON:
 
         next_node = parse_empty_stmt(tokenlist)
-        #ast_node.append(next_node)
 
-        if tokenlist.has_more():
+        # Parse more simple_stmt if there is still valid token
+        # and the token is not a EOL.
+        if tokenlist.get().tag != EPW_OP_EOL:
             next_node = parse_simple_stmt(tokenlist)
+            if next_node is not None:
+                ast_node.append(next_node)
         else:
             break
 
-        ast_node.append(next_node)
-
+    tokenlist.match(EPW_OP_EOL)
     return ast_node
 
 
@@ -114,7 +116,7 @@ def parse_empty_stmt(tokenlist):
     while tokenlist.get().tag == EPW_OP_SEMICOLON:
         tokenlist.match(EPW_OP_SEMICOLON)
 
-    return Ast_Empty()
+    return None
 
 def parse_simple_stmt(tokenlist):
 
@@ -131,7 +133,7 @@ def parse_simple_stmt(tokenlist):
 
     else:
         # if the next token is a "=", it is an assignment
-        token = tokenlist.get(pos+1)
+        token = tokenlist.get(1)
         if token.tag == EPW_OP_ASSIGN:
             ast_node = parse_assign_stmt(tokenlist)
         else:
@@ -141,8 +143,26 @@ def parse_simple_stmt(tokenlist):
 
 
 def parse_print_stmt(tokenlist):
-    pass
 
+    # match the print keyword
+    tokenlist.match(EPW_KW_PRINT)
+    ast_node = Ast_Print()
+
+    # get the first possible item
+    token = tokenlist.get()
+    if token.tag == EPW_OP_EOL or token.tag == EPW_OP_SEMICOLON:
+        return ast_node
+
+    next_node = parse_expression(tokenlist)
+    ast_node.append(next_node)
+    token = tokenlist.get()
+
+    while tokenlist.get().tag == EPW_OP_COMMA:
+        tokenlist.match(EPW_OP_COMMA)
+        next_node = parse_expression(tokenlist)
+        ast_node.append(next_node)
+
+    return ast_node
 
 def parse_expression(tokenlist):
 
@@ -152,10 +172,9 @@ def parse_expression(tokenlist):
         op = tokenlist.get().value
         tokenlist.next()
         r_node = parse_term(tokenlist)
-        ast_node = Ast_BinOp(op, ast_node, r_node)
+        ast_node = Ast_BinAop(op, ast_node, r_node)
 
     return ast_node
-
 
 
 def parse_term(tokenlist):
@@ -165,7 +184,7 @@ def parse_term(tokenlist):
         op = tokenlist.get().value
         tokenlist.next()
         r_node = parse_factor(tokenlist)
-        ast_node = Ast_BinOp(op, ast_node, r_node)
+        ast_node = Ast_BinAop(op, ast_node, r_node)
 
     return ast_node
 
@@ -173,6 +192,12 @@ def parse_term(tokenlist):
 def parse_factor(tokenlist):
 
     token = tokenlist.get()
+
+    # Check if an unary operator exists
+    op = None
+    if is_addop(token):
+        op = token.value
+        tokenlist.next()
 
     if is_number(token):
         ast_node = parse_number(tokenlist)
@@ -184,6 +209,10 @@ def parse_factor(tokenlist):
 
     else:
         ast_node = parse_variable(tokenlist)
+
+    # package the node with unary operator if exists
+    if op:
+        ast_node = Ast_UnaryAop(op, ast_node)
 
     return ast_node
 
@@ -202,12 +231,16 @@ def parse_number(tokenlist):
     return ast_node
 
 
+def parse_variable(tokenlist):
+
+    token = tokenlist.get()
+    ast_node = Ast_Variable(token.value)
+    tokenlist.next()
+    return ast_node
+
 
 def parse_assign_stmt(tokenlist):
     pass
-
-
-
 
 
 

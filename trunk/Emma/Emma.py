@@ -59,6 +59,7 @@ if __name__ == '__main__':
                     print tokens
                     ast = parse_file(tokens)
                     print ast
+                    #ast.eval(None)
 
             except LexError as e:
                 sys.stderr.write('%%%s: %s  (L%d, C%d)\n' % e.args)

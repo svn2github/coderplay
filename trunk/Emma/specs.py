@@ -21,6 +21,7 @@ EPW_OP_R_PAREN      = ')'
 EPW_OP_ASSIGN       = '='
 EPW_OP_EOL          = 'EOL'
 EPW_OP_SEMICOLON    = ';'
+EPW_OP_COMMA        = ','
 EPW_OP_L_CURLY      = '{'
 EPW_OP_R_CURLY      = '}'
 
@@ -52,14 +53,15 @@ token_type_list = [
     (r'=',          EPW_OP_ASSIGN),
     (r'\n',         EPW_OP_EOL),
     (r';',          EPW_OP_SEMICOLON),
+    (r',',          EPW_OP_COMMA),
     (r'if',         EPW_KW_IF),
     (r'else',       EPW_KW_ELSE),
     (r'while',      EPW_KW_WHILE),
     (r'for',        EPW_KW_FOR),
     (r'print',      EPW_KW_PRINT),
-    (r'[0-9]+',     EPW_INT),
     (r'[0-9]+\.[0-9]*',         EPW_FLOAT),
     (r'[0-9]*\.[0-9]+',         EPW_FLOAT),
+    (r'[0-9]+',     EPW_INT),
     (r'\"[^\"]*\"',             EPW_STR),
     (r'\'[^\"]*\'',             EPW_STR),
     (r'[A-Za-z_][A-Za-z0-9_]*', EPW_ID),
