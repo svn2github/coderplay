@@ -2,7 +2,7 @@
 import sys
 import specs
 import file
-from lexer import Lexer, LexError
+from epw_lexer import Lexer, LexError
 from epw_parser import parse_file
 
 '''
@@ -52,6 +52,7 @@ if __name__ == '__main__':
                 break
 
             try:
+                text += '\n'
                 tokens = lex(file.Line(text, line_number))
                 if len(tokens):
                     line_number += 1

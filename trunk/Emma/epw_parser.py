@@ -1,5 +1,5 @@
 from specs import *
-from ast import *
+from epw_ast import *
 
 '''
 Emma Grammer
@@ -43,7 +43,7 @@ def is_mulop(token):
 
 
 def is_number(token):
-    return 1 if token.tag in [EPW_OP_INT, EPW_OP_FLOAT] else 0
+    return 1 if token.tag in [EPW_INT, EPW_FLOAT] else 0
 
 
 # The starting point for parsing a file input
@@ -51,7 +51,7 @@ def parse_file(tokenlist):
 
     ast_node = Ast_File()
 
-    while pos < len(tokenlist):
+    while tokenlist.has_more():
         # This is the same as the lookahead token
         token = tokenlist.get()
 
@@ -62,6 +62,7 @@ def parse_file(tokenlist):
             ast_node.append(next_node)
 
     return ast_node
+
 
 def parse_statement(tokenlist):
 
@@ -94,7 +95,7 @@ def parse_stmt_list(tokenlist):
     while tokenlist.get().tag == EPW_OP_SEMICOLON:
 
         next_node = parse_empty_stmt(tokenlist)
-        ast_node.append(next_node)
+        #ast_node.append(next_node)
 
         if tokenlist.has_more():
             next_node = parse_simple_stmt(tokenlist)
@@ -102,6 +103,8 @@ def parse_stmt_list(tokenlist):
             break
 
         ast_node.append(next_node)
+
+    return ast_node
 
 
 def parse_empty_stmt(tokenlist):
@@ -145,9 +148,8 @@ def parse_expression(tokenlist):
 
     ast_node = parse_term(tokenlist)
 
-    token = tokenlist.get()
-    while is_addop(token):
-        op = token.value
+    while is_addop(tokenlist.get()):
+        op = tokenlist.get().value
         tokenlist.next()
         r_node = parse_term(tokenlist)
         ast_node = Ast_BinOp(op, ast_node, r_node)
@@ -159,9 +161,8 @@ def parse_expression(tokenlist):
 def parse_term(tokenlist):
     ast_node = parse_factor(tokenlist)
 
-    token = tokenlist.get()
-    while is_mulop(token):
-        op = token.value
+    while is_mulop(tokenlist.get()):
+        op = tokenlist.get().value
         tokenlist.next()
         r_node = parse_factor(tokenlist)
         ast_node = Ast_BinOp(op, ast_node, r_node)

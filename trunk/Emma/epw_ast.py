@@ -2,6 +2,7 @@
 
 class Ast_Empty():
     def __init__(self):
+        pass
 
     def __repr__(self):
         classname = self.__class__.__name__
@@ -54,15 +55,15 @@ class Ast_BinOp():
 
 class Ast_Stmt_List():
     def __init__(self):
-        self.stmt_list = []
+        self.node_list = []
 
     def __repr__(self):
         classname = self.__class__.__name__
         classname = classname.replace('Ast_','')
-        return classname+'(%s)' % self.stmt_list
+        return classname + repr(tuple(self.node_list))
 
     def append(self, ast_node):
-        self.stmt_list.append(ast_node)
+        self.node_list.append(ast_node)
 
     def eval(self, env):
         pass
@@ -74,7 +75,7 @@ class Ast_Statement():
     def __repr__(self):
         classname = self.__class__.__name__
         classname = classname.replace('Ast_','')
-        return classname+'(%s)' % self.node
+        return classname + repr(self.node)
 
     def eval(self, env):
         return None
@@ -87,7 +88,7 @@ class Ast_File():
     def __repr__(self):
         classname = self.__class__.__name__
         classname = classname.replace('Ast_','')
-        return classname+'(%s)' % self.node_list
+        return classname + repr(tuple(self.node_list))
 
     def append(self, ast_node):
         self.node_list.append(ast_node)
