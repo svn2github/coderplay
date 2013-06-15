@@ -100,6 +100,24 @@ class Ast_Variable(Ast_NYI):
         return theEnv[self.name]
 
 
+class Ast_FuncCall(Ast_NYI):
+    def __init__(self, name):
+        self.args = [name,]
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + repr(tuple(self.args)).replace(',)', ')')
+
+    def append(self, node):
+        self.args.append(node)
+
+    def eval(self, env):
+        funcname = self.args[0]
+        if funcname == 'debug':
+            env.top()[self.args[1].eval(env)] = self.args[2].eval(env)
+        pass
+
+
 class Ast_UnaryOp(Ast_NYI):
     def __init__(self, op, operand):
         self.op = op

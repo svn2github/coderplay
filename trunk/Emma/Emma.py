@@ -33,6 +33,11 @@ class Environment(dict):
                 return self.outer.find(name)
             else:
                 return None
+    def top(self):
+        if self.outer is not None:
+            return self.outer.top()
+        else:
+            return self
 
 def usage(prog):
     sys.stderr.write('usage: %s filename\n' % prog)

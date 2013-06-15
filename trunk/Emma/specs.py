@@ -10,6 +10,7 @@ EPW_KW_IF           = 'IF'
 EPW_KW_ELSE         = 'ELSE'
 EPW_KW_WHILE        = 'WHILE'
 EPW_KW_FOR          = 'FOR'
+EPW_KW_DEF          = 'DEF'
 EPW_KW_PRINT        = 'PRINT'
 
 EPW_OP_ADD          = '+'
@@ -73,15 +74,16 @@ token_type_list = [
     (r',',          EPW_OP_COMMA),
     (r'>',          EPW_OP_GT),
     (r'<',          EPW_OP_LT),
-
     (r'and',        EPW_OP_AND),
     (r'or',         EPW_OP_OR),
     (r'xor',        EPW_OP_XOR),
     (r'not',        EPW_OP_NOT),
+
     (r'if',         EPW_KW_IF),
     (r'else',       EPW_KW_ELSE),
     (r'while',      EPW_KW_WHILE),
     (r'for',        EPW_KW_FOR),
+    (r'def',        EPW_KW_DEF),
     (r'print',      EPW_KW_PRINT),
 
     (r'[0-9]+\.[0-9]*',         EPW_FLOAT),

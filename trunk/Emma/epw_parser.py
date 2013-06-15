@@ -18,7 +18,8 @@ r_andop :== "and"
 r_orop :== "or" | "xor"
 
 factor = [<unary_op>] ( number 
-                        | variable 
+                        | ID 
+                        | func
                         | "(" r_expression ")")
 
 term ::= factor (<mulop> factor)*
@@ -37,10 +38,11 @@ r_term ::= r_factor (<r_andop> r_factor)*
 
 r_expression ::= r_term (<r_orop> r_term)*
 
-assign_stmt ::= variable "=" r_expression
+func ::= ID "(" [r_expression ("," r_expression)*] ")"
 
-print_stmt ::= "print" 
-                | "print" r_expression ("," r_expression)*
+assign_stmt ::= (ID | func ) "=" r_expression
+
+print_stmt ::= "print" [r_expression ("," r_expression)*]
 
 empty_stmt ::= (";")+
 
@@ -50,10 +52,15 @@ simple_stmt ::=
                 | print_stmt
                 | empty_stmt
                 
+if_stmt ::= "if" r_expression ("{" statement "}" | stmt_list) [else_stmt]
+
+else_stmt ::= "else" ("{" statement "}" | stmt_list)
+
 compound_stmt ::=
             if_stmt
                 | while_stmt
                 | for_stmt
+                | funcdef_stmt
 
 stmt_list ::=
             simple_stmt (empty_stmt simple_stmt)* [empty_stmt] <EOL>
@@ -129,7 +136,36 @@ def parse_statement(tokenlist):
 
 
 def parse_compound_stmt(tokenlist):
-    pass
+    'if, while, for, def {}'
+    token = tokenlist.get()
+
+    if token.tag == EPW_KW_IF:
+        ast_node = Ast_If()
+        tokenlist.next()
+        cond_node = parse_r_expression(tokenlist)
+        ast_node.append(cond_node)
+        # The true part
+        if tokenlist.get().tag == EPW_OP_L_CURLY:
+            tokenlist.next()
+            true_node = parse_statement(tokenlist)
+            tokenlist.match(EPW_OP_R_CURLY)
+        else:
+            true_node = parse_stmt_list(tokenlist)
+        ast_node.append(true_node)
+        # the else part 
+        if tokenlist.get().tag == EPW_KW_ELSE:
+            tokenlist.next()
+            if tokenlist.get().tag == EPW_OP_L_CURLY:
+                tokenlist.next()
+                false_node = parse_statement(tokenlist)
+                tokenlist.match(EPW_OP_R_CURLY)
+            else:
+                false_node = parse_stmt_list(tokenlist)
+            ast_node.append(false_node)
+        return ast_node
+
+    elif token.tag == EPW_KW_DEF:
+        pass
 
 
 def parse_stmt_list(tokenlist):
@@ -139,7 +175,9 @@ def parse_stmt_list(tokenlist):
     # the first simple stmt
     next_node = parse_simple_stmt(tokenlist)
 
-    ast_node.append(next_node)
+    # in case first stmt is empty
+    if next_node is not None: 
+        ast_node.append(next_node)
 
     # Match the 0 or more (empty_stmt simple_stmt)
     # This also matches the optional semicolon at the end
@@ -182,13 +220,30 @@ def parse_simple_stmt(tokenlist):
     elif token.tag == EPW_OP_SEMICOLON:
         ast_node = parse_empty_stmt(tokenlist)
 
-    else:
+    elif token.tag == EPW_ID:
         # if the next token is a "=", it is an assignment
+        # if it is a "(", it is a function call, but an
+        # assignment is still possible after the function
+        # call
+        pos = tokenlist.pos  # record the old pos for backtrack
         token = tokenlist.get(1)
         if token.tag == EPW_OP_ASSIGN:
             ast_node = parse_assign_stmt(tokenlist)
+        elif token.tag == EPW_OP_L_PAREN:
+            ast_node = parse_func_call(tokenlist)
+            token = tokenlist.get() # the token after the func call
+            if token.tag == EPW_OP_ASSIGN:
+                ast_node = parse_assign_stmt(tokenlist, ast_node)
+            else:
+                # we have to backtrack and parse expression
+                tokenlist.pos = pos
+                ast_node = parse_r_expression(tokenlist)
         else:
             ast_node = parse_r_expression(tokenlist)
+
+    else:
+        sys.stderr.write('Unrecognized token '+repr(token)+'\n')
+        sys.exit(1)
 
     return ast_node
 
@@ -215,13 +270,14 @@ def parse_print_stmt(tokenlist):
 
     return ast_node
 
-def parse_assign_stmt(tokenlist):
-    token = tokenlist.match(EPW_ID)
-    varname = token.value
+def parse_assign_stmt(tokenlist, left_operand=None):
+    if left_operand is None:
+        token = tokenlist.match(EPW_ID)
+        left_operand = token.value
     token = tokenlist.match(EPW_OP_ASSIGN)
     op = token.value
     next_node = parse_r_expression(tokenlist)
-    ast_node = Ast_BinOp(op, varname, next_node)
+    ast_node = Ast_BinOp(op, left_operand, next_node)
     return ast_node
 
 
@@ -294,7 +350,6 @@ def parse_term(tokenlist):
 
 def parse_factor(tokenlist):
 
-
     # Check if an unary operator exists
     token = tokenlist.get()
     op = None
@@ -318,8 +373,15 @@ def parse_factor(tokenlist):
         ast_node = parse_r_expression(tokenlist)
         tokenlist.match(EPW_OP_R_PAREN)
 
+    elif token.tag == EPW_ID:
+        if tokenlist.get(1).tag == EPW_OP_L_PAREN:
+            ast_node = parse_func_call(tokenlist)
+        else:
+            ast_node = parse_ID(tokenlist)
+
     else:
-        ast_node = parse_variable(tokenlist)
+        sys.stderr.write('Unrecognized token '+repr(token)+'\n')
+        sys.exit(1)
 
     # package the node with unary operator if exists
     if op:
@@ -329,7 +391,6 @@ def parse_factor(tokenlist):
 
 
 def parse_number(tokenlist):
-
     token = tokenlist.get()
     if token.tag == EPW_INT:
         tokenlist.next()
@@ -340,10 +401,24 @@ def parse_number(tokenlist):
     return ast_node
 
 
-def parse_variable(tokenlist):
-
+def parse_ID(tokenlist):
     token = tokenlist.match(EPW_ID)
     ast_node = Ast_Variable(token.value)
     return ast_node
+
+def parse_func_call(tokenlist):
+    token = tokenlist.match(EPW_ID)
+    ast_node = Ast_FuncCall(token.value)
+    tokenlist.match(EPW_OP_L_PAREN)
+    if tokenlist.get().tag != EPW_OP_R_PAREN:
+        next_node = parse_r_expression(tokenlist)
+        ast_node.append(next_node)
+        while tokenlist.get().tag == EPW_OP_COMMA:
+            tokenlist.next()
+            next_node = parse_r_expression(tokenlist)
+            ast_node.append(next_node)
+    tokenlist.match(EPW_OP_R_PAREN)
+    return ast_node
+
 
 
