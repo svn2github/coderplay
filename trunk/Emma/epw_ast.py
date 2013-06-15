@@ -1,5 +1,38 @@
 import sys
 
+class EvalError(Exception):
+    pass
+
+class Eval_Res(object):
+    def __init__(self):
+        self.rlist = []
+
+    def __repr__(self):
+        if len(self.rlist) == 0:
+            return None
+        else:
+            out = ''
+            valid = 0
+            if self.rlist[0] is not None:
+                out += str(self.rlist[0])
+                valid = 1
+
+            for res in self.rlist[1:]:
+                if res is not None:
+                    if out != '': out += '\n'
+                    out += str(res)
+                    valid = 1
+
+            if not valid:
+                out = None
+
+            return out
+
+
+    def append(self, res):
+        self.rlist.append(res)
+
+
 # Generic AST node as Not Yet Implemented
 class Ast_NYI(object): 
     def __init__(self):
@@ -37,6 +70,19 @@ class Ast_Float(Ast_NYI):
     def eval(self, env):
         return self.f
 
+
+class Ast_String(Ast_NYI):
+    def __init__(self, a_string):
+        self.a_string = a_string
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname+'(%s)' % self.a_string
+
+    def eval(self, env):
+        return self.a_string
+
+
 class Ast_Variable(Ast_NYI):
     def __init__(self, name):
         self.name = name
@@ -45,11 +91,16 @@ class Ast_Variable(Ast_NYI):
         classname = super(self.__class__, self).__repr__()
         return classname+'(%s)' % self.name
 
+    # NOTE the self.name is not evaluated. So it allows ONLY literal 
+    # variable name.
     def eval(self, env):
-        pass
+        theEnv = env.find(self.name)
+        if theEnv is None:
+            raise EvalError('Variable not defined', self.name)
+        return theEnv[self.name]
 
 
-class Ast_UnaryAop(Ast_NYI):
+class Ast_UnaryOp(Ast_NYI):
     def __init__(self, op, operand):
         self.op = op
         self.operand = operand
@@ -59,10 +110,18 @@ class Ast_UnaryAop(Ast_NYI):
         return classname+'(%s, %s)' % (self.op, self.operand)
 
     def eval(self, env):
-        pass
+        if self.op == '+':
+            return self.operand
+        elif self.op == '-':
+            return -self.operand
+        elif self.op == 'not':
+            return not self.operand
+        else:
+            sys.stderr.write('Unrecognized operator '+self.op+'\n')
+            sys.exit(1)
 
 
-class Ast_BinAop(Ast_NYI):
+class Ast_BinOp(Ast_NYI):
     def __init__(self, op, l, r):
         self.op = op
         self.l = l
@@ -73,7 +132,46 @@ class Ast_BinAop(Ast_NYI):
         return classname+'(%s, %s, %s)' % (self.op, self.l, self.r)
 
     def eval(self, env):
-        pass
+        # TODO: Still need to work on coerce
+        if self.op == '+':
+            return self.l.eval(env) + self.r.eval(env)
+        elif self.op == '-':
+            return self.l.eval(env) - self.r.eval(env)
+        elif self.op == '*':
+            return self.l.eval(env) * self.r.eval(env)
+        elif self.op == '/':
+            return self.l.eval(env) / self.r.eval(env)
+        elif self.op == '>':
+            return self.l.eval(env) > self.r.eval(env)
+        elif self.op == '<':
+            return self.l.eval(env) < self.r.eval(env)
+        elif self.op == '>=':
+            return self.l.eval(env) >= self.r.eval(env)
+        elif self.op == '<=':
+            return self.l.eval(env) <= self.r.eval(env)
+        elif self.op == '==':
+            return self.l.eval(env) == self.r.eval(env)
+        elif self.op == '!=':
+            return self.l.eval(env) != self.r.eval(env)
+        elif self.op == 'and':
+            return self.l.eval(env) and self.r.eval(env)
+        elif self.op == 'or':
+            return self.l.eval(env) or self.r.eval(env)
+        elif self.op == 'xor':
+            return not (self.l.eval(env) or self.r.eval(env))
+
+        # The ristrication here is that ONLY a variable name can be used as
+        # the left side for an assignment. It won't currently allow an array
+        # subscript or a function call to be on the left side. NOTE the 
+        # self.l is not evaluated. So it can ONLY be a literal variable name.
+        # The parser won't allow them either.
+        elif self.op == '=':
+            env[self.l] = self.r.eval(env)
+
+        else:
+            sys.stderr.write('Unrecognized operator '+self.op+'\n')
+            sys.exit(1)
+
 
 
 class Ast_Print(Ast_NYI):
@@ -89,10 +187,12 @@ class Ast_Print(Ast_NYI):
 
     def eval(self, env):
         if len(self.node_list) > 0:
-            sys.stdout.write(repr(self.node_list[0].eval(env)))
+            sys.stdout.write(str(self.node_list[0].eval(env)))
         for node in self.node_list[1:]:
-            sys.stdout.write(' ' + repr(node.eval(env)))
+            sys.stdout.write(' ')
+            sys.stdout.write(str(node.eval(env)))
         sys.stdout.write('\n')
+        return None
 
 
 class Ast_Stmt_List(Ast_NYI):
@@ -107,7 +207,10 @@ class Ast_Stmt_List(Ast_NYI):
         self.node_list.append(ast_node)
 
     def eval(self, env):
-        pass
+        res = Eval_Res()
+        for node in self.node_list:
+            res.append(node.eval(env))
+        return res
 
 
 class Ast_Statement(Ast_NYI):
@@ -119,7 +222,7 @@ class Ast_Statement(Ast_NYI):
         return classname + repr(self.node)
 
     def eval(self, env):
-        pass
+        return self.node.eval(env)
 
 
 class Ast_File(Ast_NYI):
@@ -130,11 +233,27 @@ class Ast_File(Ast_NYI):
         classname = super(self.__class__, self).__repr__()
         return classname + repr(tuple(self.node_list)).replace(',)',')')
 
+    def __len__(self):
+        return len(self.node_list)
+
     def append(self, ast_node):
         self.node_list.append(ast_node)
 
     def eval(self, env):
-        pass
+        for node in self.node_list:
+            node.eval(env)
+
+
+class Ast_Prompt(Ast_NYI):
+    def __init__(self, ast_node):
+        self.node = ast_node
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + '(' + repr(self.node) + ')'
+
+    def eval(self, env):
+        return self.node.eval(env)
 
 
 

@@ -24,6 +24,16 @@ EPW_OP_SEMICOLON    = ';'
 EPW_OP_COMMA        = ','
 EPW_OP_L_CURLY      = '{'
 EPW_OP_R_CURLY      = '}'
+EPW_OP_GT           = '>'
+EPW_OP_LT           = '<'
+EPW_OP_GE           = '>='
+EPW_OP_LE           = '<='
+EPW_OP_EQ           = '=='
+EPW_OP_NE           = '!='
+EPW_OP_AND          = 'and'
+EPW_OP_OR           = 'or'
+EPW_OP_XOR          = 'xor'
+EPW_OP_NOT          = 'not'
 
 EPW_INT             = 'INT'
 EPW_FLOAT           = 'FLOAT'
@@ -42,6 +52,13 @@ EPW_ID              = 'ID'
 token_type_list = [
     (r'[\t ]+',     EPW_WHITE),
     (r'#[^\n]*',    EPW_COMMENT),
+    # Operators
+    # 2 charactar matches
+    (r'>=',         EPW_OP_GE),
+    (r'<=',         EPW_OP_LE),
+    (r'==',         EPW_OP_EQ),
+    (r'!=',         EPW_OP_NE),
+    # 1 charactor matches
     (r'\+',         EPW_OP_ADD),
     (r'-',          EPW_OP_SUB),
     (r'\*',         EPW_OP_MUL),
@@ -54,16 +71,24 @@ token_type_list = [
     (r'\n',         EPW_OP_EOL),
     (r';',          EPW_OP_SEMICOLON),
     (r',',          EPW_OP_COMMA),
+    (r'>',          EPW_OP_GT),
+    (r'<',          EPW_OP_LT),
+
+    (r'and',        EPW_OP_AND),
+    (r'or',         EPW_OP_OR),
+    (r'xor',        EPW_OP_XOR),
+    (r'not',        EPW_OP_NOT),
     (r'if',         EPW_KW_IF),
     (r'else',       EPW_KW_ELSE),
     (r'while',      EPW_KW_WHILE),
     (r'for',        EPW_KW_FOR),
     (r'print',      EPW_KW_PRINT),
+
     (r'[0-9]+\.[0-9]*',         EPW_FLOAT),
     (r'[0-9]*\.[0-9]+',         EPW_FLOAT),
     (r'[0-9]+',     EPW_INT),
     (r'\"[^\"]*\"',             EPW_STR),
-    (r'\'[^\"]*\'',             EPW_STR),
+    (r'\'[^\']*\'',             EPW_STR),
     (r'[A-Za-z_][A-Za-z0-9_]*', EPW_ID),
 ]
 

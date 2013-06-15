@@ -42,6 +42,7 @@ class TokenList():
         else:
             sys.stderr.write('Expected '+repr(tag_to_match)+'\n')
             sys.exit(1)
+        return cur_token
 
     def next(self):
         self.pos += 1
