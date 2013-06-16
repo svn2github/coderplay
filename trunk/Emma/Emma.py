@@ -3,7 +3,7 @@ import sys
 import specs
 import file
 from epw_lexer import Lexer, LexError
-from epw_parser import parse_file, parse_prompt
+from epw_parser import parse_file, parse_prompt, ParseError, get_ContinueInput, set_ContinueInput
 from epw_ast import EvalError
 
 '''
@@ -16,6 +16,7 @@ ywangd@gmail.com
 
 SETTINGS = [
     ('$DEBUG', 1), 
+    ('$PROMPT', 'Emma'),
 ]
 
 
@@ -56,6 +57,7 @@ if __name__ == '__main__':
     # Prepare the Environment
     topEnv = Environment()
     topEnv.update(SETTINGS)
+    promptPrefix = topEnv['$PROMPT']
 
     # Batch file
     if len(sys.argv) == 2:
@@ -64,34 +66,50 @@ if __name__ == '__main__':
         lines = f.readlines()
         f.close()
 
-        tokens_list = []
+        tokenlist = []
         for idx in range(len(lines)):
             try:
-                tokens = lex(file.Line(lines[idx], idx+1, filename))
+                tokens_line = lex(file.Line(lines[idx], idx+1, filename))
             except LexError as e:
                 sys.stderr.write('%s: %s  (L%d, C%d)\n' % e.args)
                 sys.exit(1)
-            tokens_list.append(tokens)
+            tokenlist.append(tokens_line)
 
-        print tokens_list
+        print tokenlist
 
     # REPL
     else:
         line_number = 1
+        oldText = '' # Initialize the text input as empty
         while True:
-            text = raw_input('Emma [%d]> ' % line_number)
 
-            if text == '.':
+            if promptPrefix == topEnv['$PROMPT']:
+                promptString = promptPrefix + ' [%d]> ' % line_number
+            else:
+                promptString = promptPrefix + '> '
+
+            newText = raw_input(promptString)
+
+            # A single period exits the prompt
+            if newText == '.':
+                set_ContinueInput(0)
                 break
 
+            # Append an EOL at the end of the line since the input from
+            # raw_input does not have it and the BNF requires it as the
+            # terminator. 
+            text = oldText + newText + '\n'
+
             try:
-                # append an EOL at the end of the line since the input from
-                # raw_input does not have it and the BNF requires it as the
-                # terminator. 
-                text += '\n'
-                tokens = lex(file.Line(text, line_number))
-                if topEnv['$DEBUG'] and len(tokens) > 1: print tokens
-                ast = parse_prompt(tokens)
+
+                # Lexing
+                tokenlist = lex(file.Line(text, line_number))
+                if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+
+                # Parsing
+                # We may skip parsing we find any dangling "{" ?
+                ast = parse_prompt(tokenlist)
+
                 # Evaluate the AST
                 if ast:
                     if topEnv['$DEBUG']: print ast
@@ -101,11 +119,32 @@ if __name__ == '__main__':
                     line_number += 1
 
             except LexError as e:
-                sys.stderr.write('%%%s: %s  (L%d, C%d)\n' % e.args)
+                sys.stderr.write('%%[LexError]%s: %s  (L%d, C%d)\n' % e.args)
+                if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
                 line_number += 1
 
+            except ParseError as e:
+                if get_ContinueInput():
+                    print 'Continue', tokenlist
+                else:
+                    sys.stderr.write('%%[ParseError]%s: %s\n' % e.args)
+                    if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+                    line_number += 1
+
             except EvalError as e:
-                sys.stderr.write('%%%s: %s\n' % e.args)
+                sys.stderr.write('%%[EvalError]%s: %s\n' % e.args)
+                if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
                 line_number += 1
+
+            finally:
+                # if we want continue input, we save the text
+                if get_ContinueInput(): 
+                    oldText = text
+                    set_ContinueInput(0)
+                    promptPrefix = '--------'
+                else:
+                    oldText = ''
+                    promptPrefix = topEnv['$PROMPT']
+
 
 

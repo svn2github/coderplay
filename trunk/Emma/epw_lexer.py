@@ -1,5 +1,8 @@
 import sys
 import re
+from specs import *
+from epw_parser import ParseError, set_ContinueInput
+
 
 class Token():
     def __init__(self, value, tag):
@@ -7,7 +10,10 @@ class Token():
         self.tag = tag
 
     def __nonzero__(self):
-        return self.value is not None and self.tag is not None
+        if (self.value is not None) and (self.tag is not None):
+            return 1
+        else:
+            return 0
 
     def __repr__(self):
         return '(' + repr(self.value) + ', ' + repr(self.tag) + ')'
@@ -36,21 +42,27 @@ class TokenList():
         return self.pos == len(self)-1
 
     def match(self, tag_to_match):
-        cur_token = self.tlist[self.pos]
+        cur_token = self.get()
         if cur_token.tag == tag_to_match:
             self.pos += 1
         else:
-            sys.stderr.write('Expected '+repr(tag_to_match)+'\n')
-            sys.exit(1)
+            # If the cur_token is None, that means we are at the end of
+            # of the input stream and we may want ask for more input
+            # instead of throwing an error. If it is not None, we want
+            # stop the contiuation. "if cur_token" return 1 if the token
+            # is not None and return 0 if it is None.
+            if cur_token:
+                set_ContinueInput(0)
+            raise ParseError('Expected', tag_to_match)
         return cur_token
-
-    def next(self):
-        self.pos += 1
 
     def __repr__(self):
         ret = [repr(t) for t in self.tlist]
         if len(ret):
-            ret[self.pos] = '-->' + ret[self.pos] + '<--'
+            if self.pos >=0 and self.pos < len(ret):
+                ret[self.pos] = '-->' + ret[self.pos] + '<--'
+            else:
+                ret.append('--> <--')
         return '[' + ', '.join(ret) + ']'
 
     def __len__(self):
