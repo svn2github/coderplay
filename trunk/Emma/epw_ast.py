@@ -213,6 +213,25 @@ class Ast_Print(Ast_NYI):
         return None
 
 
+class Ast_If(Ast_NYI):
+    def __init__(self):
+        self.node_list = []
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + repr(tuple(self.node_list)).replace(',)', ')')
+
+    def append(self, ast_node):
+        self.node_list.append(ast_node)
+
+    def eval(self, env):
+        cond = self.node_list[0].eval(env)
+        if cond:
+            return self.node_list[1].eval(env)
+        else:
+            return self.node_list[2].eval(env)
+
+
 class Ast_Stmt_List(Ast_NYI):
     def __init__(self):
         self.node_list = []
@@ -220,6 +239,30 @@ class Ast_Stmt_List(Ast_NYI):
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
         return classname + repr(tuple(self.node_list)).replace(',)', ')')
+
+    def __len__(self):
+        return len(self.node_list)
+
+    def append(self, ast_node):
+        self.node_list.append(ast_node)
+
+    def eval(self, env):
+        res = Eval_Res()
+        for node in self.node_list:
+            res.append(node.eval(env))
+        return res
+
+
+class Ast_Stmt_Block(Ast_NYI):
+    def __init__(self):
+        self.node_list = []
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + repr(tuple(self.node_list)).replace(',)', ')')
+
+    def __len__(self):
+        return len(self.node_list)
 
     def append(self, ast_node):
         self.node_list.append(ast_node)

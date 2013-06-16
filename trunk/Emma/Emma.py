@@ -95,9 +95,9 @@ if __name__ == '__main__':
                 # Evaluate the AST
                 if ast:
                     if topEnv['$DEBUG']: print ast
-                    res = ast.eval(topEnv)
-                    output = res.__repr__()
-                    if output: print output
+                    #res = ast.eval(topEnv)
+                    #output = res.__repr__()
+                    #if output: print output
                     line_number += 1
 
             except LexError as e:
@@ -107,9 +107,5 @@ if __name__ == '__main__':
             except EvalError as e:
                 sys.stderr.write('%%%s: %s\n' % e.args)
                 line_number += 1
-
-
-
-
 
 
