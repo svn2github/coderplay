@@ -274,6 +274,9 @@ def parse_simple_stmt(tokenlist):
                 ast_node = parse_r_expression(tokenlist)
         else:
             ast_node = parse_r_expression(tokenlist)
+    elif is_addop(token):
+        # a leading +/-, it can only be an expression 
+        ast_node = parse_r_expression(tokenlist)
     else:
         tokenlist.match('token for a simple_stmt')
     return ast_node
