@@ -21,10 +21,13 @@ EPW_OP_L_PAREN      = '('
 EPW_OP_R_PAREN      = ')'
 EPW_OP_ASSIGN       = '='
 EPW_OP_EOL          = 'EOL'
+EPW_OP_COLON        = ':'
 EPW_OP_SEMICOLON    = ';'
 EPW_OP_COMMA        = ','
 EPW_OP_L_CURLY      = '{'
 EPW_OP_R_CURLY      = '}'
+EPW_OP_L_BRACKET    = '['
+EPW_OP_R_BRACKET    = ']'
 EPW_OP_GT           = '>'
 EPW_OP_LT           = '<'
 EPW_OP_GE           = '>='
@@ -68,9 +71,12 @@ token_type_list = [
     (r'\)',         EPW_OP_R_PAREN),
     (r'\{',         EPW_OP_L_CURLY),
     (r'\}',         EPW_OP_R_CURLY),
+    (r'\[',         EPW_OP_L_BRACKET),
+    (r'\]',         EPW_OP_R_BRACKET),
     (r'=',          EPW_OP_ASSIGN),
     (r'\n',         EPW_OP_EOL),
     (r';',          EPW_OP_SEMICOLON),
+    (r':',          EPW_OP_COLON),
     (r',',          EPW_OP_COMMA),
     (r'>',          EPW_OP_GT),
     (r'<',          EPW_OP_LT),

@@ -100,6 +100,34 @@ class Ast_Variable(Ast_NYI):
         return theEnv[self.name]
 
 
+class Ast_ArrayElement(Ast_NYI):
+    def __init__(self):
+        self.name = None
+        self.slice = None
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + '(' + repr(self.name) + ', ' + repr(self.slice) + ')'
+
+    def eval(self, env):
+        pass
+
+
+class Ast_SliceList(Ast_NYI):
+    def __init__(self):
+        self.start = 0
+        self.end = -1
+        self.step = 1
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        out = ', '.join([repr(self.start),repr(self.end),repr(self.step)])
+        return classname + '(' + out + ')'
+    
+    def eval(self,env):
+        pass
+
+
 class Ast_FuncCall(Ast_NYI):
     def __init__(self):
         self.name = None

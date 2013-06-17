@@ -3,7 +3,8 @@ from epw_ast import *
 
 '''
 --------------------------------------------------------------------------------
-Emma Grammer
+                                Emma Grammer
+
     A terminator is to indicate the language construct before it is complete and
 can be evaluated. Note that both EOL and Semicolon are terminators. But they 
 have following differences:
@@ -21,6 +22,9 @@ have following differences:
        is not broken. Using "if {...} else {...} " as an exmaple, the "} else {"
        must be on the same line and no Semicolon terminator inside it either.
        This is similar to IDL.
+
+    * Whitespace is insignificant.
+
 --------------------------------------------------------------------------------
 
 mulop :== "*" | "/"
@@ -32,6 +36,7 @@ r_orop :== "or" | "xor"
 factor = [<unary_op>] ( number 
                         | ID 
                         | func
+                        | array_element
                         | "(" r_expression ")")
 
 term ::= factor (<mulop> factor)*
@@ -48,11 +53,13 @@ r_term ::= r_factor (<r_andop> r_factor)*
 
 r_expression ::= r_term (<r_orop> r_term)*
 
+array_element ::= ID "[" expression "]"
+
 arglist ::= "(" [r_expression ("," r_expression)*] ")"
 
 func ::= ID "(" [r_expression ("," r_expression)*] ")"
 
-assign_stmt ::= (ID | func ) "=" r_expression
+assign_stmt ::= (ID | func | array_element) "=" r_expression
 
 print_stmt ::= "print" [r_expression ("," r_expression)*]
 
@@ -311,12 +318,15 @@ def parse_simple_stmt(tokenlist):
         token = tokenlist.get(1)
         if token.tag == EPW_OP_ASSIGN:
             ast_node = parse_assign_stmt(tokenlist)
-        elif token.tag == EPW_OP_L_PAREN:
-            ast_node = parse_func_call(tokenlist)
-            token = tokenlist.get() # the token after the func call
-            # we can now tell whether it is an assignment or expression
-            # Note we only need backtrack for expression
-            if token.tag == EPW_OP_ASSIGN:
+        elif token.tag in [EPW_OP_L_PAREN, EPW_OP_L_BRACKET]:
+            if token.tag == EPW_OP_L_PAREN:
+                ast_node = parse_func_call(tokenlist)
+            else:
+                ast_node = parse_array_element(tokenlist)
+            # We can now tell whether it is an assignment or expression
+            # based on the current token we have. Note we only need 
+            # backtrack for expression parsing.
+            if tokenlist.get().tag == EPW_OP_ASSIGN:
                 ast_node = parse_assign_stmt(tokenlist, ast_node)
             else: # we have to backtrack and parse expression
                 tokenlist.pos = pos
@@ -482,6 +492,32 @@ def parse_number(tokenlist):
 def parse_ID(tokenlist):
     token = tokenlist.match(EPW_ID)
     ast_node = Ast_Variable(token.value)
+    return ast_node
+
+def parse_array_element(tokenlist):
+    'Parse an array element indexing'
+    ast_node = Ast_ArrayElement()
+    ast_node.name = tokenlist.match(EPW_ID)
+    ast_node.slice = parse_slicelist(tokenlist)
+    return ast_node
+
+def parse_slicelist(tokenlist):
+    'Parse the slice list of array indexing'
+    ast_node = Ast_SliceList()
+    tokenlist.match(EPW_OP_L_BRACKET)
+    # The compulsory start of the index
+    ast_node.start = parse_expression(tokenlist)
+    # The optional end of the index
+    if tokenlist.get().tag == EPW_OP_COLON:
+        tokenlist.match(EPW_OP_COLON)
+        if tokenlist.get().tag not in [EPW_OP_COLON, EPW_OP_R_BRACKET]:
+            ast_node.end = parse_expression(tokenlist)
+    # The optional step of the index
+    if tokenlist.get().tag == EPW_OP_COLON:
+        tokenlist.match(EPW_OP_COLON)
+        if tokenlist.get().tag != EPW_OP_R_BRACKET:
+            ast_node.step = parse_expression(tokenlist)
+    tokenlist.match(EPW_OP_R_BRACKET)
     return ast_node
 
 def parse_func_call(tokenlist):
