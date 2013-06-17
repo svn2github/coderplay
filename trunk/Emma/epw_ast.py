@@ -145,13 +145,30 @@ class Ast_FuncCall(Ast_NYI):
 class Ast_ArgList(Ast_NYI):
     def __init__(self):
         self.args = []
+        self.kwargs = []
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + repr(tuple(self.args)).replace(',)', ')')
+        return classname + repr(tuple(self.args+self.kwargs)).replace(',)', ')')
 
-    def append(self, node):
-        self.args.append(node)
+    def append(self, node, is_kwarg=0):
+        if is_kwarg:
+            self.kwargs.append(node)
+        else:
+            self.args.append(node)
+
+    def eval(self, env):
+        pass
+
+
+class Ast_KeywordParm(Ast_NYI):
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + '(' + repr(self.name) + ', ' + repr(self.value) + ')'
 
     def eval(self, env):
         pass

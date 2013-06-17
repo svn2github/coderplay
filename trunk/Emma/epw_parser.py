@@ -8,6 +8,7 @@ from epw_ast import *
     A terminator is to indicate the language construct before it is complete and
 can be evaluated. Note that both EOL and Semicolon are terminators. But they 
 have following differences:
+
     1. Semicolon is used for separating statements in a single line.
     2. EOL obviously can only be used at the end of a line.
     3. Semicolon is optional if there no separation for statements in a single
@@ -466,6 +467,8 @@ def parse_factor(tokenlist):
     elif token.tag == EPW_ID:
         if tokenlist.get(1).tag == EPW_OP_L_PAREN:
             ast_node = parse_func_call(tokenlist)
+        elif tokenlist.get(1).tag == EPW_OP_L_BRACKET:
+            ast_node = parse_array_element(tokenlist)
         else:
             ast_node = parse_ID(tokenlist)
 
@@ -497,7 +500,7 @@ def parse_ID(tokenlist):
 def parse_array_element(tokenlist):
     'Parse an array element indexing'
     ast_node = Ast_ArrayElement()
-    ast_node.name = tokenlist.match(EPW_ID)
+    ast_node.name = tokenlist.match(EPW_ID).value
     ast_node.slice = parse_slicelist(tokenlist)
     return ast_node
 
@@ -523,7 +526,7 @@ def parse_slicelist(tokenlist):
 def parse_func_call(tokenlist):
     'Parse a function call'
     ast_node = Ast_FuncCall()
-    ast_node.name = tokenlist.match(EPW_ID)
+    ast_node.name = tokenlist.match(EPW_ID).value
     ast_node.args = parse_arglist(tokenlist)
     return ast_node
 
@@ -531,16 +534,33 @@ def parse_arglist(tokenlist):
     'Parse the argument list, i.e. (a, b, c)'
     ast_node = Ast_ArgList()
     tokenlist.match(EPW_OP_L_PAREN)
+    # Parse first argument if it is not empty
     if tokenlist.get().tag != EPW_OP_R_PAREN:
         next_node = parse_r_expression(tokenlist)
-        ast_node.append(next_node)
+        # Parse possible keyword type parameter
+        is_kwarg = 0
+        if tokenlist.get().tag == EPW_OP_ASSIGN:
+            tokenlist.match(EPW_OP_ASSIGN)
+            val_node = parse_r_expression(tokenlist)
+            next_node = Ast_KeywordParm(next_node, val_node)
+            is_kwarg = 1
+        ast_node.append(next_node, is_kwarg)
+        # Parse any other following parameters
         while tokenlist.get().tag == EPW_OP_COMMA:
             tokenlist.match(EPW_OP_COMMA)
             next_node = parse_r_expression(tokenlist)
-            ast_node.append(next_node)
+            # Parse possible keyword type parameter
+            is_kwarg = 0
+            if tokenlist.get().tag == EPW_OP_ASSIGN:
+                tokenlist.match(EPW_OP_ASSIGN)
+                val_node = parse_r_expression(tokenlist)
+                next_node = Ast_KeywordParm(next_node, val_node)
+                is_kwarg = 1
+            ast_node.append(next_node, is_kwarg)
     tokenlist.match(EPW_OP_R_PAREN)
     return ast_node
 
 class ParseError(Exception):
     pass
+
 
