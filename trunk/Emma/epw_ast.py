@@ -101,8 +101,22 @@ class Ast_Variable(Ast_NYI):
 
 
 class Ast_FuncCall(Ast_NYI):
-    def __init__(self, name):
-        self.args = [name,]
+    def __init__(self):
+        self.name = None
+        self.args = None
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + '(' + repr(self.name) + ', ' + repr(self.args) + ')'
+
+    def eval(self, env):
+        if self.name == 'debug':
+            env.top()[self.args[1].eval(env)] = self.args[2].eval(env)
+
+
+class Ast_ArgList(Ast_NYI):
+    def __init__(self):
+        self.args = []
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
@@ -112,9 +126,6 @@ class Ast_FuncCall(Ast_NYI):
         self.args.append(node)
 
     def eval(self, env):
-        funcname = self.args[0]
-        if funcname == 'debug':
-            env.top()[self.args[1].eval(env)] = self.args[2].eval(env)
         pass
 
 
@@ -211,6 +222,47 @@ class Ast_Print(Ast_NYI):
             sys.stdout.write(str(node.eval(env)))
         sys.stdout.write('\n')
         return None
+
+
+class Ast_DefFunc(Ast_NYI):
+    def __int__(self):
+        self.name = None
+        self.args = None
+        self.body = None
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        out = ', '.join([repr(self.name), repr(self.args), repr(self.body)])
+        return classname + '(' + out + ')'
+
+class Ast_WhileLoop(Ast_NYI):
+    def __init__(self):
+        self.condition = None
+        self.body = None
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + '(' + repr(self.condition) + ', ' + repr(self.body) +')'
+
+    def eval(self, env):
+        pass
+
+
+class Ast_ForLoop(Ast_NYI):
+    def __init__(self):
+        self.counter = None
+        self.start = None
+        self.end = None
+        self.step = 1 # default step
+        self.body = None
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        out = ', '.join([repr(self.counter),repr(self.start),repr(self.end),repr(self.step),repr(self.body)])
+        return classname + '(' + out + ')'
+
+    def eval(self, env):
+        pass
 
 
 class Ast_If(Ast_NYI):

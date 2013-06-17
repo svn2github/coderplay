@@ -48,6 +48,8 @@ r_term ::= r_factor (<r_andop> r_factor)*
 
 r_expression ::= r_term (<r_orop> r_term)*
 
+arglist ::= "(" [r_expression ("," r_expression)*] ")"
+
 func ::= ID "(" [r_expression ("," r_expression)*] ")"
 
 assign_stmt ::= (ID | func ) "=" r_expression
@@ -56,19 +58,21 @@ print_stmt ::= "print" [r_expression ("," r_expression)*]
 
 empty_stmt ::= (";")+
 
-funcdef_stmt ::= "def" func stmt_block
+def_stmt ::= "def" func stmt_block
 
 for_stmt ::= "for" ID "=" expression, expression [, expression] (simple_stmt | stmt_block)
 
 while_stmt ::= "while" r_expression (simple_stmt | stmt_block)
 
-if_stmt ::= "if" r_expression (simple_stmt | stmt_block) ["else" (simple_stmt | stmt_block)]
+if_stmt ::= "if" r_expression (simple_stmt | stmt_block) [else_stmt] 
+
+else_stmt ::= "else" (if_stmt | simple_stmt | stmt_block)
 
 compound_stmt ::=
             if_stmt
                 | while_stmt
                 | for_stmt
-                | funcdef_stmt
+                | def_stmt
 
 simple_stmt ::= 
             r_expression
@@ -204,11 +208,13 @@ def parse_compound_stmt(tokenlist):
     if token.tag == EPW_KW_IF:
         ast_node = parse_if_stmt(tokenlist)
     elif token.tag == EPW_KW_DEF:
-        pass
+        ast_node = parse_def_stmt(tokenlist)
     elif token.tag == EPW_KW_WHILE:
-        pass
+        ast_node = parse_while_stmt(tokenlist)
     elif token.tag == EPW_KW_FOR:
-        pass
+        ast_node = parse_for_stmt(tokenlist)
+    else:
+        tokenlist.match('token for a compound_stmt')
     return ast_node
 
 
@@ -227,12 +233,60 @@ def parse_if_stmt(tokenlist):
     ast_node.append(next_node)
     # the optional else part
     if tokenlist.get().tag == EPW_KW_ELSE:
-        tokenlist.match(EPW_KW_ELSE)
-        if tokenlist.get().tag == EPW_OP_L_CURLY:
-            next_node = parse_stmt_block(tokenlist)
-        else:
-            next_node = parse_simple_stmt(tokenlist)
+        next_node = parse_else_stmt(tokenlist)
         ast_node.append(next_node)
+    return ast_node
+
+
+def parse_else_stmt(tokenlist):
+    'Parse the else_stmt, which can enclose another if_stmt'
+    tokenlist.match(EPW_KW_ELSE)
+    if tokenlist.get().tag == EPW_OP_L_CURLY:
+        ast_node = parse_stmt_block(tokenlist)
+    elif tokenlist.get().tag == EPW_KW_IF:
+        ast_node = parse_if_stmt(tokenlist)
+    else:
+        ast_node = parse_simple_stmt(tokenlist)
+    return ast_node
+
+
+def parse_while_stmt(tokenlist):
+    'Parse the while compound_stmt'
+    tokenlist.match(EPW_KW_WHILE)
+    ast_node = Ast_WhileLoop()
+    ast_node.condition = parse_r_expression(tokenlist)
+    if tokenlist.get().tag == EPW_OP_L_CURLY:
+        ast_node.body = parse_stmt_block(tokenlist)
+    else:
+        ast_node.body = parse_simple_stmt(tokenlist)
+    return ast_node
+
+def parse_for_stmt(tokenlist):
+    'Parse the for loop'
+    tokenlist.match(EPW_KW_FOR)
+    ast_node = Ast_ForLoop()
+    ast_node.counter = parse_ID(tokenlist)
+    ast_node.start = parse_expression(tokenlist)
+    tokenlist.match(EPW_OP_COMMA)
+    ast_node.end = parse_expression(tokenlist)
+    if tokenlist.get().tag == EPW_OP_COMMA:
+        tokenlist.match(EPW_OP_COMMA)
+        ast_node.step = parse_expression(tokenlist)
+    else:
+        if tokenlist.get().tag == EPW_OP_L_CURLY:
+            ast_node.body = parse_stmt_block(tokenlist)
+        else:
+            ast_node.body = parse_simple_stmt(tokenlist)
+    return ast_node
+
+
+def parse_def_stmt(tokenlist):
+    'Parse the function definition'
+    tokenlist.match(EPW_KW_DEF)
+    ast_node = Ast_DefFunc()
+    ast_node.name = parse_ID(tokenlist)
+    ast_node.args = parse_arglist(tokenlist)
+    ast_node.body = parse_stmt_block(tokenlist)
     return ast_node
 
 
@@ -436,8 +490,15 @@ def parse_ID(tokenlist):
     return ast_node
 
 def parse_func_call(tokenlist):
-    token = tokenlist.match(EPW_ID)
-    ast_node = Ast_FuncCall(token.value)
+    'Parse a function call'
+    ast_node = Ast_FuncCall()
+    ast_node.name = tokenlist.match(EPW_ID)
+    ast_node.args = parse_arglist(tokenlist)
+    return ast_node
+
+def parse_arglist(tokenlist):
+    'Parse the argument list, i.e. (a, b, c)'
+    ast_node = Ast_ArgList()
     tokenlist.match(EPW_OP_L_PAREN)
     if tokenlist.get().tag != EPW_OP_R_PAREN:
         next_node = parse_r_expression(tokenlist)

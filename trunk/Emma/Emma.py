@@ -17,6 +17,7 @@ ywangd@gmail.com
 SETTINGS = [
     ('$DEBUG', 1), 
     ('$PROMPT', 'Emma'),
+    ('$PROMPT_CONTINUE', '........'),
 ]
 
 
@@ -86,7 +87,7 @@ if __name__ == '__main__':
             if promptPrefix == topEnv['$PROMPT']:
                 promptString = promptPrefix + ' [%d]> ' % line_number
             else:
-                promptString = promptPrefix + '> '
+                promptString = promptPrefix + ' '
 
             newText = raw_input(promptString)
 
@@ -116,12 +117,10 @@ if __name__ == '__main__':
                     #res = ast.eval(topEnv)
                     #output = res.__repr__()
                     #if output: print output
-                    line_number += 1
 
             except LexError as e:
                 sys.stderr.write('%%[LexError]%s: %s  (L%d, C%d)\n' % e.args)
                 if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
-                line_number += 1
 
             except ParseError as e:
                 if get_ContinueInput():
@@ -129,22 +128,21 @@ if __name__ == '__main__':
                 else:
                     sys.stderr.write('%%[ParseError]%s: %s\n' % e.args)
                     if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
-                    line_number += 1
 
             except EvalError as e:
                 sys.stderr.write('%%[EvalError]%s: %s\n' % e.args)
                 if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
-                line_number += 1
 
             finally:
                 # if we want continue input, we save the text
                 if get_ContinueInput(): 
                     oldText = text
                     set_ContinueInput(0)
-                    promptPrefix = '--------'
+                    promptPrefix = topEnv['$PROMPT_CONTINUE']
                 else:
                     oldText = ''
                     promptPrefix = topEnv['$PROMPT']
+                    line_number += 1
 
 
 
