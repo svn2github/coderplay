@@ -104,25 +104,38 @@ class Emma(object):
     def run_file(self, filename):
         'The batch script'
         f = open(filename)
-        lines = f.readlines()
+        text = f.read()
         f.close()
 
-        tokenlist = []
-        for idx in range(len(lines)):
-            try:
-                tokenline = lex(file.Line(lines[idx], idx+1, filename))
-            except LexError as e:
-                sys.stderr.write('%s: %s  (L%d, C%d)\n' % e.args)
-                sys.exit(1)
-            tokenlist.append(tokenline)
+        # Lexing
+        try:
+            tokenlist = self.lex(file.Line(text, 1, filename))
+            if self.topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
 
-        print tokenlist
+        except LexError as e:
+            sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
+            sys.exit(1)
 
+        # Parsing
+        try:
+            ast = parse_file(tokenlist)
+            if ast and self.topEnv['$DEBUG']: print ast
+
+        except ParseError as e:
+            pass
+
+        # Evaluation
+        try:
+            if ast:
+                pass
+        except EvalError as e:
+            pass
 
 
 def usage(prog):
     sys.stderr.write('usage: %s filename\n' % prog)
     sys.exit(0)
+
 
 if __name__ == '__main__':
 
@@ -134,6 +147,4 @@ if __name__ == '__main__':
         emma.run_repl()
     else:
         emma.run_file(sys.argv[1])
-
-    sys.exit(0)
 
