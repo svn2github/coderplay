@@ -17,7 +17,8 @@ ywangd@gmail.com
 SETTINGS = [
     ('$DEBUG', 1), 
     ('$PROMPT', 'Emma'),
-    ('$PROMPT_CONTINUE', '........'),
+    ('$PROMPT_CONTINUE', '.'),
+    ('$SHIFTWIDTH', 4), 
 ]
 
 
@@ -58,7 +59,6 @@ if __name__ == '__main__':
     # Prepare the Environment
     topEnv = Environment()
     topEnv.update(SETTINGS)
-    promptPrefix = topEnv['$PROMPT']
 
     # Batch file
     if len(sys.argv) == 2:
@@ -85,10 +85,13 @@ if __name__ == '__main__':
         while True:
 
             # set up the proper prompt string
-            if promptPrefix == topEnv['$PROMPT']:
-                promptString = promptPrefix + ' [%d]> ' % line_number
+            normal_prompt = topEnv['$PROMPT'] + ' [%d]>' % line_number
+            nident = tokenlist.nLCurly - tokenlist.nRCurly
+            if nident == 0:
+                promptString = normal_prompt + ' '
             else:
-                promptString = promptPrefix + ' '
+                indent_width = nident * topEnv['$SHIFTWIDTH']
+                promptString = topEnv['$PROMPT_CONTINUE']*(len(normal_prompt)+indent_width) + ' '
 
             # Get input from the prompt
             text = raw_input(promptString)
@@ -100,38 +103,36 @@ if __name__ == '__main__':
             # raw_input does not have it and the BNF requires it as the
             # terminator. 
             text += '\n'
-
             
             # Lexing
             try:
-                tokenline = None
                 tokenline = lex(file.Line(text, line_number))
 
+                # Add to the existing list
                 tokenlist.concatenate(tokenline) 
                 # If we have unmatched {} pair, don't parsing till all pairs are matched.
                 if tokenlist.nLCurly != tokenlist.nRCurly:
-                    promptPrefix = topEnv['$PROMPT_CONTINUE']
                     continue
-                else:
-                    promptPrefix = topEnv['$PROMPT']
 
                 if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
 
             except LexError as e:
                 sys.stderr.write('%%[LexError]%s: %s  (L%d, C%d)\n' % e.args)
                 if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+                tokenlist.reset()
+                continue
 
 
             # Parsing
             try:
-                ast = None
                 ast = parse_prompt(tokenlist)
                 if ast and topEnv['$DEBUG']: print ast
 
             except ParseError as e:
                 sys.stderr.write('%%[ParseError]%s: %s\n' % e.args)
                 if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
-
+                tokenlist.reset()
+                continue
             
             # Evaluation
             try:

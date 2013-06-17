@@ -263,14 +263,15 @@ def parse_for_stmt(tokenlist):
     ast_node.start = parse_expression(tokenlist)
     tokenlist.match(EPW_OP_COMMA)
     ast_node.end = parse_expression(tokenlist)
+    # The optional step argument
     if tokenlist.get().tag == EPW_OP_COMMA:
         tokenlist.match(EPW_OP_COMMA)
         ast_node.step = parse_expression(tokenlist)
+    # Parse the body
+    if tokenlist.get().tag == EPW_OP_L_CURLY:
+        ast_node.body = parse_stmt_block(tokenlist)
     else:
-        if tokenlist.get().tag == EPW_OP_L_CURLY:
-            ast_node.body = parse_stmt_block(tokenlist)
-        else:
-            ast_node.body = parse_simple_stmt(tokenlist)
+        ast_node.body = parse_simple_stmt(tokenlist)
     return ast_node
 
 
