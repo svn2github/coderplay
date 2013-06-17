@@ -21,8 +21,23 @@ have following differences:
     5. For statements that contains two or more blocks, the ending "}" must be
        in the same line with the following "{", so that the language construct
        is not broken. Using "if {...} else {...} " as an exmaple, the "} else {"
-       must be on the same line and no Semicolon terminator inside it either.
-       This is similar to IDL.
+       must be on the same line and no Semicolon terminator in between them 
+       either. This behaviour is kind similar to IDL.
+    6. Another way to look at the "{" and "}" pair is treat them as "glue" or
+       "magnetic" operators. They are glued to each other and take whatever
+       statements inside them to become a single languge construct. It is like
+       a north and south pair of magnetic poles that attract each other. Note
+       that the glue/magnetic only works inside the "{}" pair. Any other 
+       language constructs before or after them are not glued. If these other
+       language constructs need to be as part of the "{}" language construct.
+       They have to be written in the same line. Using "if ... else ..." as an
+       example, following statement is a single language construct.
+           if x == y {
+               do_something()
+           } else {
+               do_something_else()
+           }
+       Note how "{" and "}" are glued to each other across multiple lines.
 
     * Whitespace is insignificant.
 
