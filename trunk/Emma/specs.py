@@ -100,3 +100,19 @@ token_type_list = [
     (r'[A-Za-z_][A-Za-z0-9_]*', EPW_ID),
 ]
 
+
+SETTINGS = [
+    ('$DEBUG', 1), 
+    ('$NAME', 'Emma'),
+    ('$PROMPT', 'In'),
+    ('$PROMPT_CONTINUE', '.'),
+    ('$SHIFTWIDTH', 4), 
+    ('$VERSION', '0.1.0'), 
+    ('$MOTD', ['Emma Peiran Wang says Hi!', 
+               'No!',
+               'More, Please.',
+               'Mine!',
+               'Bunny, Bunny ...',
+              ]),
+]
+
