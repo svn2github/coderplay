@@ -2,8 +2,8 @@
 import sys
 import specs
 import file
-from epw_lexer import Lexer, LexError
-from epw_parser import parse_file, parse_prompt, ParseError, get_ContinueInput, set_ContinueInput
+from epw_lexer import Lexer, LexError, TokenList
+from epw_parser import parse_file, parse_prompt, ParseError
 from epw_ast import EvalError
 
 '''
@@ -70,79 +70,84 @@ if __name__ == '__main__':
         tokenlist = []
         for idx in range(len(lines)):
             try:
-                tokens_line = lex(file.Line(lines[idx], idx+1, filename))
+                tokenline = lex(file.Line(lines[idx], idx+1, filename))
             except LexError as e:
                 sys.stderr.write('%s: %s  (L%d, C%d)\n' % e.args)
                 sys.exit(1)
-            tokenlist.append(tokens_line)
+            tokenlist.append(tokenline)
 
         print tokenlist
 
     # REPL
     else:
         line_number = 1
-        oldText = '' # Initialize the text input as empty
+        tokenlist = TokenList()
         while True:
 
+            # set up the proper prompt string
             if promptPrefix == topEnv['$PROMPT']:
                 promptString = promptPrefix + ' [%d]> ' % line_number
             else:
                 promptString = promptPrefix + ' '
 
-            newText = raw_input(promptString)
+            # Get input from the prompt
+            text = raw_input(promptString)
 
             # A single period exits the prompt
-            if newText == '.':
-                set_ContinueInput(0)
-                break
+            if text == '.': break
 
             # Append an EOL at the end of the line since the input from
             # raw_input does not have it and the BNF requires it as the
             # terminator. 
-            text = oldText + newText + '\n'
+            text += '\n'
 
+            
+            # Lexing
             try:
+                tokenline = None
+                tokenline = lex(file.Line(text, line_number))
 
-                # Lexing
-                tokenlist = lex(file.Line(text, line_number))
+                tokenlist.concatenate(tokenline) 
+                # If we have unmatched {} pair, don't parsing till all pairs are matched.
+                if tokenlist.nLCurly != tokenlist.nRCurly:
+                    promptPrefix = topEnv['$PROMPT_CONTINUE']
+                    continue
+                else:
+                    promptPrefix = topEnv['$PROMPT']
+
                 if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
-
-                # Parsing
-                # We may skip parsing we find any dangling "{" ?
-                ast = parse_prompt(tokenlist)
-
-                # Evaluate the AST
-                if ast:
-                    if topEnv['$DEBUG']: print ast
-                    #res = ast.eval(topEnv)
-                    #output = res.__repr__()
-                    #if output: print output
 
             except LexError as e:
                 sys.stderr.write('%%[LexError]%s: %s  (L%d, C%d)\n' % e.args)
                 if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
 
+
+            # Parsing
+            try:
+                ast = None
+                ast = parse_prompt(tokenlist)
+                if ast and topEnv['$DEBUG']: print ast
+
             except ParseError as e:
-                if get_ContinueInput():
-                    print 'Continue', tokenlist
-                else:
-                    sys.stderr.write('%%[ParseError]%s: %s\n' % e.args)
-                    if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+                sys.stderr.write('%%[ParseError]%s: %s\n' % e.args)
+                if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+
+            
+            # Evaluation
+            try:
+                if ast:
+                    #res = ast.eval(topEnv)
+                    #output = res.__repr__()
+                    #if output: print output
+                    line_number += 1
+                    pass
 
             except EvalError as e:
                 sys.stderr.write('%%[EvalError]%s: %s\n' % e.args)
                 if topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
 
             finally:
-                # if we want continue input, we save the text
-                if get_ContinueInput(): 
-                    oldText = text
-                    set_ContinueInput(0)
-                    promptPrefix = topEnv['$PROMPT_CONTINUE']
-                else:
-                    oldText = ''
-                    promptPrefix = topEnv['$PROMPT']
-                    line_number += 1
+                tokenlist.reset()
 
 
 

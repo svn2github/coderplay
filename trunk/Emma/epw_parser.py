@@ -93,14 +93,6 @@ file_input ::= (statement)*
 prompt_input ::= statement
 '''
 
-ContinueInput = 0 # Flag if we wanna have another line of input for parsing
-
-def get_ContinueInput():
-    return ContinueInput
-
-def set_ContinueInput(value):
-    globals()['ContinueInput'] = value
-
 def is_addop(token):
     return 1 if token.tag in [EPW_OP_ADD, EPW_OP_SUB] else 0
 
@@ -143,6 +135,7 @@ def parse_file(tokenlist):
 def parse_statement(tokenlist):
     'The program is just a bunch of statements'
     token = tokenlist.get()
+    # For empty line, a None is returned implicitly
     if token.tag == EPW_OP_EOL:
         tokenlist.match(EPW_OP_EOL)
     else:
@@ -154,12 +147,13 @@ def parse_statement(tokenlist):
 def parse_stmt_block(tokenlist):
     'Parse the {} block'
     tokenlist.match(EPW_OP_L_CURLY)
-    set_ContinueInput(1) # set the flag for continue Input
     ast_node = Ast_Stmt_Block()
     # if the corresponding "}" if not encountered
     while tokenlist.get().tag != EPW_OP_R_CURLY:
         while tokenlist.get().tag == EPW_OP_EOL:
             tokenlist.match(EPW_OP_EOL)
+        if tokenlist.get().tag == EPW_OP_R_CURLY:
+            break
         next_node = parse_stmt_list(tokenlist)
         if next_node is not None:
             ast_node.append(next_node)
@@ -168,7 +162,6 @@ def parse_stmt_block(tokenlist):
         else:
             break
     tokenlist.match(EPW_OP_R_CURLY)
-    set_ContinueInput(0) # unset the flag for continue Input
     return ast_node
 
 
@@ -266,6 +259,7 @@ def parse_for_stmt(tokenlist):
     tokenlist.match(EPW_KW_FOR)
     ast_node = Ast_ForLoop()
     ast_node.counter = parse_ID(tokenlist)
+    tokenlist.match(EPW_OP_ASSIGN)
     ast_node.start = parse_expression(tokenlist)
     tokenlist.match(EPW_OP_COMMA)
     ast_node.end = parse_expression(tokenlist)

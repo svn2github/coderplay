@@ -1,7 +1,7 @@
 import sys
 import re
 from specs import *
-from epw_parser import ParseError, set_ContinueInput
+from epw_parser import ParseError
 
 
 class Token():
@@ -23,9 +23,23 @@ class TokenList():
     def __init__(self):
         self.tlist = []
         self.pos = 0
+        self.nLCurly = 0
+        self.nRCurly = 0
+
+    def reset(self):
+        self.tlist = []
+        self.pos = 0
+        self.nLCurly = 0
+        self.nRCurly = 0
 
     def append(self, token):
         self.tlist.append(token)
+
+    def concatenate(self, anotherList):
+        if len(anotherList) > 0:
+            self.tlist.extend(anotherList.tlist)
+            self.nLCurly += anotherList.nLCurly
+            self.nRCurly += anotherList.nRCurly
 
     def get(self, offset=0):
         pos = self.pos + offset
@@ -46,13 +60,6 @@ class TokenList():
         if cur_token.tag == tag_to_match:
             self.pos += 1
         else:
-            # If the cur_token is None, that means we are at the end of
-            # of the input stream and we may want ask for more input
-            # instead of throwing an error. If it is not None, we want
-            # stop the contiuation. "if cur_token" return 1 if the token
-            # is not None and return 0 if it is None.
-            if cur_token:
-                set_ContinueInput(0)
             raise ParseError('Expected', tag_to_match)
         return cur_token
 
@@ -98,6 +105,10 @@ class Lexer():
             else:
                 if matched_tag != 'WHITE':
                     tokenlist.append(Token(matched_text, matched_tag))
+                    if matched_tag == EPW_OP_L_CURLY:
+                        tokenlist.nLCurly += 1
+                    elif matched_tag == EPW_OP_R_CURLY:
+                        tokenlist.nRCurly += 1
                 pos += len(matched_text)
         return tokenlist
 
