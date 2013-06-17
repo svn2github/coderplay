@@ -27,8 +27,8 @@ class Emma(object):
 
     def run_repl(self):
         'REPL prompt'
-        print self.topEnv['$NAME'] + ' ' + self.topEnv['$VERSION']
-        print 'MoTD: ' + random.choice(self.topEnv['$MOTD'])
+        print self.topEnv.get('$NAME') + ' ' + self.topEnv.get('$VERSION')
+        print 'MoTD: ' + random.choice(self.topEnv.get('$MOTD'))
         print
         line_number = 1
         tokenlist = TokenList()
@@ -36,13 +36,13 @@ class Emma(object):
         while True:
 
             # set up the proper prompt string
-            normal_prompt = self.topEnv['$PROMPT'] + ' [%d]>' % line_number
+            normal_prompt = self.topEnv.get('$PROMPT') + ' [%d]>' % line_number
             nident = tokenlist.nLCurly - tokenlist.nRCurly
             if nident == 0:
                 promptString = normal_prompt + ' '
             else:
-                indent_width = nident * self.topEnv['$SHIFTWIDTH']
-                promptString = self.topEnv['$PROMPT_CONTINUE']*(len(normal_prompt)+indent_width) + ' '
+                indent_width = nident * self.topEnv.get('$SHIFTWIDTH')
+                promptString = self.topEnv.get('$PROMPT_CONTINUE')*(len(normal_prompt)+indent_width) + ' '
 
             # Get input from the prompt
             text = raw_input(promptString)
@@ -65,22 +65,22 @@ class Emma(object):
                 if tokenlist.nLCurly != tokenlist.nRCurly:
                     continue
 
-                if self.topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+                if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
             except LexError as e:
                 sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
-                if self.topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+                if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
                 tokenlist.reset()
                 continue
 
             # Parsing
             try:
                 ast = parse_prompt(tokenlist)
-                if ast and self.topEnv['$DEBUG']: print ast
+                if ast and self.topEnv.get('$DEBUG'): print ast
 
             except ParseError as e:
                 sys.stderr.write('%%[ParseError] %s: %s\n' % e.args)
-                if self.topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+                if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
                 tokenlist.reset()
                 continue
             
@@ -95,7 +95,7 @@ class Emma(object):
 
             except EvalError as e:
                 sys.stderr.write('%%[EvalError] %s: %s\n' % e.args)
-                if self.topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+                if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
             finally:
                 tokenlist.reset()
@@ -110,7 +110,7 @@ class Emma(object):
         # Lexing
         try:
             tokenlist = self.lex(file.Line(text, 1, filename))
-            if self.topEnv['$DEBUG'] and len(tokenlist) > 1: print tokenlist
+            if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
         except LexError as e:
             sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
@@ -119,7 +119,7 @@ class Emma(object):
         # Parsing
         try:
             ast = parse_file(tokenlist)
-            if ast and self.topEnv['$DEBUG']: print ast
+            if ast and self.topEnv.get('$DEBUG'): print ast
 
         except ParseError as e:
             pass

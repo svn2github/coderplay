@@ -50,6 +50,7 @@ r_andop :== "and"
 r_orop :== "or" | "xor"
 
 factor = [<unary_op>] ( number 
+                        | string
                         | ID 
                         | func
                         | array_element
@@ -322,11 +323,15 @@ def parse_simple_stmt(tokenlist):
     token = tokenlist.get()
     if token.tag == EPW_KW_PRINT:
         ast_node = parse_print_stmt(tokenlist)
-    elif token.tag in [EPW_INT, EPW_FLOAT]:
+    elif token.tag in [EPW_INT, EPW_FLOAT, EPW_STR]:
         ast_node = parse_r_expression(tokenlist)
     elif token.tag == EPW_OP_SEMICOLON:
         ast_node = parse_empty_stmt(tokenlist)
+    elif is_addop(token):
+        # a leading +/-, it can only be an expression 
+        ast_node = parse_r_expression(tokenlist)
     elif token.tag == EPW_ID:
+        # ID, func_call and array_element all start with an ID.
         # If the next token is a "=", it is an assignment.
         # If it is a "(", it is a function call, but an
         # assignment is still possible after the call.
@@ -349,9 +354,6 @@ def parse_simple_stmt(tokenlist):
                 ast_node = parse_r_expression(tokenlist)
         else:
             ast_node = parse_r_expression(tokenlist)
-    elif is_addop(token):
-        # a leading +/-, it can only be an expression 
-        ast_node = parse_r_expression(tokenlist)
     else:
         tokenlist.match('token for a simple_stmt')
     return ast_node

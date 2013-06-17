@@ -112,7 +112,10 @@ SETTINGS = [
                'No!',
                'More, Please.',
                'Mine!',
+               'Me!',
+               'Sit.',
                'Bunny, Bunny ...',
+               'Meow ...',
               ]),
 ]
 
