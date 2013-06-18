@@ -87,11 +87,10 @@ class Emma(object):
             # Evaluation
             try:
                 if ast:
-                    #res = ast.eval(self.topEnv)
-                    #output = res.__repr__()
-                    #if output: print output
+                    ret = ast.eval(self.topEnv)
+                    output = ret.__repr__()
+                    if output: print output
                     line_number += 1
-                    pass
 
             except EvalError as e:
                 sys.stderr.write('%%[EvalError] %s: %s\n' % e.args)

@@ -240,18 +240,15 @@ def parse_if_stmt(tokenlist):
     tokenlist.match(EPW_KW_IF)
     ast_node = Ast_If()
     # the test
-    next_node = parse_r_expression(tokenlist)
-    ast_node.append(next_node)
+    ast_node.predicate = parse_r_expression(tokenlist)
     # the if part
     if tokenlist.get().tag == EPW_OP_L_CURLY:
-        next_node = parse_stmt_block(tokenlist)
+        ast_node.if_body = parse_stmt_block(tokenlist)
     else:
-        next_node = parse_simple_stmt(tokenlist)
-    ast_node.append(next_node)
+        ast_node.if_body = parse_simple_stmt(tokenlist)
     # the optional else part
     if tokenlist.get().tag == EPW_KW_ELSE:
-        next_node = parse_else_stmt(tokenlist)
-        ast_node.append(next_node)
+        ast_node.else_body = parse_else_stmt(tokenlist)
     return ast_node
 
 
@@ -271,7 +268,7 @@ def parse_while_stmt(tokenlist):
     'Parse the while compound_stmt'
     tokenlist.match(EPW_KW_WHILE)
     ast_node = Ast_WhileLoop()
-    ast_node.condition = parse_r_expression(tokenlist)
+    ast_node.predicate = parse_r_expression(tokenlist)
     if tokenlist.get().tag == EPW_OP_L_CURLY:
         ast_node.body = parse_stmt_block(tokenlist)
     else:
@@ -385,8 +382,7 @@ def parse_assign_stmt(tokenlist, left_operand=None):
     # It must be an ID because a function call would have been given
     # in parse_simple_stmt.
     if left_operand is None:
-        token = tokenlist.match(EPW_ID)
-        left_operand = token.value
+        left_operand = parse_ID(tokenlist)
     token = tokenlist.match(EPW_OP_ASSIGN)
     op = token.value
     # The right operand
@@ -517,7 +513,7 @@ def parse_ID(tokenlist):
 def parse_array_element(tokenlist):
     'Parse an array element indexing'
     ast_node = Ast_ArrayElement()
-    ast_node.name = tokenlist.match(EPW_ID).value
+    ast_node.variable = parse_ID(tokenlist)
     ast_node.slice = parse_slicelist(tokenlist)
     return ast_node
 

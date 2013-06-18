@@ -32,4 +32,9 @@ class Environment(object):
         'Get the name from this Environment'
         return self.binding[name]
 
+    
+    def set(self, name, value=None):
+        'Set the named variable in this Environment'
+        self.binding[name] = value
+        return value
 

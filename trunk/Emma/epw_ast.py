@@ -1,7 +1,5 @@
 import sys
-
-class EvalError(Exception):
-    pass
+from epw_interpreter import *
 
 class Eval_Res(object):
     def __init__(self):
@@ -28,7 +26,6 @@ class Eval_Res(object):
 
             return out
 
-
     def append(self, res):
         self.rlist.append(res)
 
@@ -48,39 +45,39 @@ class Ast_NYI(object):
 
 
 class Ast_Int(Ast_NYI):
-    def __init__(self, i):
-        self.i = i
+    def __init__(self, value):
+        self.value = value
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname+'(%d)' % self.i
+        return classname+'(%d)' % self.value
 
     def eval(self, env):
-        return self.i
+        return self.value
 
 
 class Ast_Float(Ast_NYI):
-    def __init__(self, f):
-        self.f = f
+    def __init__(self, value):
+        self.value = value
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname+'(%f)' % self.f
+        return classname+'(%f)' % self.value
 
     def eval(self, env):
-        return self.f
+        return self.value
 
 
 class Ast_String(Ast_NYI):
-    def __init__(self, a_string):
-        self.a_string = a_string
+    def __init__(self, value):
+        self.value = value
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname+'(%s)' % self.a_string
+        return classname+'(%s)' % self.value
 
     def eval(self, env):
-        return self.a_string
+        return self.value
 
 
 class Ast_Variable(Ast_NYI):
@@ -96,28 +93,30 @@ class Ast_Variable(Ast_NYI):
     def eval(self, env):
         theEnv = env.find(self.name)
         if theEnv is None:
-            raise EvalError('Variable not defined', self.name)
-        return theEnv[self.name]
+            raise EvalError('Variable Not Defined', self.name)
+        return theEnv.get(self.name)
 
 
 class Ast_ArrayElement(Ast_NYI):
     def __init__(self):
-        self.name = None
+        self.variable = None
         self.slice = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + '(' + repr(self.name) + ', ' + repr(self.slice) + ')'
+        return classname + '(' + repr(self.variable) + ', ' + repr(self.slice) + ')'
 
     def eval(self, env):
-        pass
+        var = self.variable.eval(env)
+        slice = self.slice.eval(env)
+        return eval('var' + slice)
 
 
 class Ast_SliceList(Ast_NYI):
     def __init__(self):
-        self.start = 0
-        self.end = -1
-        self.step = 1
+        self.start = None 
+        self.end = None
+        self.step = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
@@ -125,8 +124,18 @@ class Ast_SliceList(Ast_NYI):
         return classname + '(' + out + ')'
     
     def eval(self,env):
-        pass
-
+        start = self.start.eval(env)
+        end = self.end.eval(env) if self.end else None
+        step = self.step.eval(env) if self.step else None
+        ret = '[' + str(start)
+        if end is not None or step is not None:
+            ret += ':'
+            if end is not None:
+                ret += str(end)
+            if step is not None:
+                ret += ':' + str(step)
+        ret += ']'
+        return ret
 
 class Ast_FuncCall(Ast_NYI):
     def __init__(self):
@@ -139,7 +148,9 @@ class Ast_FuncCall(Ast_NYI):
 
     def eval(self, env):
         if self.name == 'debug':
-            env.top()[self.args[1].eval(env)] = self.args[2].eval(env)
+            #env.top()['$'+self.args[1].eval(env)] = self.args[2].eval(env)
+            env.top().set('$DEBUG',  1-env.top().get('$DEBUG'))
+        pass
 
 
 class Ast_ArgList(Ast_NYI):
@@ -185,14 +196,13 @@ class Ast_UnaryOp(Ast_NYI):
 
     def eval(self, env):
         if self.op == '+':
-            return self.operand
+            return self.operand.eval(env)
         elif self.op == '-':
-            return -self.operand
+            return -self.operand.eval(env)
         elif self.op == 'not':
-            return not self.operand
+            return not self.operand.eval(env)
         else:
-            sys.stderr.write('Unrecognized operator '+self.op+'\n')
-            sys.exit(1)
+            raise EvalError('Unrecognized Unary Operator', self.op)
 
 
 class Ast_BinOp(Ast_NYI):
@@ -234,18 +244,13 @@ class Ast_BinOp(Ast_NYI):
         elif self.op == 'xor':
             return not (self.l.eval(env) or self.r.eval(env))
 
-        # The ristrication here is that ONLY a variable name can be used as
-        # the left side for an assignment. It won't currently allow an array
-        # subscript or a function call to be on the left side. NOTE the 
-        # self.l is not evaluated. So it can ONLY be a literal variable name.
-        # The parser won't allow them either.
+        # The assignment 
+        # Can only assign to a variable
         elif self.op == '=':
-            env[self.l] = self.r.eval(env)
+            return env.set(self.l.name, self.r.eval(env))
 
         else:
-            sys.stderr.write('Unrecognized operator '+self.op+'\n')
-            sys.exit(1)
-
+            raise EvalError('Unrecognized Binary Operator', self.op)
 
 
 class Ast_Print(Ast_NYI):
@@ -260,7 +265,7 @@ class Ast_Print(Ast_NYI):
         self.node_list.append(ast_node)
 
     def eval(self, env):
-        if len(self.node_list) > 0:
+        if len(self.node_list) > 0: # in case it is an empty print
             sys.stdout.write(str(self.node_list[0].eval(env)))
         for node in self.node_list[1:]:
             sys.stdout.write(' ')
@@ -280,17 +285,28 @@ class Ast_DefFunc(Ast_NYI):
         out = ', '.join([repr(self.name), repr(self.args), repr(self.body)])
         return classname + '(' + out + ')'
 
+    def eval(self, env):
+        pass
+
+
 class Ast_WhileLoop(Ast_NYI):
     def __init__(self):
-        self.condition = None
+        self.predicate = None
         self.body = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + '(' + repr(self.condition) + ', ' + repr(self.body) +')'
+        return classname + '(' + repr(self.predicate) + ', ' + repr(self.body) +')'
 
     def eval(self, env):
-        pass
+        while self.predicate.eval(env):
+            try:
+                ret = self.body(env)
+            except BreakControl as e:
+                break
+            except ContinueControl as e:
+                continue
+        return ret
 
 
 class Ast_ForLoop(Ast_NYI):
@@ -312,21 +328,19 @@ class Ast_ForLoop(Ast_NYI):
 
 class Ast_If(Ast_NYI):
     def __init__(self):
-        self.node_list = []
+        self.predicate = None
+        self.if_body = None
+        self.else_body = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + repr(tuple(self.node_list)).replace(',)', ')')
-
-    def append(self, ast_node):
-        self.node_list.append(ast_node)
+        return classname + repr((self.predicate, self.if_body, self.else_body)).replace(',)', ')')
 
     def eval(self, env):
-        cond = self.node_list[0].eval(env)
-        if cond:
-            return self.node_list[1].eval(env)
+        if self.predicate.eval(env):
+            return self.if_body.eval(env)
         else:
-            return self.node_list[2].eval(env)
+            return self.else_body.eval(env)
 
 
 class Ast_Stmt_List(Ast_NYI):
@@ -344,10 +358,10 @@ class Ast_Stmt_List(Ast_NYI):
         self.node_list.append(ast_node)
 
     def eval(self, env):
-        res = Eval_Res()
+        ret = Eval_Res()
         for node in self.node_list:
-            res.append(node.eval(env))
-        return res
+            ret.append(node.eval(env))
+        return ret
 
 
 class Ast_Stmt_Block(Ast_NYI):
@@ -365,10 +379,10 @@ class Ast_Stmt_Block(Ast_NYI):
         self.node_list.append(ast_node)
 
     def eval(self, env):
-        res = Eval_Res()
+        ret = Eval_Res()
         for node in self.node_list:
-            res.append(node.eval(env))
-        return res
+            ret.append(node.eval(env))
+        return ret
 
 
 class Ast_Statement(Ast_NYI):
