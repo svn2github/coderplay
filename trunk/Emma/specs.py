@@ -12,11 +12,15 @@ EPW_KW_WHILE        = 'WHILE'
 EPW_KW_FOR          = 'FOR'
 EPW_KW_DEF          = 'DEF'
 EPW_KW_PRINT        = 'PRINT'
+EPW_KW_CONTINUE     = 'CONTINUE'
+EPW_KW_BREAK        = 'BREAK'
+EPW_KW_RETURN       = 'RETURN'
 
 EPW_OP_ADD          = '+'
 EPW_OP_SUB          = '-'
 EPW_OP_MUL          = '*'
 EPW_OP_DIV          = '/'
+EPW_OP_MOD          = '%'
 EPW_OP_L_PAREN      = '('
 EPW_OP_R_PAREN      = ')'
 EPW_OP_ASSIGN       = '='
@@ -67,6 +71,7 @@ token_type_list = [
     (r'-',          EPW_OP_SUB),
     (r'\*',         EPW_OP_MUL),
     (r'/',          EPW_OP_DIV),
+    (r'%',          EPW_OP_MOD),
     (r'\(',         EPW_OP_L_PAREN),
     (r'\)',         EPW_OP_R_PAREN),
     (r'\{',         EPW_OP_L_CURLY),
@@ -91,6 +96,9 @@ token_type_list = [
     (r'\bfor\b',        EPW_KW_FOR),
     (r'\bdef\b',        EPW_KW_DEF),
     (r'\bprint\b',      EPW_KW_PRINT),
+    (r'\bcontinue\b',   EPW_KW_CONTINUE),
+    (r'\bbreak\b',      EPW_KW_BREAK),
+    (r'\breturn\b',      EPW_KW_RETURN),
 
     (r'[0-9]+\.[0-9]*',         EPW_FLOAT),
     (r'[0-9]*\.[0-9]+',         EPW_FLOAT),

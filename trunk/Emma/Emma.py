@@ -5,7 +5,7 @@ import specs
 import file
 from epw_lexer import Lexer, LexError, TokenList
 from epw_parser import parse_file, parse_prompt, ParseError
-from epw_ast import EvalError
+from epw_interpreter import EvalError, BreakControl, ContinueControl, ReturnControl
 from epw_env import Environment
 
 '''
@@ -89,15 +89,25 @@ class Emma(object):
                 if ast:
                     ret = ast.eval(self.topEnv)
                     output = ret.__repr__()
-                    if output: print output
+                    if output: print 'Ret:', output
                     line_number += 1
 
             except EvalError as e:
                 sys.stderr.write('%%[EvalError] %s: %s\n' % e.args)
                 if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
+            except BreakControl as e:
+                sys.stderr.write('%%[ControlError] Cannot Break From Top Level\n')
+
+            except ContinueControl as e:
+                sys.stderr.write('%%[ControlError] Cannot Continue From Top Level\n')
+
+            except ReturnControl as e:
+                sys.stderr.write('%%[ControlError] Cannot Return From Top Level\n')
+
             finally:
                 tokenlist.reset()
+
 
 
     def run_file(self, filename):
@@ -126,6 +136,7 @@ class Emma(object):
         # Evaluation
         try:
             if ast:
+                ast.eval(self.topEnv)
                 pass
         except EvalError as e:
             pass

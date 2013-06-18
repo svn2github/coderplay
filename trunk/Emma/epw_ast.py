@@ -1,4 +1,5 @@
 import sys
+from epw_env import Environment
 from epw_interpreter import *
 
 class Eval_Res(object):
@@ -7,7 +8,7 @@ class Eval_Res(object):
 
     def __repr__(self):
         if len(self.rlist) == 0:
-            return None
+            return ''
         else:
             out = ''
             valid = 0
@@ -22,7 +23,7 @@ class Eval_Res(object):
                     valid = 1
 
             if not valid:
-                out = None
+                out = ''
 
             return out
 
@@ -140,17 +141,37 @@ class Ast_SliceList(Ast_NYI):
 class Ast_FuncCall(Ast_NYI):
     def __init__(self):
         self.name = None
-        self.args = None
+        self.arglist = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + '(' + repr(self.name) + ', ' + repr(self.args) + ')'
+        return classname + '(' + repr(self.name) + ', ' + repr(self.arglist) + ')'
 
     def eval(self, env):
-        if self.name == 'debug':
-            #env.top()['$'+self.args[1].eval(env)] = self.args[2].eval(env)
+        if self.name.name == 'debug':
             env.top().set('$DEBUG',  1-env.top().get('$DEBUG'))
-        pass
+            return None
+
+        # Get the func definition
+        func_name = self.name.name
+        if env.has(func_name):
+            func_def = env.get(self.name.name)
+        else:
+            raise EvalError('Undefined Function', func_name)
+
+        # Plug the arglist
+        callee_env = func_def['env']
+        parmlist = func_def['parmlist']
+        plug_arglist(parmlist, self.arglist, env, callee_env)
+        
+        # Evaluation
+        try:
+            ret = None
+            ret = func_def['body'].eval(callee_env)
+        except ReturnControl as e:
+            pass
+
+        return ret
 
 
 class Ast_ArgList(Ast_NYI):
@@ -200,7 +221,7 @@ class Ast_UnaryOp(Ast_NYI):
         elif self.op == '-':
             return -self.operand.eval(env)
         elif self.op == 'not':
-            return not self.operand.eval(env)
+            return 1 if not self.operand.eval(env) else 0
         else:
             raise EvalError('Unrecognized Unary Operator', self.op)
 
@@ -225,24 +246,26 @@ class Ast_BinOp(Ast_NYI):
             return self.l.eval(env) * self.r.eval(env)
         elif self.op == '/':
             return self.l.eval(env) / self.r.eval(env)
+        elif self.op == '%':
+            return self.l.eval(env) % self.r.eval(env)
         elif self.op == '>':
             return self.l.eval(env) > self.r.eval(env)
         elif self.op == '<':
             return self.l.eval(env) < self.r.eval(env)
         elif self.op == '>=':
-            return self.l.eval(env) >= self.r.eval(env)
+            return 1 if self.l.eval(env) >= self.r.eval(env) else 0
         elif self.op == '<=':
-            return self.l.eval(env) <= self.r.eval(env)
+            return 1 if self.l.eval(env) <= self.r.eval(env) else 0
         elif self.op == '==':
-            return self.l.eval(env) == self.r.eval(env)
+            return 1 if self.l.eval(env) == self.r.eval(env) else 0
         elif self.op == '!=':
-            return self.l.eval(env) != self.r.eval(env)
+            return 1 if self.l.eval(env) != self.r.eval(env) else 0
         elif self.op == 'and':
-            return self.l.eval(env) and self.r.eval(env)
+            return 1 if self.l.eval(env) and self.r.eval(env) else 0
         elif self.op == 'or':
-            return self.l.eval(env) or self.r.eval(env)
+            return 1 if self.l.eval(env) or self.r.eval(env) else 0
         elif self.op == 'xor':
-            return not (self.l.eval(env) or self.r.eval(env))
+            return 1 if not (self.l.eval(env) or self.r.eval(env)) else 0
 
         # The assignment 
         # Can only assign to a variable
@@ -277,17 +300,22 @@ class Ast_Print(Ast_NYI):
 class Ast_DefFunc(Ast_NYI):
     def __int__(self):
         self.name = None
-        self.args = None
+        self.parmlist = None
         self.body = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        out = ', '.join([repr(self.name), repr(self.args), repr(self.body)])
+        out = ', '.join([repr(self.name), repr(self.parmlist), repr(self.body)])
         return classname + '(' + out + ')'
 
     def eval(self, env):
-        pass
-
+        func_env = Environment(outer=env)
+        if self.parmlist:
+            for arg in self.parmlist.args:
+                func_env.set(arg.name)
+            for kwarg in self.parmlist.kwargs:
+                func_env.set(kwarg.name.name, kwarg.value.eval(env))
+        env.set(self.name.name, {'body': self.body, 'env': func_env, 'parmlist': self.parmlist})
 
 class Ast_WhileLoop(Ast_NYI):
     def __init__(self):
@@ -299,14 +327,15 @@ class Ast_WhileLoop(Ast_NYI):
         return classname + '(' + repr(self.predicate) + ', ' + repr(self.body) +')'
 
     def eval(self, env):
+        ret = None
         while self.predicate.eval(env):
             try:
-                ret = self.body(env)
+                ret = self.body.eval(env)
             except BreakControl as e:
                 break
             except ContinueControl as e:
                 continue
-        return ret
+        return ret if ret else None
 
 
 class Ast_ForLoop(Ast_NYI):
@@ -314,7 +343,7 @@ class Ast_ForLoop(Ast_NYI):
         self.counter = None
         self.start = None
         self.end = None
-        self.step = 1 # default step
+        self.step = Ast_Int(1) # default step
         self.body = None
 
     def __repr__(self):
@@ -323,7 +352,34 @@ class Ast_ForLoop(Ast_NYI):
         return classname + '(' + out + ')'
 
     def eval(self, env):
-        pass
+        if env.has(self.counter.name):
+            ii = env.get(self.counter.name)
+        else:
+            env.set(self.counter.name)
+        ret = None
+        for ii in range(self.start.eval(env), self.end.eval(env)+1, self.step.eval(1)):
+            env.set(self.counter.name, ii)
+            try:
+                ret = self.body.eval(env)
+            except BreakControl as e:
+                break
+            except ContinueControl as e:
+                continue
+        #raise Exception
+        return ret if ret else None
+
+
+class Ast_Continue(Ast_NYI):
+    def eval(self, env):
+        raise ContinueControl()
+
+class Ast_Break(Ast_NYI):
+    def eval(self, env):
+        raise BreakControl()
+
+class Ast_Return(Ast_NYI):
+    def eval(self, env):
+        raise ReturnControl()
 
 
 class Ast_If(Ast_NYI):
@@ -339,8 +395,10 @@ class Ast_If(Ast_NYI):
     def eval(self, env):
         if self.predicate.eval(env):
             return self.if_body.eval(env)
-        else:
+        if self.else_body is not None:
             return self.else_body.eval(env)
+        else:
+            return None
 
 
 class Ast_Stmt_List(Ast_NYI):
@@ -426,6 +484,26 @@ class Ast_Prompt(Ast_NYI):
 
     def eval(self, env):
         return self.node.eval(env)
+
+
+
+
+def plug_arglist(parmlist, arglist, caller_env, callee_env):
+    if parmlist is None and arglist is not None:
+        raise EvalError('Unmatched Function Parameters', [parmlist, arglist])
+    if arglist is None:
+        return
+    if len(parmlist.args) < len(arglist.args) or len(parmlist.kwargs) < len(arglist.kwargs):
+        raise EvalError('Unmatched Function Parameters', [parmlist, arglist])
+
+    # plug positional arguments
+    for ii in range(len(arglist.args)):
+        parmname = parmlist.args[ii].name
+        callee_env.set(parmname, arglist.args[ii].eval(caller_env))
+
+    # plug keyword arguments
+
+
 
 
 
