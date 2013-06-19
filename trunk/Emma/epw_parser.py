@@ -70,7 +70,7 @@ r_term ::= r_factor (<r_andop> r_factor)*
 
 r_expression ::= r_term (<r_orop> r_term)*
 
-idxlist ::= "[" expression (":" [expression]){0,2} "]"
+idxlist ::= "[" [expression] (":" [expression]){0,2} "]"
 
 slice ::= ID [arglist] idxlist
 
@@ -106,6 +106,7 @@ simple_stmt ::=
                 | print_stmt
                 | "continue"
                 | "break"
+                | "return" r_expression
                 | empty_stmt
 
 stmt_list ::=
@@ -306,7 +307,7 @@ def parse_def_stmt(tokenlist):
     'Parse the function definition'
     tokenlist.match(EPW_KW_DEF)
     ast_node = Ast_DefFunc()
-    ast_node.name = parse_ID(tokenlist)
+    ast_node.func_name = parse_ID(tokenlist)
     ast_node.parmlist = parse_arglist(tokenlist)
     ast_node.body = parse_stmt_block(tokenlist)
     return ast_node
@@ -334,7 +335,12 @@ def parse_simple_stmt(tokenlist):
         ast_node = Ast_Break()
     elif token.tag == EPW_KW_RETURN:
         tokenlist.match(EPW_KW_RETURN)
-        ast_node = Ast_Return()
+        # This parsing may not be optimal though it may works.
+        if tokenlist.get().tag not in [EPW_OP_EOL, EPW_OP_SEMICOLON, EPW_OP_R_PAREN]:
+            next_node = parse_r_expression(tokenlist)
+            ast_node = Ast_Return(next_node)
+        else:
+            ast_node = Ast_Return()
     elif token.tag in [EPW_INT, EPW_FLOAT, EPW_STR]:
         ast_node = parse_r_expression(tokenlist)
     elif token.tag == EPW_OP_SEMICOLON:
@@ -400,11 +406,10 @@ def parse_assign_stmt(tokenlist, pre_parser=parse_ID):
     # It must be an ID because a function call would have been given
     # in parse_simple_stmt.
     left_operand = pre_parser(tokenlist)
-    token = tokenlist.match(EPW_OP_ASSIGN)
-    op = token.value
+    tokenlist.match(EPW_OP_ASSIGN)
     # The right operand
     next_node = parse_r_expression(tokenlist)
-    ast_node = Ast_BinOp(op, left_operand, next_node)
+    ast_node = Ast_Assign(left_operand, next_node)
     return ast_node
 
 
@@ -529,31 +534,34 @@ def parse_number(tokenlist):
 def parse_var_slice(tokenlist):
     'Parse a variable slice'
     ast_node = Ast_Slice()
-    ast_node.variable = parse_ID(tokenlist)
-    ast_node.slice = parse_idxlist(tokenlist)
+    ast_node.collection = parse_ID(tokenlist)
+    ast_node.idxlist = parse_idxlist(tokenlist)
     return ast_node
 
 def parse_func_slice(tokenlist):
     'Parse a func slice'
     ast_node = Ast_Slice()
-    ast_node.variable = parse_func_call(tokenlist)
-    ast_node.slice = parse_idxlist(tokenlist)
+    ast_node.collection = parse_func_call(tokenlist)
+    ast_node.idxlist = parse_idxlist(tokenlist)
     return ast_node
 
 def parse_idxlist(tokenlist):
     'Parse the idxlist for array like variable'
     ast_node = Ast_IdxList()
     tokenlist.match(EPW_OP_L_BRACKET)
-    # The compulsory start of the index
-    ast_node.start = parse_expression(tokenlist)
+    # The start of the index
+    if tokenlist.get().tag != EPW_OP_COLON:
+        ast_node.start = parse_expression(tokenlist)
     # The optional end of the index
     if tokenlist.get().tag == EPW_OP_COLON:
         tokenlist.match(EPW_OP_COLON)
+        ast_node.nColon += 1
         if tokenlist.get().tag not in [EPW_OP_COLON, EPW_OP_R_BRACKET]:
             ast_node.end = parse_expression(tokenlist)
     # The optional step of the index
     if tokenlist.get().tag == EPW_OP_COLON:
         tokenlist.match(EPW_OP_COLON)
+        ast_node.nColon += 1
         if tokenlist.get().tag != EPW_OP_R_BRACKET:
             ast_node.step = parse_expression(tokenlist)
     tokenlist.match(EPW_OP_R_BRACKET)
@@ -562,7 +570,7 @@ def parse_idxlist(tokenlist):
 def parse_func_call(tokenlist):
     'Parse a function call'
     ast_node = Ast_FuncCall()
-    ast_node.name = parse_ID(tokenlist)
+    ast_node.func_name = parse_ID(tokenlist)
     ast_node.arglist = parse_arglist(tokenlist)
     return ast_node
 

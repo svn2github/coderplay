@@ -9,11 +9,26 @@ from epw_interpreter import EvalError, BreakControl, ContinueControl, ReturnCont
 from epw_env import Environment
 
 '''
-Emma is a computer language designed to be flexible and easy to use. 
-The initial goal is to make the language Turing complete. Additional
-features are possible but not required.
+Emma is a computer language designed moslty for educational purpose.
+The basic goal is to make the language Turing complete. Additional
+features are possible but not required. 
 
-ywangd@gmail.com
+The Python version is to prototype the possible future C version.
+Therefore the coding may not be very pythonic to facilitate the 
+subsequent adpation to C.
+
+Features Supported:
+    Loops
+    Flow control with break, continue and return
+    Functions
+    Array
+
+Features to be Added:
+    Assignment
+    Return value
+    Keyword parameters
+
+Author: ywangd@gmail.com
 '''
 
 class Emma(object):

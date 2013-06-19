@@ -1,34 +1,7 @@
 import sys
 from epw_env import Environment
 from epw_interpreter import *
-
-class Eval_Res(object):
-    def __init__(self):
-        self.rlist = []
-
-    def __repr__(self):
-        if len(self.rlist) == 0:
-            return ''
-        else:
-            out = ''
-            valid = 0
-            if self.rlist[0] is not None:
-                out += str(self.rlist[0])
-                valid = 1
-
-            for res in self.rlist[1:]:
-                if res is not None:
-                    if out != '': out += '\n'
-                    out += str(res)
-                    valid = 1
-
-            if not valid:
-                out = ''
-
-            return out
-
-    def append(self, res):
-        self.rlist.append(res)
+from epw_builtin import *
 
 
 # Generic AST node as Not Yet Implemented
@@ -100,17 +73,22 @@ class Ast_Variable(Ast_NYI):
 
 class Ast_Slice(Ast_NYI):
     def __init__(self):
-        self.variable = None
-        self.slice = None
+        self.collection = None
+        self.idxlist = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + '(' + repr(self.variable) + ', ' + repr(self.slice) + ')'
+        return classname + '(' + repr(self.collection) + ', ' + repr(self.idxlist) + ')'
 
     def eval(self, env):
-        var = self.variable.eval(env)
-        slice = self.slice.eval(env)
-        return eval('var' + slice)
+        var = self.collection.eval(env)
+        idxlist = self.idxlist.eval(env)
+        try: 
+            return var[idxlist]
+        except TypeError:
+            raise EvalError('Cannot Slice A Scalar', str(var))
+        except IndexError:
+            raise EvalError('List Index Out of Range', '')
 
 
 class Ast_IdxList(Ast_NYI):
@@ -118,6 +96,7 @@ class Ast_IdxList(Ast_NYI):
         self.start = None 
         self.end = None
         self.step = None
+        self.nColon = 0
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
@@ -125,39 +104,46 @@ class Ast_IdxList(Ast_NYI):
         return classname + '(' + out + ')'
     
     def eval(self,env):
-        start = self.start.eval(env)
+        start = self.start.eval(env) if self.start else None
         end = self.end.eval(env) if self.end else None
         step = self.step.eval(env) if self.step else None
-        ret = '[' + str(start)
-        if end is not None or step is not None:
-            ret += ':'
-            if end is not None:
-                ret += str(end)
-            if step is not None:
-                ret += ':' + str(step)
-        ret += ']'
-        return ret
+        if self.nColon == 0:
+            return start
+        elif self.nColon == 1:
+            return slice(start, end)
+        elif self.nColon == 2:
+            return slice(start, end, step)
+            
 
 class Ast_FuncCall(Ast_NYI):
     def __init__(self):
-        self.name = None
+        self.func_name = None
         self.arglist = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + '(' + repr(self.name) + ', ' + repr(self.arglist) + ')'
+        return classname + '(' + repr(self.func_name) + ', ' + repr(self.arglist) + ')'
 
-    def eval(self, env):
-        if self.name.name == 'debug':
-            env.top().set('$DEBUG',  1-env.top().get('$DEBUG'))
+    def eval(self, caller_env):
+        if not check_builtin_func_usage(self):
+            raise EvalError('Incorrect Parameters for Builtin Function', self.func_name.name)
+
+        if self.func_name.name == 'debug':
+            caller_env.top().set('$DEBUG',  1-caller_env.top().get('$DEBUG'))
             return None
+        elif self.func_name.name == 'list':
+            if len(self.arglist.args) == 0:
+                return []
+            else:
+                return [0] * self.arglist.args[0].eval(caller_env)
 
         # Get the func definition
-        func_name = self.name.name
-        if env.has(func_name):
-            func_def = env.get(self.name.name)
-        else:
+        func_name = self.func_name.name
+        env_func_def = caller_env.find(func_name)
+        if env_func_def is None:
             raise EvalError('Undefined Function', func_name)
+        else:
+            func_def = env_func_def.get(self.func_name.name)
 
         # Plug the arglist
         callee_env = func_def['env']
@@ -169,7 +155,8 @@ class Ast_FuncCall(Ast_NYI):
             ret = None
             ret = func_def['body'].eval(callee_env)
         except ReturnControl as e:
-            pass
+            if len(e.args) > 0:
+                ret = e.args[0]
 
         return ret
 
@@ -195,12 +182,12 @@ class Ast_ArgList(Ast_NYI):
 
 class Ast_KeywordParm(Ast_NYI):
     def __init__(self, name, value):
-        self.name = name
+        self.parm_name = name
         self.value = value
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + '(' + repr(self.name) + ', ' + repr(self.value) + ')'
+        return classname + '(' + repr(self.parm_name) + ', ' + repr(self.value) + ')'
 
     def eval(self, env):
         pass
@@ -237,45 +224,74 @@ class Ast_BinOp(Ast_NYI):
         return classname+'(%s, %s, %s)' % (self.op, self.l, self.r)
 
     def eval(self, env):
-        # TODO: Still need to work on coerce
-        if self.op == '+':
-            return self.l.eval(env) + self.r.eval(env)
-        elif self.op == '-':
-            return self.l.eval(env) - self.r.eval(env)
-        elif self.op == '*':
-            return self.l.eval(env) * self.r.eval(env)
-        elif self.op == '/':
-            return self.l.eval(env) / self.r.eval(env)
-        elif self.op == '%':
-            return self.l.eval(env) % self.r.eval(env)
-        elif self.op == '>':
-            return self.l.eval(env) > self.r.eval(env)
-        elif self.op == '<':
-            return self.l.eval(env) < self.r.eval(env)
-        elif self.op == '>=':
-            return 1 if self.l.eval(env) >= self.r.eval(env) else 0
-        elif self.op == '<=':
-            return 1 if self.l.eval(env) <= self.r.eval(env) else 0
-        elif self.op == '==':
-            return 1 if self.l.eval(env) == self.r.eval(env) else 0
-        elif self.op == '!=':
-            return 1 if self.l.eval(env) != self.r.eval(env) else 0
-        elif self.op == 'and':
-            return 1 if self.l.eval(env) and self.r.eval(env) else 0
-        elif self.op == 'or':
-            return 1 if self.l.eval(env) or self.r.eval(env) else 0
-        elif self.op == 'xor':
-            return 1 if not (self.l.eval(env) or self.r.eval(env)) else 0
+        try:
+            # TODO: Still need to work on coerce
+            if self.op == '+':
+                return self.l.eval(env) + self.r.eval(env)
+            elif self.op == '-':
+                return self.l.eval(env) - self.r.eval(env)
+            elif self.op == '*':
+                return self.l.eval(env) * self.r.eval(env)
+            elif self.op == '/':
+                return self.l.eval(env) / self.r.eval(env)
+            elif self.op == '%':
+                return self.l.eval(env) % self.r.eval(env)
+            elif self.op == '>':
+                return self.l.eval(env) > self.r.eval(env)
+            elif self.op == '<':
+                return self.l.eval(env) < self.r.eval(env)
+            elif self.op == '>=':
+                return 1 if self.l.eval(env) >= self.r.eval(env) else 0
+            elif self.op == '<=':
+                return 1 if self.l.eval(env) <= self.r.eval(env) else 0
+            elif self.op == '==':
+                return 1 if self.l.eval(env) == self.r.eval(env) else 0
+            elif self.op == '!=':
+                return 1 if self.l.eval(env) != self.r.eval(env) else 0
+            elif self.op == 'and':
+                return 1 if self.l.eval(env) and self.r.eval(env) else 0
+            elif self.op == 'or':
+                return 1 if self.l.eval(env) or self.r.eval(env) else 0
+            elif self.op == 'xor':
+                return 1 if not (self.l.eval(env) or self.r.eval(env)) else 0
 
-        # The assignment 
-        # Can only assign to a variable
-        elif self.op == '=':
-            #return env.set(self.l.name, self.r.eval(env))
-            pass
+            else:
+                raise EvalError('Unrecognized Binary Operator', '')
 
-        else:
-            raise EvalError('Unrecognized Binary Operator', self.op)
+        except TypeError as e:
+            raise EvalError(e.message, self.op)
 
+
+class Ast_Assign(Ast_NYI):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname+'(%s, %s)' % (self.left, self.right)
+
+    def eval(self, env):
+        # It seems either IPython or Python has a bug to not being able to
+        # correctly run isinstance in the subsequent sessions after an error 
+        # out. So we are using an ugly workaround.
+
+        #if isinstance(self.left, Ast_Variable):
+        if repr(self.left).find('Variable(') == 0:
+            # this is a simple scalar variable
+            return env.set(self.left.name, self.right.eval(env))
+
+        #elif isinstance(self.left, Ast_Slice):
+        elif repr(self.left).find('Ast_Slice(') == 0:
+           
+            # this can be either an list variable or function that yields
+            # list like variable. In either case we can use the result
+            # from eval directly since it is a reference.
+            var = self.left.collection.eval(env)
+            idxlist = self.left.idxlist.eval(env)
+            value = self.right.eval(env)
+            var[idxlist] = value
+            return value
 
 class Ast_Print(Ast_NYI):
     def __init__(self):
@@ -300,13 +316,13 @@ class Ast_Print(Ast_NYI):
 
 class Ast_DefFunc(Ast_NYI):
     def __int__(self):
-        self.name = None
+        self.func_name = None
         self.parmlist = None
         self.body = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        out = ', '.join([repr(self.name), repr(self.parmlist), repr(self.body)])
+        out = ', '.join([repr(self.func_name), repr(self.parmlist), repr(self.body)])
         return classname + '(' + out + ')'
 
     def eval(self, env):
@@ -315,8 +331,10 @@ class Ast_DefFunc(Ast_NYI):
             for arg in self.parmlist.args:
                 func_env.set(arg.name)
             for kwarg in self.parmlist.kwargs:
-                func_env.set(kwarg.name.name, kwarg.value.eval(env))
-        env.set(self.name.name, {'body': self.body, 'env': func_env, 'parmlist': self.parmlist})
+                func_env.set(kwarg.parm_name.name, kwarg.value.eval(env))
+        func_def = {'body': self.body, 'env': func_env, 'parmlist': self.parmlist}
+        env.set(self.func_name.name, func_def)
+        return func_def
 
 class Ast_WhileLoop(Ast_NYI):
     def __init__(self):
@@ -379,8 +397,11 @@ class Ast_Break(Ast_NYI):
         raise BreakControl()
 
 class Ast_Return(Ast_NYI):
+    def __init__(self, node=None):
+        self.ret = node
+
     def eval(self, env):
-        raise ReturnControl()
+        raise ReturnControl(self.ret.eval(env))
 
 
 class Ast_If(Ast_NYI):
@@ -417,9 +438,9 @@ class Ast_Stmt_List(Ast_NYI):
         self.node_list.append(ast_node)
 
     def eval(self, env):
-        ret = Eval_Res()
+        ret = None
         for node in self.node_list:
-            ret.append(node.eval(env))
+            ret = node.eval(env)
         return ret
 
 
@@ -438,9 +459,9 @@ class Ast_Stmt_Block(Ast_NYI):
         self.node_list.append(ast_node)
 
     def eval(self, env):
-        ret = Eval_Res()
+        ret = None
         for node in self.node_list:
-            ret.append(node.eval(env))
+            ret = node.eval(env)
         return ret
 
 
@@ -485,7 +506,6 @@ class Ast_Prompt(Ast_NYI):
 
     def eval(self, env):
         return self.node.eval(env)
-
 
 
 
