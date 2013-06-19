@@ -253,7 +253,7 @@ class Ast_BinOp(Ast_NYI):
             elif self.op == 'or':
                 return 1 if self.l.eval(env) or self.r.eval(env) else 0
             elif self.op == 'xor':
-                return 1 if not (self.l.eval(env) or self.r.eval(env)) else 0
+                return 1 if bool(self.l.eval(env)) != bool(self.r.eval(env)) else 0
 
             else:
                 raise EvalError('Unrecognized Binary Operator', '')
