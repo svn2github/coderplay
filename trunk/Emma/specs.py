@@ -1,3 +1,5 @@
+import re
+
 '''
 The specification of Emma language
 '''
@@ -108,6 +110,13 @@ token_type_list = [
     (r'[A-Za-z_][A-Za-z0-9_]*', EPW_ID),
 ]
 
+regex_func                  = re.compile(r'ID \( [^\)]*\)')
+regex_var_slice             = re.compile(r'ID \[ [^\]]*\]')
+regex_func_slice            = re.compile(r'ID \( [^\)]*\) \[ [^\]]*\]')
+
+regex_var_slice_assign      = re.compile(r'ID \[ [^\]]*\] =')
+regex_func_slice_assign     = re.compile(r'ID \( [^\)]*\) \[ [^\]]*\] =')
+# ID L_BRACKET ((?!R_BRACKET).)* R_BRACKET ASSIGN
 
 SETTINGS = [
     ('$DEBUG', 1), 
@@ -123,7 +132,7 @@ SETTINGS = [
                'Me!',
                'Sit.',
                'Bunny, Bunny ...',
-               'Meow ...',
+               'Meow Meow ...',
               ]),
 ]
 

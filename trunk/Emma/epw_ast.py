@@ -98,7 +98,7 @@ class Ast_Variable(Ast_NYI):
         return theEnv.get(self.name)
 
 
-class Ast_ArrayElement(Ast_NYI):
+class Ast_Slice(Ast_NYI):
     def __init__(self):
         self.variable = None
         self.slice = None
@@ -113,7 +113,7 @@ class Ast_ArrayElement(Ast_NYI):
         return eval('var' + slice)
 
 
-class Ast_SliceList(Ast_NYI):
+class Ast_IdxList(Ast_NYI):
     def __init__(self):
         self.start = None 
         self.end = None
@@ -270,7 +270,8 @@ class Ast_BinOp(Ast_NYI):
         # The assignment 
         # Can only assign to a variable
         elif self.op == '=':
-            return env.set(self.l.name, self.r.eval(env))
+            #return env.set(self.l.name, self.r.eval(env))
+            pass
 
         else:
             raise EvalError('Unrecognized Binary Operator', self.op)

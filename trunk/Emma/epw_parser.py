@@ -53,7 +53,7 @@ factor = [<unary_op>] ( number
                         | string
                         | ID 
                         | func
-                        | array_element
+                        | slice
                         | "(" r_expression ")")
 
 term ::= factor (<mulop> factor)*
@@ -70,13 +70,15 @@ r_term ::= r_factor (<r_andop> r_factor)*
 
 r_expression ::= r_term (<r_orop> r_term)*
 
-array_element ::= ID "[" expression "]"
+idxlist ::= "[" expression (":" [expression]){0,2} "]"
+
+slice ::= ID [arglist] idxlist
 
 arglist ::= "(" [r_expression ("," r_expression)*] ")"
 
-func ::= ID "(" [r_expression ("," r_expression)*] ")"
+func ::= ID arglist
 
-assign_stmt ::= (ID | func | array_element) "=" r_expression
+assign_stmt ::= (ID | slice) "=" r_expression
 
 print_stmt ::= "print" [r_expression ("," r_expression)*]
 
@@ -340,30 +342,28 @@ def parse_simple_stmt(tokenlist):
     elif is_unaryop(token):
         # a leading +/-/not, it can only be an expression 
         ast_node = parse_r_expression(tokenlist)
+
     elif token.tag == EPW_ID:
-        # ID, func_call and array_element all start with an ID.
-        # If the next token is a "=", it is an assignment.
-        # If it is a "(", it is a function call, but an
-        # assignment is still possible after the call.
-        pos = tokenlist.pos  # record the old pos for backtrack
-        token = tokenlist.get(1)
-        if token.tag == EPW_OP_ASSIGN:
+        # Both ID, slice all start with an ID.
+        # If the next token is a "=", it is an assignment with an ID.
+        # If it is not, we need to do a regular expression match to 
+        # find out whether it is a assignment to a slice.
+        # A slice can be either a simple ID with [], ID[], or
+        # a function call with [], f()[]
+
+        if tokenlist.get(1).tag == EPW_OP_ASSIGN: # simple case of ID assignment
             ast_node = parse_assign_stmt(tokenlist)
-        elif token.tag in [EPW_OP_L_PAREN, EPW_OP_L_BRACKET]:
-            if token.tag == EPW_OP_L_PAREN:
-                ast_node = parse_func_call(tokenlist)
+
+        else: # complicate case for possible slice assignment
+            rest = tokenlist.get_rest_line()
+
+            if regex_func_slice_assign.match(rest):
+                ast_node = parse_assign_stmt(tokenlist, parse_func_slice)
+            elif regex_var_slice_assign.match(rest):
+                ast_node = parse_assign_stmt(tokenlist, parse_var_slice)
             else:
-                ast_node = parse_array_element(tokenlist)
-            # We can now tell whether it is an assignment or expression
-            # based on the current token we have. Note we only need 
-            # backtrack for expression parsing.
-            if tokenlist.get().tag == EPW_OP_ASSIGN:
-                ast_node = parse_assign_stmt(tokenlist, ast_node)
-            else: # we have to backtrack and parse expression
-                tokenlist.pos = pos
                 ast_node = parse_r_expression(tokenlist)
-        else:
-            ast_node = parse_r_expression(tokenlist)
+
     else:
         tokenlist.match('token for a simple_stmt')
     return ast_node
@@ -389,13 +389,17 @@ def parse_print_stmt(tokenlist):
     return ast_node
 
 
-def parse_assign_stmt(tokenlist, left_operand=None):
+def parse_ID(tokenlist):
+    token = tokenlist.match(EPW_ID)
+    ast_node = Ast_Variable(token.value)
+    return ast_node
+
+def parse_assign_stmt(tokenlist, pre_parser=parse_ID):
     'The left operand of assign_stmt can be either an ID or a Function Call'
     # We need to evaluated for the left operand if it is not given.
     # It must be an ID because a function call would have been given
     # in parse_simple_stmt.
-    if left_operand is None:
-        left_operand = parse_ID(tokenlist)
+    left_operand = pre_parser(tokenlist)
     token = tokenlist.match(EPW_OP_ASSIGN)
     op = token.value
     # The right operand
@@ -491,10 +495,14 @@ def parse_factor(tokenlist):
         tokenlist.match(EPW_OP_R_PAREN)
 
     elif token.tag == EPW_ID:
-        if tokenlist.get(1).tag == EPW_OP_L_PAREN:
+        # All of ID, func, slice start with an ID
+        rest = tokenlist.get_rest_line()
+        if regex_func_slice.match(rest): # match the longest candidate first
+            ast_node = parse_func_slice(tokenlist)
+        elif regex_var_slice.match(rest):
+            ast_node = parse_var_slice(tokenlist)
+        elif regex_func.match(rest):
             ast_node = parse_func_call(tokenlist)
-        elif tokenlist.get(1).tag == EPW_OP_L_BRACKET:
-            ast_node = parse_array_element(tokenlist)
         else:
             ast_node = parse_ID(tokenlist)
 
@@ -518,21 +526,23 @@ def parse_number(tokenlist):
         ast_node = Ast_Float(float(token.value))
     return ast_node
 
-def parse_ID(tokenlist):
-    token = tokenlist.match(EPW_ID)
-    ast_node = Ast_Variable(token.value)
-    return ast_node
-
-def parse_array_element(tokenlist):
-    'Parse an array element indexing'
-    ast_node = Ast_ArrayElement()
+def parse_var_slice(tokenlist):
+    'Parse a variable slice'
+    ast_node = Ast_Slice()
     ast_node.variable = parse_ID(tokenlist)
-    ast_node.slice = parse_slicelist(tokenlist)
+    ast_node.slice = parse_idxlist(tokenlist)
     return ast_node
 
-def parse_slicelist(tokenlist):
-    'Parse the slice list of array indexing'
-    ast_node = Ast_SliceList()
+def parse_func_slice(tokenlist):
+    'Parse a func slice'
+    ast_node = Ast_Slice()
+    ast_node.variable = parse_func_call(tokenlist)
+    ast_node.slice = parse_idxlist(tokenlist)
+    return ast_node
+
+def parse_idxlist(tokenlist):
+    'Parse the idxlist for array like variable'
+    ast_node = Ast_IdxList()
     tokenlist.match(EPW_OP_L_BRACKET)
     # The compulsory start of the index
     ast_node.start = parse_expression(tokenlist)

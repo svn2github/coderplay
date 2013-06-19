@@ -49,6 +49,15 @@ class TokenList():
             # out of boundary
             return Token(None, None)
 
+    def get_rest_line(self):
+        # Get all tokens that forms an unit (before breaking by terminators etc.)
+        rest = []
+        offset = 0
+        while self.get(offset).tag not in [EPW_OP_EOL, EPW_OP_SEMICOLON, EPW_OP_L_CURLY, None]:
+            rest.append(self.get(offset).tag)
+            offset += 1
+        return ' '.join(rest)
+
     def has_more(self):
         return self.pos < len(self)
 
