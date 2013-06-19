@@ -119,7 +119,7 @@ regex_func_slice_assign     = re.compile(r'ID \( [^\)]*\) \[ [^\]]*\] =')
 # ID L_BRACKET ((?!R_BRACKET).)* R_BRACKET ASSIGN
 
 SETTINGS = [
-    ('$DEBUG', 1), 
+    ('$DEBUG', 0), 
     ('$NAME', 'Emma'),
     ('$PROMPT', 'In'),
     ('$PROMPT_CONTINUE', '.'),

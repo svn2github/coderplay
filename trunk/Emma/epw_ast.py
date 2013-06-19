@@ -1,5 +1,5 @@
 import sys
-from epw_env import Environment
+from epw_env import Environment, get_topenv
 from epw_interpreter import *
 from epw_builtin import *
 
@@ -126,7 +126,8 @@ class Ast_FuncCall(Ast_NYI):
 
     def eval(self, caller_env):
         if not check_builtin_func_usage(self):
-            raise EvalError('Incorrect Parameters for Builtin Function', self.func_name.name)
+            raise EvalError('Incorrect Parameters for Builtin Function', 
+                            self.func_name.name)
 
         if self.func_name.name == 'debug':
             caller_env.top().set('$DEBUG',  1-caller_env.top().get('$DEBUG'))
@@ -137,18 +138,17 @@ class Ast_FuncCall(Ast_NYI):
             else:
                 return [0] * self.arglist.args[0].eval(caller_env)
 
-        # Get the func definition
+        # Get the func definition from top level
         func_name = self.func_name.name
-        env_func_def = caller_env.find(func_name)
-        if env_func_def is None:
-            raise EvalError('Undefined Function', func_name)
+        topenv = get_topenv()
+        if topenv.has(func_name):
+            func_def = get_topenv().get(func_name)
         else:
-            func_def = env_func_def.get(self.func_name.name)
+            raise EvalError('Undefined Function', func_name)
 
         # Plug the arglist
-        callee_env = func_def['env']
-        parmlist = func_def['parmlist']
-        plug_arglist(parmlist, self.arglist, env, callee_env)
+        callee_env = Environment(outer=caller_env)
+        plug_arglist(func_def, self.arglist, caller_env, callee_env)
         
         # Evaluation
         try:
@@ -282,7 +282,7 @@ class Ast_Assign(Ast_NYI):
             return env.set(self.left.name, self.right.eval(env))
 
         #elif isinstance(self.left, Ast_Slice):
-        elif repr(self.left).find('Ast_Slice(') == 0:
+        elif repr(self.left).find('Slice(') == 0:
            
             # this can be either an list variable or function that yields
             # list like variable. In either case we can use the result
@@ -326,13 +326,20 @@ class Ast_DefFunc(Ast_NYI):
         return classname + '(' + out + ')'
 
     def eval(self, env):
-        func_env = Environment(outer=env)
+        # Function can only be defined at the Top Level
+        if env != get_topenv():
+            raise EvalError('Function Definition Can Only Be at Top Level', '')
+        # Process any parameter list
         if self.parmlist:
+            pos_parmlist = []
             for arg in self.parmlist.args:
-                func_env.set(arg.name)
+                pos_parmlist.append(arg.name)
+            kw_parmlist = {}
             for kwarg in self.parmlist.kwargs:
-                func_env.set(kwarg.parm_name.name, kwarg.value.eval(env))
-        func_def = {'body': self.body, 'env': func_env, 'parmlist': self.parmlist}
+                kw_parmlist[kwarg.parm_name.name] = kwarg.value.eval(env)
+        # Create the function definition and store in the top level 
+        func_def = {'body': self.body, 
+                    'pos_parmlist': pos_parmlist, 'kw_parmlist': kw_parmlist}
         env.set(self.func_name.name, func_def)
         return func_def
 
@@ -509,22 +516,31 @@ class Ast_Prompt(Ast_NYI):
 
 
 
-def plug_arglist(parmlist, arglist, caller_env, callee_env):
-    if parmlist is None and arglist is not None:
-        raise EvalError('Unmatched Function Parameters', [parmlist, arglist])
-    if arglist is None:
-        return
-    if len(parmlist.args) < len(arglist.args) or len(parmlist.kwargs) < len(arglist.kwargs):
-        raise EvalError('Unmatched Function Parameters', [parmlist, arglist])
+def plug_arglist(func_def, arglist, caller_env, callee_env):
+
+    pos_parmlist = func_def['pos_parmlist']
+    pos_arglist = arglist.args
+    if len(pos_parmlist) < len(pos_arglist):
+        raise EvalError('Unmatched Function Positional Parameters', 
+                        [pos_parmlist, pos_arglist])
+
+    kw_parmlist = func_def['kw_parmlist']
+    kw_arglist = {}
+    for kwarg in arglist.kwargs:
+        kw_arglist[kwarg.parm_name.name] = kwarg.value.eval(caller_env)
+
+    if not set.issubset(set(kw_arglist.keys()), set(kw_parmlist.keys())):
+        raise EvalError('Unmatched Function Keyword Parameters', '')
 
     # plug positional arguments
-    for ii in range(len(arglist.args)):
-        parmname = parmlist.args[ii].name
-        callee_env.set(parmname, arglist.args[ii].eval(caller_env))
+    for ii in range(len(pos_parmlist)):
+        value = pos_arglist[ii].eval(caller_env) if ii < len(pos_arglist) else None
+        callee_env.set(pos_parmlist[ii], value)
 
     # plug keyword arguments
-
-
+    for key in kw_parmlist.keys():
+        value = kw_arglist[key] if key in kw_arglist.keys() else kw_parmlist[key]
+        callee_env.set(key, value)
 
 
 

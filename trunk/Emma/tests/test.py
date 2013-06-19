@@ -1,8 +1,6 @@
 """
 
 >>> test_control_flow_1()
-[-->('for', 'FOR')<--, ('ii', 'ID'), ('=', '='), ('1', 'INT'), (',', ','), ('10', 'INT'), ('{', '{'), ('\\n', 'EOL'), ('x', 'ID'), ('=', '='), ('ii', 'ID'), ('\\n', 'EOL'), ('while', 'WHILE'), ('x', 'ID'), ('>', '>'), ('0', 'INT'), ('{', '{'), ('\\n', 'EOL'), ('x', 'ID'), ('=', '='), ('x', 'ID'), ('-', '-'), ('1', 'INT'), ('\\n', 'EOL'), ('if', 'IF'), ('x', 'ID'), ('%', '%'), ('2', 'INT'), ('==', '=='), ('0', 'INT'), ('continue', 'CONTINUE'), ('\\n', 'EOL'), ('print', 'PRINT'), ("'    '", 'STR'), (',', ','), ('x', 'ID'), (',', ','), ('ii', 'ID'), ('\\n', 'EOL'), ('}', '}'), ('\\n', 'EOL'), ('if', 'IF'), ('ii', 'ID'), ('%', '%'), ('2', 'INT'), ('==', '=='), ('0', 'INT'), ('continue', 'CONTINUE'), ('\\n', 'EOL'), ('print', 'PRINT'), ('ii', 'ID'), ('\\n', 'EOL'), ('}', '}'), ('\\n', 'EOL')]
-File(Stmt_List(ForLoop(Variable(ii), Int(1), Int(10), Int(1), Stmt_Block(Stmt_List(BinOp(=, Variable(x), Variable(ii))), Stmt_List(WhileLoop(BinOp(>, Variable(x), Int(0)), Stmt_Block(Stmt_List(BinOp(=, Variable(x), BinOp(-, Variable(x), Int(1)))), Stmt_List(If(BinOp(==, BinOp(%, Variable(x), Int(2)), Int(0)), Continue, None)), Stmt_List(Print(String(    ), Variable(x), Variable(ii)))))), Stmt_List(If(BinOp(==, BinOp(%, Variable(ii), Int(2)), Int(0)), Continue, None)), Stmt_List(Print(Variable(ii)))))))
 1
      1 2
      1 3
@@ -36,8 +34,6 @@ File(Stmt_List(ForLoop(Variable(ii), Int(1), Int(10), Int(1), Stmt_Block(Stmt_Li
 
 
 >>> test_control_flow_2()
-[-->('for', 'FOR')<--, ('ii', 'ID'), ('=', '='), ('1', 'INT'), (',', ','), ('10', 'INT'), ('{', '{'), ('\\n', 'EOL'), ('x', 'ID'), ('=', '='), ('ii', 'ID'), ('+', '+'), ('5', 'INT'), ('\\n', 'EOL'), ('while', 'WHILE'), ('x', 'ID'), ('>', '>'), ('0', 'INT'), ('{', '{'), ('\\n', 'EOL'), ('x', 'ID'), ('=', '='), ('x', 'ID'), ('-', '-'), ('1', 'INT'), ('\\n', 'EOL'), ('if', 'IF'), ('x', 'ID'), ('<', '<'), ('2', 'INT'), ('break', 'BREAK'), ('\\n', 'EOL'), ('print', 'PRINT'), ("'    '", 'STR'), (',', ','), ('x', 'ID'), (',', ','), ('ii', 'ID'), ('\\n', 'EOL'), ('}', '}'), ('\\n', 'EOL'), ('if', 'IF'), ('ii', 'ID'), ('%', '%'), ('2', 'INT'), ('==', '=='), ('0', 'INT'), ('continue', 'CONTINUE'), ('\\n', 'EOL'), ('if', 'IF'), ('ii', 'ID'), ('==', '=='), ('9', 'INT'), ('break', 'BREAK'), ('\\n', 'EOL'), ('print', 'PRINT'), ('ii', 'ID'), ('\\n', 'EOL'), ('}', '}'), ('\\n', 'EOL')]
-File(Stmt_List(ForLoop(Variable(ii), Int(1), Int(10), Int(1), Stmt_Block(Stmt_List(BinOp(=, Variable(x), BinOp(+, Variable(ii), Int(5)))), Stmt_List(WhileLoop(BinOp(>, Variable(x), Int(0)), Stmt_Block(Stmt_List(BinOp(=, Variable(x), BinOp(-, Variable(x), Int(1)))), Stmt_List(If(BinOp(<, Variable(x), Int(2)), Break, None)), Stmt_List(Print(String(    ), Variable(x), Variable(ii)))))), Stmt_List(If(BinOp(==, BinOp(%, Variable(ii), Int(2)), Int(0)), Continue, None)), Stmt_List(If(BinOp(==, Variable(ii), Int(9)), Break, None)), Stmt_List(Print(Variable(ii)))))))
      5 1
      4 1
      3 1
@@ -115,6 +111,10 @@ File(Stmt_List(ForLoop(Variable(ii), Int(1), Int(10), Int(1), Stmt_Block(Stmt_Li
      3 9
      2 9
 
+>>> test_control_flow_3()
+55
+6765
+
 """
 
 def test_control_flow_1():
@@ -126,6 +126,11 @@ def test_control_flow_2():
     from Emma import Emma
     e = Emma()
     e.run_file('tests/2.em')
+
+def test_control_flow_3():
+    from Emma import Emma
+    e = Emma()
+    e.run_file('tests/3.em')
 
 
 if __name__ == "__main__":

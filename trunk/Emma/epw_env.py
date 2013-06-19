@@ -39,3 +39,10 @@ class Environment(object):
 
     def has(self, name):
         return 1 if name in self.binding else 0
+
+
+topenv = Environment()
+
+def get_topenv():
+    return topenv
+

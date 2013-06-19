@@ -6,7 +6,7 @@ import file
 from epw_lexer import Lexer, LexError, TokenList
 from epw_parser import parse_file, parse_prompt, ParseError
 from epw_interpreter import EvalError, BreakControl, ContinueControl, ReturnControl
-from epw_env import Environment
+from epw_env import get_topenv
 
 '''
 Emma is a computer language designed moslty for educational purpose.
@@ -18,15 +18,12 @@ Therefore the coding may not be very pythonic to facilitate the
 subsequent adpation to C.
 
 Features Supported:
-    Loops
+    Flow control with if-else, for loops, while loops
     Flow control with break, continue and return
-    Functions
-    Array
+    Functions, return value, recursive calls
+    List
 
 Features to be Added:
-    Assignment
-    Return value
-    Keyword parameters
 
 Author: ywangd@gmail.com
 '''
@@ -37,13 +34,13 @@ class Emma(object):
         self.lex = Lexer()
         for token_type in specs.token_type_list:
             self.lex.add_token_type(token_type)
-        self.topEnv = Environment()
-        self.topEnv.update(specs.SETTINGS)
+        self.topenv = get_topenv()
+        self.topenv.update(specs.SETTINGS)
 
     def run_repl(self):
         'REPL prompt'
-        print self.topEnv.get('$NAME') + ' ' + self.topEnv.get('$VERSION')
-        print 'MoTD: ' + random.choice(self.topEnv.get('$MOTD'))
+        print self.topenv.get('$NAME') + ' ' + self.topenv.get('$VERSION')
+        print 'MoTD: ' + random.choice(self.topenv.get('$MOTD'))
         print
         line_number = 1
         tokenlist = TokenList()
@@ -51,13 +48,13 @@ class Emma(object):
         while True:
 
             # set up the proper prompt string
-            normal_prompt = self.topEnv.get('$PROMPT') + ' [%d]>' % line_number
+            normal_prompt = self.topenv.get('$PROMPT') + ' [%d]>' % line_number
             nident = tokenlist.nLCurly - tokenlist.nRCurly
             if nident == 0:
                 promptString = normal_prompt + ' '
             else:
-                indent_width = nident * self.topEnv.get('$SHIFTWIDTH')
-                promptString = self.topEnv.get('$PROMPT_CONTINUE')*(len(normal_prompt)+indent_width) + ' '
+                indent_width = nident * self.topenv.get('$SHIFTWIDTH')
+                promptString = self.topenv.get('$PROMPT_CONTINUE')*(len(normal_prompt)+indent_width) + ' '
 
             # Get input from the prompt
             text = raw_input(promptString)
@@ -80,36 +77,36 @@ class Emma(object):
                 if tokenlist.nLCurly != tokenlist.nRCurly:
                     continue
 
-                if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+                if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
             except LexError as e:
                 sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
-                if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+                if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
                 tokenlist.reset()
                 continue
 
             # Parsing
             try:
                 ast = parse_prompt(tokenlist)
-                if ast and self.topEnv.get('$DEBUG'): print ast
+                if ast and self.topenv.get('$DEBUG'): print ast
 
             except ParseError as e:
                 sys.stderr.write('%%[ParseError] %s: %s\n' % e.args)
-                if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+                if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
                 tokenlist.reset()
                 continue
             
             # Evaluation
             try:
                 if ast:
-                    ret = ast.eval(self.topEnv)
+                    ret = ast.eval(self.topenv)
                     output = ret.__repr__()
                     if output: print 'Ret:', output
                     line_number += 1
 
             except EvalError as e:
                 sys.stderr.write('%%[EvalError] %s: %s\n' % e.args)
-                if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+                if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
             except BreakControl as e:
                 sys.stderr.write('%%[ControlError] Cannot Break From Top Level\n')
@@ -134,7 +131,7 @@ class Emma(object):
         # Lexing
         try:
             tokenlist = self.lex(file.Line(text, 1, filename))
-            if self.topEnv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
         except LexError as e:
             sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
@@ -143,7 +140,7 @@ class Emma(object):
         # Parsing
         try:
             ast = parse_file(tokenlist)
-            if ast and self.topEnv.get('$DEBUG'): print ast
+            if ast and self.topenv.get('$DEBUG'): print ast
 
         except ParseError as e:
             pass
@@ -151,7 +148,7 @@ class Emma(object):
         # Evaluation
         try:
             if ast:
-                ast.eval(self.topEnv)
+                ast.eval(self.topenv)
                 pass
         except EvalError as e:
             pass
