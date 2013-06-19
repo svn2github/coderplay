@@ -81,7 +81,7 @@ token_type_list = [
     (r'\[',         EPW_OP_L_BRACKET),
     (r'\]',         EPW_OP_R_BRACKET),
     (r'=',          EPW_OP_ASSIGN),
-    (r'\n',         EPW_OP_EOL),
+    (r'\r{0,1}\n',  EPW_OP_EOL),
     (r';',          EPW_OP_SEMICOLON),
     (r':',          EPW_OP_COLON),
     (r',',          EPW_OP_COMMA),
