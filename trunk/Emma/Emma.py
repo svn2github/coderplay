@@ -24,6 +24,8 @@ Features Supported:
     List
 
 Features to be Added:
+    Coercion
+    Input/Output
 
 Author: ywangd@gmail.com
 '''
@@ -66,10 +68,12 @@ class Emma(object):
             # raw_input does not have it and the BNF requires it as the
             # terminator. 
             text += '\n'
+            # Built the character stream
+            file_line = file.Line(text, line_number)
             
             # Lexing
             try:
-                tokenline = self.lex(file.Line(text, line_number))
+                tokenline = self.lex(file_line)
 
                 # Add to the existing list
                 tokenlist.concatenate(tokenline) 
@@ -127,10 +131,11 @@ class Emma(object):
         f = open(filename)
         text = f.read()
         f.close()
+        file_line = file.Line(text, 1, filename)
 
         # Lexing
         try:
-            tokenlist = self.lex(file.Line(text, 1, filename))
+            tokenlist = self.lex(file_line)
             if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
         except LexError as e:
