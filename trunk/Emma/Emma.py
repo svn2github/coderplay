@@ -61,8 +61,8 @@ class Emma(object):
             # Get input from the prompt
             text = raw_input(promptString)
 
-            # A single period exits the prompt
-            if text == '.': break
+            # Magic commands for ending the session
+            if text == '.exit': break
 
             # Append an EOL at the end of the line since the input from
             # raw_input does not have it and the BNF requires it as the

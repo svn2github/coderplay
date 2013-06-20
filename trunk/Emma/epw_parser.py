@@ -308,7 +308,7 @@ def parse_def_stmt(tokenlist):
     tokenlist.match(EPW_KW_DEF)
     ast_node = Ast_DefFunc()
     ast_node.func_name = parse_ID(tokenlist)
-    ast_node.parmlist = parse_arglist(tokenlist)
+    ast_node.parmlist = parse_arglist(tokenlist, isdef=1)
     ast_node.body = parse_stmt_block(tokenlist)
     return ast_node
 
@@ -599,13 +599,16 @@ def parse_func_call(tokenlist):
     ast_node.arglist = parse_arglist(tokenlist)
     return ast_node
 
-def parse_arglist(tokenlist):
+def parse_arglist(tokenlist, isdef=0):
     'Parse the argument list, i.e. (a, b, c)'
     ast_node = Ast_ArgList()
     tokenlist.match(EPW_OP_L_PAREN)
     # Parse first argument if it is not empty
     if tokenlist.get().tag != EPW_OP_R_PAREN:
-        next_node = parse_r_expression(tokenlist)
+        if isdef:
+            next_node = parse_ID(tokenlist)
+        else:
+            next_node = parse_r_expression(tokenlist)
         # Parse possible keyword type parameter
         is_kwarg = 0
         if tokenlist.get().tag == EPW_OP_ASSIGN:
@@ -617,7 +620,10 @@ def parse_arglist(tokenlist):
         # Parse any other following parameters
         while tokenlist.get().tag == EPW_OP_COMMA:
             tokenlist.match(EPW_OP_COMMA)
-            next_node = parse_r_expression(tokenlist)
+            if isdef:
+                next_node = parse_ID(tokenlist)
+            else:
+                next_node = parse_r_expression(tokenlist)
             # Parse possible keyword type parameter
             is_kwarg = 0
             if tokenlist.get().tag == EPW_OP_ASSIGN:

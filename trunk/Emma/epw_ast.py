@@ -446,8 +446,12 @@ class Ast_Stmt_List(Ast_NYI):
 
     def eval(self, env):
         ret = None
+        top_env = get_topenv()
         for node in self.node_list:
             ret = node.eval(env)
+            # Set value for magic variable
+            if ret is not None:
+                top_env.set('_', ret)
         return ret
 
 
