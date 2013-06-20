@@ -115,6 +115,12 @@
 55
 6765
 
+>>> test_control_flow_4()
+55
+1
+55
+1
+
 """
 
 def test_control_flow_1():
@@ -131,6 +137,11 @@ def test_control_flow_3():
     from Emma import Emma
     e = Emma()
     e.run_file('tests/3.em')
+
+def test_control_flow_4():
+    from Emma import Emma
+    e = Emma()
+    e.run_file('tests/4.em')
 
 
 if __name__ == "__main__":

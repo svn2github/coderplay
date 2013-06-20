@@ -26,6 +26,7 @@ Features Supported:
 Features to be Added:
     Coercion
     Input/Output
+    Line continuation character
 
 Author: ywangd@gmail.com
 '''

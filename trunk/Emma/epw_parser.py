@@ -72,11 +72,11 @@ r_expression ::= r_term (<r_orop> r_term)*
 
 idxlist ::= "[" [expression] (":" [expression]){0,2} "]"
 
-slice ::= ID [arglist] idxlist
+slice ::= ID (arglist | idxlist)* idxlist
 
 arglist ::= "(" [r_expression ("," r_expression)*] ")"
 
-func ::= ID arglist
+func ::= ID (arglist | idxlist)* arglist
 
 assign_stmt ::= (ID | slice) "=" r_expression
 
@@ -307,7 +307,7 @@ def parse_def_stmt(tokenlist):
     'Parse the function definition'
     tokenlist.match(EPW_KW_DEF)
     ast_node = Ast_DefFunc()
-    ast_node.func_name = parse_ID(tokenlist)
+    ast_node.func = parse_ID(tokenlist)
     ast_node.parmlist = parse_arglist(tokenlist, isdef=1)
     ast_node.body = parse_stmt_block(tokenlist)
     return ast_node
@@ -362,16 +362,19 @@ def parse_simple_stmt(tokenlist):
 
         else: # complicate case for possible slice assignment
             rest = tokenlist.get_rest_line()
-
-            if regex_func_slice_assign.match(rest):
-                # Find out how many slice we need
-                nslices = regex_func_slice_assign.match(rest).group(0).count(EPW_OP_L_BRACKET)
-                ast_node = parse_assign_stmt(tokenlist, parse_func_slice, nslices)
-
-            elif regex_var_slice_assign.match(rest):
-                nslices = regex_var_slice_assign.match(rest).group(0).count(EPW_OP_L_BRACKET)
-                ast_node = parse_assign_stmt(tokenlist, parse_var_slice, nslices)
-
+            # Try to see if we have any function call or slices
+            matched = regex_func_slice_mix_assign.match(rest)
+            if matched:
+                mstring = matched.group(0)
+                if mstring[-3] == EPW_OP_R_PAREN:
+                    raise ParseError('Cannot Assign to a Function Call', mstring)
+                ast_node = parse_ID(tokenlist)
+                for c in mstring:
+                    if c == EPW_OP_L_BRACKET:
+                        ast_node = parse_brackets(tokenlist, ast_node)
+                    elif c == EPW_OP_L_PAREN:
+                        ast_node = parse_parenthesis(tokenlist, ast_node)
+                ast_node = parse_assign_stmt(tokenlist, ast_node)
             else:
                 ast_node = parse_r_expression(tokenlist)
 
@@ -405,15 +408,15 @@ def parse_ID(tokenlist):
     ast_node = Ast_Variable(token.value)
     return ast_node
 
-def parse_assign_stmt(tokenlist, pre_parser=parse_ID, nslices=None):
+def parse_assign_stmt(tokenlist, left=None):
     'The left operand of assign_stmt can be either an ID or a Function Call'
     # We need to evaluated for the left operand if it is not given.
     # It must be an ID because a function call would have been given
     # in parse_simple_stmt.
-    if nslices:
-        left_operand = pre_parser(tokenlist, nslices)
+    if left:
+        left_operand = left
     else:
-        left_operand = pre_parser(tokenlist)
+        left_operand = parse_ID(tokenlist)
     # The = character
     tokenlist.match(EPW_OP_ASSIGN)
     # The right operand
@@ -511,18 +514,16 @@ def parse_factor(tokenlist):
     elif token.tag == EPW_ID:
         # All of ID, func, slice start with an ID
         rest = tokenlist.get_rest_line()
-
-        if regex_func_slice.match(rest): # match the longest candidate first
-            nslices = regex_func_slice.match(rest).group(0).count(EPW_OP_L_BRACKET)
-            ast_node = parse_func_slice(tokenlist, nslices)
-
-        elif regex_var_slice.match(rest):
-            nslices = regex_var_slice.match(rest).group(0).count(EPW_OP_L_BRACKET)
-            ast_node = parse_var_slice(tokenlist, nslices)
-
-        elif regex_func.match(rest):
-            ast_node = parse_func_call(tokenlist)
-
+        # Check if any () or []
+        matched = regex_func_slice_mix.match(rest)
+        if matched:
+            mstring = matched.group(0)
+            ast_node = parse_ID(tokenlist)
+            for c in mstring:
+                if c == EPW_OP_L_BRACKET:
+                    ast_node = parse_brackets(tokenlist, ast_node)
+                elif c == EPW_OP_L_PAREN:
+                    ast_node = parse_parenthesis(tokenlist, ast_node)
         else:
             ast_node = parse_ID(tokenlist)
 
@@ -546,28 +547,16 @@ def parse_number(tokenlist):
         ast_node = Ast_Float(float(token.value))
     return ast_node
 
-def parse_var_slice(tokenlist, nslices=1):
-    'Parse a variable slice'
+def parse_brackets(tokenlist, prefix):
     ast_node = Ast_Slice()
-    ast_node.collection = parse_ID(tokenlist)
+    ast_node.collection = prefix
     ast_node.idxlist = parse_idxlist(tokenlist)
-    for ii in range(nslices-1):
-        node = ast_node
-        ast_node = Ast_Slice()
-        ast_node.collection = node
-        ast_node.idxlist = parse_idxlist(tokenlist)
     return ast_node
 
-def parse_func_slice(tokenlist, nslices=1):
-    'Parse a func slice'
-    ast_node = Ast_Slice()
-    ast_node.collection = parse_func_call(tokenlist)
-    ast_node.idxlist = parse_idxlist(tokenlist)
-    for ii in range(nslices-1):
-        node = ast_node
-        ast_node = Ast_Slice()
-        ast_node.collection = node
-        ast_node.idxlist = parse_idxlist(tokenlist)
+def parse_parenthesis(tokenlist, prefix):
+    ast_node = Ast_FuncCall()
+    ast_node.func = prefix
+    ast_node.arglist = parse_arglist(tokenlist)
     return ast_node
 
 def parse_idxlist(tokenlist):
@@ -595,7 +584,7 @@ def parse_idxlist(tokenlist):
 def parse_func_call(tokenlist):
     'Parse a function call'
     ast_node = Ast_FuncCall()
-    ast_node.func_name = parse_ID(tokenlist)
+    ast_node.func = parse_ID(tokenlist)
     ast_node.arglist = parse_arglist(tokenlist)
     return ast_node
 

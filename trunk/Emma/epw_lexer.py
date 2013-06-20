@@ -69,7 +69,7 @@ class TokenList():
         if cur_token.tag == tag_to_match:
             self.pos += 1
         else:
-            raise ParseError('Expected', tag_to_match)
+            raise ParseError('Expected ' + tag_to_match, repr(self))
         return cur_token
 
     def __repr__(self):

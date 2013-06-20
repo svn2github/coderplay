@@ -117,34 +117,37 @@ class Ast_IdxList(Ast_NYI):
 
 class Ast_FuncCall(Ast_NYI):
     def __init__(self):
-        self.func_name = None
+        self.func = None
         self.arglist = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        return classname + '(' + repr(self.func_name) + ', ' + repr(self.arglist) + ')'
+        return classname + '(' + repr(self.func) + ', ' + repr(self.arglist) + ')'
 
     def eval(self, caller_env):
-        if not check_builtin_func_usage(self):
-            raise EvalError('Incorrect Parameters for Builtin Function', 
-                            self.func_name.name)
-
-        if self.func_name.name == 'debug':
-            caller_env.top().set('$DEBUG',  1-caller_env.top().get('$DEBUG'))
-            return None
-        elif self.func_name.name == 'list':
-            if len(self.arglist.args) == 0:
-                return []
-            else:
-                return [0] * self.arglist.args[0].eval(caller_env)
-
-        # Get the func definition from top level
-        func_name = self.func_name.name
+        # Get the top env
         topenv = get_topenv()
-        if topenv.has(func_name):
-            func_def = get_topenv().get(func_name)
+
+        func = self.func
+        # If the function call is a simple ID() form, we check whether it 
+        # is a builtin function.
+        # or get its definition from topenv.
+        # This is not ideal, but since the language does not allow assign
+        # another variable name to a builtin function. So it may work for
+        # now.
+        if repr(func).find('Variable(') == 0:
+            # Check and run if its a builtin func
+            flag, ret = try_builtin_func(self, caller_env)
+            if flag: return ret
+
+            # Otherwise, Get the func definition from top level
+            name = func.name
+            if topenv.has(name):
+                func_def = get_topenv().get(name)
+            else:
+                raise EvalError('Undefined Function', name)
         else:
-            raise EvalError('Undefined Function', func_name)
+            func_def = func.eval(caller_env)
 
         # Plug the arglist
         callee_env = Environment(outer=caller_env)
@@ -316,13 +319,13 @@ class Ast_Print(Ast_NYI):
 
 class Ast_DefFunc(Ast_NYI):
     def __int__(self):
-        self.func_name = None
+        self.func = None
         self.parmlist = None
         self.body = None
 
     def __repr__(self):
         classname = super(self.__class__, self).__repr__()
-        out = ', '.join([repr(self.func_name), repr(self.parmlist), repr(self.body)])
+        out = ', '.join([repr(self.func), repr(self.parmlist), repr(self.body)])
         return classname + '(' + out + ')'
 
     def eval(self, env):
@@ -340,7 +343,7 @@ class Ast_DefFunc(Ast_NYI):
         # Create the function definition and store in the top level 
         func_def = {'body': self.body, 
                     'pos_parmlist': pos_parmlist, 'kw_parmlist': kw_parmlist}
-        env.set(self.func_name.name, func_def)
+        env.set(self.func.name, func_def)
         return func_def
 
 class Ast_WhileLoop(Ast_NYI):
