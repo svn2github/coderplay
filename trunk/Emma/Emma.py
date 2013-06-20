@@ -64,15 +64,17 @@ class Emma(object):
             # Get input from the prompt
             text = raw_input(promptString)
 
-            # Magic commands for ending the session
-            if text == '.exit': break
             if text == '': continue
-            if text.startswith('.run '):
-                filename = text[5:].strip()
-                if filename != '':
-                    if self.run_file(filename):
-                        line_number +=1
-                continue
+            # Magic commands 
+            if text[0] == '.':
+                if text == '.exit': break
+                if text.startswith('.run'):
+                    if text[4:5].isspace():
+                        filename = text[5:].strip()
+                        if filename != '':
+                            if self.run_file(filename):
+                                line_number +=1
+                    continue
 
             # Append an EOL at the end of the line since the input from
             # raw_input does not have it and the BNF requires it as the
