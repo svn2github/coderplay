@@ -111,11 +111,11 @@ token_type_list = [
 ]
 
 regex_func                  = re.compile(r'ID \( [^\)]*\)')
-regex_var_slice             = re.compile(r'ID \[ [^\]]*\]')
-regex_func_slice            = re.compile(r'ID \( [^\)]*\) \[ [^\]]*\]')
+regex_var_slice             = re.compile(r'ID (\[ [^\]]*\] *)+')
+regex_func_slice            = re.compile(r'ID \( [^\)]*\) (\[ [^\]]*\] *)+')
 
-regex_var_slice_assign      = re.compile(r'ID \[ [^\]]*\] =')
-regex_func_slice_assign     = re.compile(r'ID \( [^\)]*\) \[ [^\]]*\] =')
+regex_var_slice_assign      = re.compile(r'ID (\[ [^\]]*\] )+=')
+regex_func_slice_assign     = re.compile(r'ID \( [^\)]*\) (\[ [^\]]*\] )+=')
 # ID L_BRACKET ((?!R_BRACKET).)* R_BRACKET ASSIGN
 
 SETTINGS = [

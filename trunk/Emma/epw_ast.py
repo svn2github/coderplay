@@ -82,11 +82,11 @@ class Ast_Slice(Ast_NYI):
 
     def eval(self, env):
         var = self.collection.eval(env)
+        if type(var) != list:
+            raise EvalError('Can Only Slice a List', str(var))
         idxlist = self.idxlist.eval(env)
         try: 
             return var[idxlist]
-        except TypeError:
-            raise EvalError('Cannot Slice A Scalar', str(var))
         except IndexError:
             raise EvalError('List Index Out of Range', '')
 

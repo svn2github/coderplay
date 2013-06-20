@@ -364,9 +364,14 @@ def parse_simple_stmt(tokenlist):
             rest = tokenlist.get_rest_line()
 
             if regex_func_slice_assign.match(rest):
-                ast_node = parse_assign_stmt(tokenlist, parse_func_slice)
+                # Find out how many slice we need
+                nslices = regex_func_slice_assign.match(rest).group(0).count(EPW_OP_L_BRACKET)
+                ast_node = parse_assign_stmt(tokenlist, parse_func_slice, nslices)
+
             elif regex_var_slice_assign.match(rest):
-                ast_node = parse_assign_stmt(tokenlist, parse_var_slice)
+                nslices = regex_var_slice_assign.match(rest).group(0).count(EPW_OP_L_BRACKET)
+                ast_node = parse_assign_stmt(tokenlist, parse_var_slice, nslices)
+
             else:
                 ast_node = parse_r_expression(tokenlist)
 
@@ -400,12 +405,16 @@ def parse_ID(tokenlist):
     ast_node = Ast_Variable(token.value)
     return ast_node
 
-def parse_assign_stmt(tokenlist, pre_parser=parse_ID):
+def parse_assign_stmt(tokenlist, pre_parser=parse_ID, nslices=None):
     'The left operand of assign_stmt can be either an ID or a Function Call'
     # We need to evaluated for the left operand if it is not given.
     # It must be an ID because a function call would have been given
     # in parse_simple_stmt.
-    left_operand = pre_parser(tokenlist)
+    if nslices:
+        left_operand = pre_parser(tokenlist, nslices)
+    else:
+        left_operand = pre_parser(tokenlist)
+    # The = character
     tokenlist.match(EPW_OP_ASSIGN)
     # The right operand
     next_node = parse_r_expression(tokenlist)
@@ -502,12 +511,18 @@ def parse_factor(tokenlist):
     elif token.tag == EPW_ID:
         # All of ID, func, slice start with an ID
         rest = tokenlist.get_rest_line()
+
         if regex_func_slice.match(rest): # match the longest candidate first
-            ast_node = parse_func_slice(tokenlist)
+            nslices = regex_func_slice.match(rest).group(0).count(EPW_OP_L_BRACKET)
+            ast_node = parse_func_slice(tokenlist, nslices)
+
         elif regex_var_slice.match(rest):
-            ast_node = parse_var_slice(tokenlist)
+            nslices = regex_var_slice.match(rest).group(0).count(EPW_OP_L_BRACKET)
+            ast_node = parse_var_slice(tokenlist, nslices)
+
         elif regex_func.match(rest):
             ast_node = parse_func_call(tokenlist)
+
         else:
             ast_node = parse_ID(tokenlist)
 
@@ -531,18 +546,28 @@ def parse_number(tokenlist):
         ast_node = Ast_Float(float(token.value))
     return ast_node
 
-def parse_var_slice(tokenlist):
+def parse_var_slice(tokenlist, nslices=1):
     'Parse a variable slice'
     ast_node = Ast_Slice()
     ast_node.collection = parse_ID(tokenlist)
     ast_node.idxlist = parse_idxlist(tokenlist)
+    for ii in range(nslices-1):
+        node = ast_node
+        ast_node = Ast_Slice()
+        ast_node.collection = node
+        ast_node.idxlist = parse_idxlist(tokenlist)
     return ast_node
 
-def parse_func_slice(tokenlist):
+def parse_func_slice(tokenlist, nslices=1):
     'Parse a func slice'
     ast_node = Ast_Slice()
     ast_node.collection = parse_func_call(tokenlist)
     ast_node.idxlist = parse_idxlist(tokenlist)
+    for ii in range(nslices-1):
+        node = ast_node
+        ast_node = Ast_Slice()
+        ast_node.collection = node
+        ast_node.idxlist = parse_idxlist(tokenlist)
     return ast_node
 
 def parse_idxlist(tokenlist):
