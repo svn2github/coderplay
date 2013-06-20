@@ -67,6 +67,12 @@ class Emma(object):
             # Magic commands for ending the session
             if text == '.exit': break
             if text == '': continue
+            if text.startswith('.run '):
+                filename = text[5:].strip()
+                if filename != '':
+                    if self.run_file(filename):
+                        line_number +=1
+                continue
 
             # Append an EOL at the end of the line since the input from
             # raw_input does not have it and the BNF requires it as the
@@ -151,12 +157,20 @@ class Emma(object):
     def run_file(self, filename):
         'The batch script'
         # Read the source file
-        f = open(filename)
-        text = f.read()
-        f.close()
+        try:
+            f = open(filename)
+            text = f.read()
+            f.close()
+        except IOError as e:
+            sys.stderr.write('%%[IOError] File Not Found: \"%s\"\n' % filename)
+            return 0
+
         file_line = file.Line(text, 1, filename)
         # Process the content
-        self.process_file_line(0, file_line)
+        if self.process_file_line(0, file_line):
+            return 1
+        else:
+            return 0
 
 
 def usage(prog):
