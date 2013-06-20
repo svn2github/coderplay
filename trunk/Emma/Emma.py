@@ -44,8 +44,10 @@ class Emma(object):
         print self.topenv.get('$NAME') + ' ' + self.topenv.get('$VERSION')
         print 'MoTD: ' + random.choice(self.topenv.get('$MOTD'))
         print
+
         line_number = 1
         tokenlist = TokenList()
+
         # Repeat the prompt till user quits
         while True:
 
@@ -56,107 +58,105 @@ class Emma(object):
                 promptString = normal_prompt + ' '
             else:
                 indent_width = nident * self.topenv.get('$SHIFTWIDTH')
-                promptString = self.topenv.get('$PROMPT_CONTINUE')*(len(normal_prompt)+indent_width) + ' '
+                promptString = self.topenv.get('$PROMPT_CONTINUE') \
+                               * (len(normal_prompt)+indent_width) + ' '
 
             # Get input from the prompt
             text = raw_input(promptString)
 
             # Magic commands for ending the session
             if text == '.exit': break
+            if text == '': continue
 
             # Append an EOL at the end of the line since the input from
             # raw_input does not have it and the BNF requires it as the
             # terminator. 
             text += '\n'
+
             # Built the character stream
             file_line = file.Line(text, line_number)
-            
-            # Lexing
-            try:
-                tokenline = self.lex(file_line)
 
-                # Add to the existing list
-                tokenlist.concatenate(tokenline) 
-                # If we have unmatched {} pair, don't parsing till all pairs are matched.
-                if tokenlist.nLCurly != tokenlist.nRCurly:
-                    continue
-
-                if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
-
-            except LexError as e:
-                sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
-                if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
-                tokenlist.reset()
-                continue
-
-            # Parsing
-            try:
-                ast = parse_prompt(tokenlist)
-                if ast and self.topenv.get('$DEBUG'): print ast
-
-            except ParseError as e:
-                sys.stderr.write('%%[ParseError] %s: %s\n' % e.args)
-                if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
-                tokenlist.reset()
-                continue
-            
-            # Evaluation
-            try:
-                if ast:
-                    ret = ast.eval(self.topenv)
-                    output = ret.__repr__()
-                    if output: print 'Ret:', output
-                    line_number += 1
-
-            except EvalError as e:
-                sys.stderr.write('%%[EvalError] %s: %s\n' % e.args)
-                if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
-
-            except BreakControl as e:
-                sys.stderr.write('%%[ControlError] Cannot Break From Top Level\n')
-
-            except ContinueControl as e:
-                sys.stderr.write('%%[ControlError] Cannot Continue From Top Level\n')
-
-            except ReturnControl as e:
-                sys.stderr.write('%%[ControlError] Cannot Return From Top Level\n')
-
-            finally:
-                tokenlist.reset()
+            # Process the stream
+            if self.process_file_line(1, file_line, tokenlist):
+                line_number += 1
 
 
-
-    def run_file(self, filename):
-        'The batch script'
-        f = open(filename)
-        text = f.read()
-        f.close()
-        file_line = file.Line(text, 1, filename)
-
+    def process_file_line(self, isPrompt, file_line, tokenlist=None):
+        'The core processing'    
         # Lexing
         try:
-            tokenlist = self.lex(file_line)
+            tokenline = self.lex(file_line)
+
+            # Add to the existing list if any
+            if tokenlist is not None:
+                tokenlist.concatenate(tokenline) 
+            else:
+                tokenlist = tokenline
+
+            # If we have unmatched {} pair, don't parsing till all pairs are matched.
+            if isPrompt and tokenlist.nLCurly != tokenlist.nRCurly:
+                return
+
             if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
         except LexError as e:
             sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
-            sys.exit(1)
+            if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            tokenlist.reset()
+            return
 
         # Parsing
         try:
-            ast = parse_file(tokenlist)
+            if isPrompt:
+                ast = parse_prompt(tokenlist)
+            else:
+                ast = parse_file(tokenlist)
             if ast and self.topenv.get('$DEBUG'): print ast
 
         except ParseError as e:
-            pass
-
+            sys.stderr.write('%%[ParseError] %s: %s\n' % e.args)
+            if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            tokenlist.reset()
+            return
+        
         # Evaluation
         try:
             if ast:
-                ast.eval(self.topenv)
-                pass
+                ret = ast.eval(self.topenv)
+                output = ret.__repr__()
+                if isPrompt and output: print 'Ret:', output
+
         except EvalError as e:
-            pass
+            sys.stderr.write('%%[EvalError] %s: %s\n' % e.args)
+            if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            return
+
+        except BreakControl as e:
+            sys.stderr.write('%%[ControlError] Cannot Break From Top Level\n')
+            return
+
+        except ContinueControl as e:
+            sys.stderr.write('%%[ControlError] Cannot Continue From Top Level\n')
+            return
+
+        except ReturnControl as e:
+            sys.stderr.write('%%[ControlError] Cannot Return From Top Level\n')
+            return
+
+        # Everything is fine if we reach here
+        tokenlist.reset()
+        return 1
+
+
+    def run_file(self, filename):
+        'The batch script'
+        # Read the source file
+        f = open(filename)
+        text = f.read()
+        f.close()
+        file_line = file.Line(text, 1, filename)
+        # Process the content
+        self.process_file_line(0, file_line)
 
 
 def usage(prog):
