@@ -318,7 +318,7 @@ class Ast_Print(Ast_NYI):
 
 
 class Ast_DefFunc(Ast_NYI):
-    def __int__(self):
+    def __init__(self):
         self.func = None
         self.parmlist = None
         self.body = None
