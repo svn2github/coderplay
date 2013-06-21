@@ -26,6 +26,18 @@ class TokenList():
         self.nLCurly = 0
         self.nRCurly = 0
 
+    def __repr__(self):
+        ret = [repr(t) for t in self.tlist]
+        if len(ret):
+            if self.pos >=0 and self.pos < len(ret):
+                ret[self.pos] = '-->' + ret[self.pos] + '<--'
+            else:
+                ret.append('--> <--')
+        return '[' + ', '.join(ret) + ']'
+
+    def __len__(self):
+        return len(self.tlist)
+
     def reset(self):
         self.tlist = []
         self.pos = 0
@@ -71,18 +83,6 @@ class TokenList():
         else:
             raise ParseError('Expected ' + tag_to_match, repr(self))
         return cur_token
-
-    def __repr__(self):
-        ret = [repr(t) for t in self.tlist]
-        if len(ret):
-            if self.pos >=0 and self.pos < len(ret):
-                ret[self.pos] = '-->' + ret[self.pos] + '<--'
-            else:
-                ret.append('--> <--')
-        return '[' + ', '.join(ret) + ']'
-
-    def __len__(self):
-        return len(self.tlist)
 
 class Lexer():
     def __init__(self):
