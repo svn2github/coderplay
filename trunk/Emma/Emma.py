@@ -40,6 +40,9 @@ class Emma(object):
         self.topenv = get_topenv()
         self.topenv.update(specs.SETTINGS)
 
+    def tidy(self):
+        self.topenv.binding.clear()
+
     def run_repl(self):
         'REPL prompt'
         print self.topenv.get('$NAME') + ' ' + self.topenv.get('$VERSION')
@@ -82,6 +85,10 @@ class Emma(object):
             # raw_input does not have it and the BNF requires it as the
             # terminator. 
             text += '\n'
+            # prefix with whitespaces for multiple line input, so the 
+            # error message looks better with the indentation.
+            if nident != 0:
+                text = indent_width * ' ' + text
 
             # Built the character stream
             lines.append(text)
@@ -193,8 +200,7 @@ def usage(prog):
     sys.exit(0)
 
 
-if __name__ == '__main__':
-
+def main():
     if len(sys.argv) > 2:
         usage(sys.argv[0])
 
@@ -203,4 +209,11 @@ if __name__ == '__main__':
         emma.run_repl()
     else:
         emma.run_file(sys.argv[1])
+
+    # clear the environment, so it does not contaminate next run
+    emma.tidy()
+
+
+if __name__ == '__main__':
+    main()
 

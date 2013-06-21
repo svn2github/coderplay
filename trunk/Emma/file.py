@@ -27,7 +27,7 @@ class Lines():
         padding = '    '
         arrow   = '--> '
         content = ''
-        for idx in range(lineno-1, lineno+2):
+        for idx in range(lineno-2, lineno+1):
             oneline = self.get_line(idx)
             if oneline is not None:
                 txt_ln = '%4d' % (idx+1)
