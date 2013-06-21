@@ -93,8 +93,8 @@ class Lexer():
         regex = re.compile(pattern)
         self.token_type_list.append((pattern, tag, regex))
 
-    def __call__(self, oneline):
-        text = oneline.text
+    def __call__(self, lines):
+        text = lines.text
         tokenlist = TokenList()
         pos = 0
         while pos < len(text):
@@ -110,7 +110,7 @@ class Lexer():
                     break
             if not match:
                 raise LexError('Illegal character', 
-                        text[pos], oneline.line_number, pos+1)
+                        text[pos], 1, pos+1)
             else:
                 if matched_tag != 'WHITE':
                     tokenlist.append(Token(matched_text, matched_tag))

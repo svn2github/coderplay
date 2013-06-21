@@ -2,7 +2,7 @@
 import sys
 import random
 import specs
-import file
+from file import Lines
 from epw_lexer import Lexer, LexError, TokenList
 from epw_parser import parse_file, parse_prompt, ParseError
 from epw_interpreter import EvalError, BreakControl, ContinueControl, ReturnControl
@@ -48,6 +48,7 @@ class Emma(object):
 
         line_number = 1
         tokenlist = TokenList()
+        lines = Lines()
 
         # Repeat the prompt till user quits
         while True:
@@ -83,18 +84,18 @@ class Emma(object):
             text += '\n'
 
             # Built the character stream
-            file_line = file.Line(text, line_number)
+            lines.append(text)
 
             # Process the stream
-            if self.process_file_line(1, file_line, tokenlist):
+            if self.process_file_line(1, lines, tokenlist):
                 line_number += 1
 
 
-    def process_file_line(self, isPrompt, file_line, tokenlist=None):
+    def process_file_line(self, isPrompt, lines, tokenlist=None):
         'The core processing'    
         # Lexing
         try:
-            tokenline = self.lex(file_line)
+            tokenline = self.lex(lines)
 
             # Add to the existing list if any
             if tokenlist is not None:
@@ -111,6 +112,7 @@ class Emma(object):
         except LexError as e:
             sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
             if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            lines.reset()
             tokenlist.reset()
             return
 
@@ -125,6 +127,7 @@ class Emma(object):
         except ParseError as e:
             sys.stderr.write('%%[ParseError] %s: %s\n' % e.args)
             if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            lines.reset()
             tokenlist.reset()
             return
         
@@ -153,6 +156,7 @@ class Emma(object):
             return
 
         # Everything is fine if we reach here
+        lines.reset()
         tokenlist.reset()
         return 1
 
@@ -162,15 +166,18 @@ class Emma(object):
         # Read the source file
         try:
             f = open(filename)
-            text = f.read()
+            text = f.readlines()
             f.close()
         except IOError as e:
             sys.stderr.write('%%[IOError] File Not Found: \"%s\"\n' % filename)
             return 0
 
-        file_line = file.Line(text, 1, filename)
+        lines = Lines()
+        for oneline in text:
+            lines.append(oneline)
+
         # Process the content
-        if self.process_file_line(0, file_line):
+        if self.process_file_line(0, lines):
             return 1
         else:
             return 0
