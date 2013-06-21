@@ -99,7 +99,7 @@ class Lexer():
     def __call__(self, lines):
         text = lines.text
         tokenlist = TokenList()
-        pos = 0
+        pos = lines.pos
         while pos < len(text):
             for token_type in self.token_type_list:
                 # Note that the regex.match matches the pattern from the 
@@ -123,6 +123,8 @@ class Lexer():
                     elif matched_tag == EPW_OP_R_CURLY:
                         tokenlist.nRCurly += 1
                 pos += len(matched_text)
+        # update the lexed position
+        lines.pos = pos
         return tokenlist
 
 class LexError(Exception):

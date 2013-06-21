@@ -3,9 +3,8 @@ class Lines():
     def __init__(self, filename='[PROMT]'):
         self.filename = filename
         self.text = ''
-        self.nchars = 0
         self.line_ranges = []
-        self.idxchar = 0
+        self.pos = 0
 
     def get_lineno(self, pos):
         'Get the line number from the char position in overall text'
@@ -53,13 +52,11 @@ class Lines():
         line_length = len(line)
         self.text += line
         self.line_ranges.append((text_length, text_length+line_length))
-        self.nchars += line_length
 
     def reset(self):
         self.text = ''
-        self.nchars = 0
         self.line_ranges = []
-        self.idxchar = 0
+        self.pos = 0
 
 
 
