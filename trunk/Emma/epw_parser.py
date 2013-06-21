@@ -1,5 +1,6 @@
 from specs import *
 from epw_ast import *
+from epw_env import get_topenv
 
 '''
 --------------------------------------------------------------------------------
@@ -367,7 +368,8 @@ def parse_simple_stmt(tokenlist):
             if matched:
                 mstring = matched.group(0)
                 if mstring[-3] == EPW_OP_R_PAREN:
-                    raise ParseError('Cannot Assign to a Function Call', mstring)
+                    raise ParseError('Cannot Assign to a Function Call', 
+                            get_topenv().get('$INPUT_LINES').get_content_around_pos(tokenlist.get().pos))
                 ast_node = parse_ID(tokenlist)
                 for c in mstring:
                     if c == EPW_OP_L_BRACKET:
@@ -625,6 +627,8 @@ def parse_arglist(tokenlist, isdef=0):
     return ast_node
 
 class ParseError(Exception):
-    pass
+    def __repr__(self):
+        return '%%[ParseError] %s\n%s' % self.args
+
 
 

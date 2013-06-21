@@ -2,12 +2,14 @@ import sys
 import re
 from specs import *
 from epw_parser import ParseError
+from epw_env import get_topenv
 
 
 class Token():
-    def __init__(self, value, tag):
+    def __init__(self, value, tag, pos):
         self.value = value
         self.tag = tag
+        self.pos = pos
 
     def __nonzero__(self):
         if (self.value is not None) and (self.tag is not None):
@@ -59,7 +61,7 @@ class TokenList():
             return self.tlist[pos]
         else:
             # out of boundary
-            return Token(None, None)
+            return Token(None, None, None)
 
     def get_rest_line(self):
         # Get all tokens that forms an unit (before breaking by terminators etc.)
@@ -81,7 +83,8 @@ class TokenList():
         if cur_token.tag == tag_to_match:
             self.pos += 1
         else:
-            raise ParseError('Expected ' + tag_to_match, repr(self))
+            raise ParseError('Expected: ' + tag_to_match, 
+                    get_topenv().get('$INPUT_LINES').get_content_around_pos(cur_token.pos))
         return cur_token
 
 class Lexer():
@@ -114,7 +117,7 @@ class Lexer():
                         lines.get_content_around_pos(pos))
             else:
                 if matched_tag != 'WHITE':
-                    tokenlist.append(Token(matched_text, matched_tag))
+                    tokenlist.append(Token(matched_text, matched_tag, pos))
                     if matched_tag == EPW_OP_L_CURLY:
                         tokenlist.nLCurly += 1
                     elif matched_tag == EPW_OP_R_CURLY:

@@ -7,11 +7,6 @@ class Lines():
         self.line_ranges = []
         self.idxchar = 0
 
-    def get_rest_text(self):
-        if self.idxchar >= len(self.text):
-            return None
-        return self.text[self.idxchar:]
-
     def get_lineno(self, pos):
         'Get the line number from the char position in overall text'
         for idx, (start, end) in enumerate(self.line_ranges):

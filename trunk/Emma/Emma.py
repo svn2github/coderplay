@@ -97,6 +97,9 @@ class Emma(object):
         try:
             tokenline = self.lex(lines)
 
+            # save the input lines in the top env 
+            self.topenv.set('$INPUT_LINES', lines)
+
             # Add to the existing list if any
             if tokenlist is not None:
                 tokenlist.concatenate(tokenline) 
@@ -107,11 +110,11 @@ class Emma(object):
             if isPrompt and tokenlist.nLCurly != tokenlist.nRCurly:
                 return
 
-            if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            if self.topenv.get('$DEBUG'): print tokenlist
 
         except LexError as e:
             sys.stderr.write(repr(e))
-            if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            if self.topenv.get('$DEBUG'): print tokenlist
             lines.reset()
             tokenlist.reset()
             return
@@ -125,8 +128,8 @@ class Emma(object):
             if ast and self.topenv.get('$DEBUG'): print ast
 
         except ParseError as e:
-            sys.stderr.write('%%[ParseError] %s: %s\n' % e.args)
-            if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            sys.stderr.write(repr(e))
+            if self.topenv.get('$DEBUG'): print tokenlist
             lines.reset()
             tokenlist.reset()
             return
@@ -140,7 +143,9 @@ class Emma(object):
 
         except EvalError as e:
             sys.stderr.write('%%[EvalError] %s: %s\n' % e.args)
-            if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
+            if self.topenv.get('$DEBUG'): print tokenlist
+            lines.reset()
+            tokenlist.reset()
             return
 
         except BreakControl as e:
