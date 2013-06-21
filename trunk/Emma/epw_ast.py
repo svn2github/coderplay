@@ -6,7 +6,8 @@ from epw_builtin import *
 
 # Generic AST node as Not Yet Implemented
 class Ast_NYI(object): 
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         pass
 
     def __repr__(self):
@@ -19,7 +20,8 @@ class Ast_NYI(object):
 
 
 class Ast_Int(Ast_NYI):
-    def __init__(self, value):
+    def __init__(self, pos, value):
+        self.pos = pos
         self.value = value
 
     def __repr__(self):
@@ -31,7 +33,8 @@ class Ast_Int(Ast_NYI):
 
 
 class Ast_Float(Ast_NYI):
-    def __init__(self, value):
+    def __init__(self, pos, value):
+        self.pos = pos
         self.value = value
 
     def __repr__(self):
@@ -43,7 +46,8 @@ class Ast_Float(Ast_NYI):
 
 
 class Ast_String(Ast_NYI):
-    def __init__(self, value):
+    def __init__(self, pos, value):
+        self.pos = pos
         self.value = value
 
     def __repr__(self):
@@ -55,7 +59,8 @@ class Ast_String(Ast_NYI):
 
 
 class Ast_Variable(Ast_NYI):
-    def __init__(self, name):
+    def __init__(self, pos, name):
+        self.pos = pos
         self.name = name
 
     def __repr__(self):
@@ -67,12 +72,14 @@ class Ast_Variable(Ast_NYI):
     def eval(self, env):
         theEnv = env.find(self.name)
         if theEnv is None:
-            raise EvalError('Variable Not Defined', self.name)
+            raise EvalError('Variable Not Defined: ' + self.name, 
+                    get_topenv().get('$INPUT_LINES').get_content_around_pos(self.pos))
         return theEnv.get(self.name)
 
 
 class Ast_Slice(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.collection = None
         self.idxlist = None
 
@@ -83,16 +90,19 @@ class Ast_Slice(Ast_NYI):
     def eval(self, env):
         var = self.collection.eval(env)
         if type(var) != list:
-            raise EvalError('Can Only Slice a List', str(var))
+            raise EvalError('Can Only Slice a List: ' + str(var),
+                    get_topenv().get('$INPUT_LINES').get_content_around_pos(self.pos))
         idxlist = self.idxlist.eval(env)
         try: 
             return var[idxlist]
         except IndexError:
-            raise EvalError('List Index Out of Range', '')
+            raise EvalError('List Index Out of Range',
+                    get_topenv().get('$INPUT_LINES').get_content_around_pos(self.pos))
 
 
 class Ast_IdxList(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.start = None 
         self.end = None
         self.step = None
@@ -116,7 +126,8 @@ class Ast_IdxList(Ast_NYI):
             
 
 class Ast_FuncCall(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.func = None
         self.arglist = None
 
@@ -145,7 +156,8 @@ class Ast_FuncCall(Ast_NYI):
             if topenv.has(name):
                 func_def = get_topenv().get(name)
             else:
-                raise EvalError('Undefined Function', name)
+                raise EvalError('Undefined Function: ' + name,
+                        get_topenv().get('$INPUT_LINES').get_content_around_pos(self.pos))
         else:
             func_def = func.eval(caller_env)
 
@@ -165,7 +177,8 @@ class Ast_FuncCall(Ast_NYI):
 
 
 class Ast_ArgList(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.args = []
         self.kwargs = []
 
@@ -184,7 +197,8 @@ class Ast_ArgList(Ast_NYI):
 
 
 class Ast_KeywordParm(Ast_NYI):
-    def __init__(self, name, value):
+    def __init__(self, pos, name, value):
+        self.pos = pos
         self.parm_name = name
         self.value = value
 
@@ -197,7 +211,8 @@ class Ast_KeywordParm(Ast_NYI):
 
 
 class Ast_UnaryOp(Ast_NYI):
-    def __init__(self, op, operand):
+    def __init__(self, pos, op, operand):
+        self.pos = pos
         self.op = op
         self.operand = operand
 
@@ -213,11 +228,13 @@ class Ast_UnaryOp(Ast_NYI):
         elif self.op == 'not':
             return 1 if not self.operand.eval(env) else 0
         else:
-            raise EvalError('Unrecognized Unary Operator', self.op)
+            raise EvalError('Unrecognized Unary Operator: ' + self.op,
+                    get_topenv().get('$INPUT_LINES').get_content_around_pos(self.pos))
 
 
 class Ast_BinOp(Ast_NYI):
-    def __init__(self, op, l, r):
+    def __init__(self, pos, op, l, r):
+        self.pos = pos
         self.op = op
         self.l = l
         self.r = r
@@ -259,14 +276,17 @@ class Ast_BinOp(Ast_NYI):
                 return 1 if bool(self.l.eval(env)) != bool(self.r.eval(env)) else 0
 
             else:
-                raise EvalError('Unrecognized Binary Operator', '')
+                raise EvalError('Unrecognized Binary Operator: ' + self.op,
+                        get_topenv().get('$INPUT_LINES').get_content_around_pos(self.pos))
 
         except TypeError as e:
-            raise EvalError(e.message, self.op)
+            raise EvalError('Type Mismatch: ' + self.op,
+                    get_topenv().get('$INPUT_LINES').get_content_around_pos(self.pos))
 
 
 class Ast_Assign(Ast_NYI):
-    def __init__(self, left, right):
+    def __init__(self, pos, left, right):
+        self.pos = pos
         self.left = left
         self.right = right
 
@@ -297,7 +317,8 @@ class Ast_Assign(Ast_NYI):
             return value
 
 class Ast_Print(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.node_list = []
 
     def __repr__(self):
@@ -318,7 +339,8 @@ class Ast_Print(Ast_NYI):
 
 
 class Ast_DefFunc(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.func = None
         self.parmlist = None
         self.body = None
@@ -331,7 +353,8 @@ class Ast_DefFunc(Ast_NYI):
     def eval(self, env):
         # Function can only be defined at the Top Level
         if env != get_topenv():
-            raise EvalError('Function Definition Can Only Be at Top Level', '')
+            raise EvalError('Function Definition Can Only Be at Top Level',
+                    get_topenv().get('$INPUT_LINES').get_content_around_pos(self.pos))
         # Process any parameter list
         if self.parmlist:
             pos_parmlist = []
@@ -347,7 +370,8 @@ class Ast_DefFunc(Ast_NYI):
         return func_def
 
 class Ast_WhileLoop(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.predicate = None
         self.body = None
 
@@ -368,11 +392,12 @@ class Ast_WhileLoop(Ast_NYI):
 
 
 class Ast_ForLoop(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.counter = None
         self.start = None
         self.end = None
-        self.step = Ast_Int(1) # default step
+        self.step = Ast_Int(None, 1) # default step
         self.body = None
 
     def __repr__(self):
@@ -399,23 +424,35 @@ class Ast_ForLoop(Ast_NYI):
 
 
 class Ast_Continue(Ast_NYI):
+    def __init__(self, pos):
+        self.pos = pos
+
     def eval(self, env):
         raise ContinueControl()
 
 class Ast_Break(Ast_NYI):
+    def __init__(self, pos):
+        self.pos = pos
+
     def eval(self, env):
         raise BreakControl()
 
 class Ast_Return(Ast_NYI):
-    def __init__(self, node=None):
+    def __init__(self, pos, node=None):
+        self.pos = pos
         self.ret = node
+
+    def __repr__(self):
+        classname = super(self.__class__, self).__repr__()
+        return classname + '(%s)' % self.ret
 
     def eval(self, env):
         raise ReturnControl(self.ret.eval(env))
 
 
 class Ast_If(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.predicate = None
         self.if_body = None
         self.else_body = None
@@ -434,7 +471,8 @@ class Ast_If(Ast_NYI):
 
 
 class Ast_Stmt_List(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.node_list = []
 
     def __repr__(self):
@@ -459,7 +497,8 @@ class Ast_Stmt_List(Ast_NYI):
 
 
 class Ast_Stmt_Block(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.node_list = []
 
     def __repr__(self):
@@ -479,20 +518,9 @@ class Ast_Stmt_Block(Ast_NYI):
         return ret
 
 
-class Ast_Statement(Ast_NYI):
-    def __init__(self, ast_node):
-        self.node = ast_node
-
-    def __repr__(self):
-        classname = super(self.__class__, self).__repr__()
-        return classname + repr(self.node)
-
-    def eval(self, env):
-        return self.node.eval(env)
-
-
 class Ast_File(Ast_NYI):
-    def __init__(self):
+    def __init__(self, pos):
+        self.pos = pos
         self.node_list = []
 
     def __repr__(self):
@@ -510,26 +538,13 @@ class Ast_File(Ast_NYI):
             node.eval(env)
 
 
-class Ast_Prompt(Ast_NYI):
-    def __init__(self, ast_node):
-        self.node = ast_node
-
-    def __repr__(self):
-        classname = super(self.__class__, self).__repr__()
-        return classname + '(' + repr(self.node) + ')'
-
-    def eval(self, env):
-        return self.node.eval(env)
-
-
-
 def plug_arglist(func_def, arglist, caller_env, callee_env):
 
     pos_parmlist = func_def['pos_parmlist']
     pos_arglist = arglist.args
     if len(pos_parmlist) < len(pos_arglist):
         raise EvalError('Unmatched Function Positional Parameters', 
-                        [pos_parmlist, pos_arglist])
+                get_topenv().get('$INPUT_LINES').get_content_around_pos(arglist.pos))
 
     kw_parmlist = func_def['kw_parmlist']
     kw_arglist = {}
@@ -537,7 +552,8 @@ def plug_arglist(func_def, arglist, caller_env, callee_env):
         kw_arglist[kwarg.parm_name.name] = kwarg.value.eval(caller_env)
 
     if not set.issubset(set(kw_arglist.keys()), set(kw_parmlist.keys())):
-        raise EvalError('Unmatched Function Keyword Parameters', '')
+        raise EvalError('Unmatched Function Keyword Parameters',
+                get_topenv().get('$INPUT_LINES').get_content_around_pos(arglist.pos))
 
     # plug positional arguments
     for ii in range(len(pos_parmlist)):

@@ -1,6 +1,7 @@
 
 class EvalError(Exception):
-    pass
+    def __repr__(self):
+        return '%%[EvalError] %s\n%s' % self.args
 
 class InterpretControl(Exception):
     def __init__(self, *args):

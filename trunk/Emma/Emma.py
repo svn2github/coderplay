@@ -149,7 +149,7 @@ class Emma(object):
                 if isPrompt and output: print 'Ret:', output
 
         except EvalError as e:
-            sys.stderr.write('%%[EvalError] %s: %s\n' % e.args)
+            sys.stderr.write(repr(e))
             if self.topenv.get('$DEBUG'): print tokenlist
             lines.reset()
             tokenlist.reset()
