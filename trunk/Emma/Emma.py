@@ -110,7 +110,7 @@ class Emma(object):
             if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
 
         except LexError as e:
-            sys.stderr.write('%%[LexError] %s: %s  (L%d, C%d)\n' % e.args)
+            sys.stderr.write(repr(e))
             if self.topenv.get('$DEBUG') and len(tokenlist) > 1: print tokenlist
             lines.reset()
             tokenlist.reset()

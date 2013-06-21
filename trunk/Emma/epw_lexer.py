@@ -109,8 +109,9 @@ class Lexer():
                     matched_tag = token_type[1]
                     break
             if not match:
-                raise LexError('Illegal character', 
-                        text[pos], 1, pos+1)
+                lineno = lines.get_lineno(pos)
+                raise LexError('Illegal character: ' + text[pos],
+                        lines.get_content_around_pos(pos))
             else:
                 if matched_tag != 'WHITE':
                     tokenlist.append(Token(matched_text, matched_tag))
@@ -122,7 +123,8 @@ class Lexer():
         return tokenlist
 
 class LexError(Exception):
-    pass
+    def __repr__(self):
+        return '%%[LexError] %s\n%s' % self.args
 
 if __name__ == '__main__':
     import specs, file
