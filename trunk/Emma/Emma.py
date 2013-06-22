@@ -73,12 +73,12 @@ class Emma(object):
             # Magic commands 
             if text[0] == '.':
                 if text == '.exit': break
-                if text.startswith('.run'):
-                    if text[4:5].isspace():
-                        filename = text[5:].strip()
-                        if filename != '':
-                            if self.run_file(filename):
-                                line_number +=1
+                fields = text.split(' ')
+                if fields[0] == '.run':
+                    filename = text[4:].strip()
+                    if filename != '':
+                        if self.run_file(filename):
+                            line_number +=1
                     continue
 
             # Append an EOL at the end of the line since the input from
