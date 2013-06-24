@@ -1,0 +1,16 @@
+// Try test a self build Nand gate from Not and Or
+
+
+/**
+ * Nandmy gate: if {a==1 and b==1} then out = 0 else out = 1
+ */
+
+CHIP Nandyw {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+    Not(in=a, out=nota);
+    Not(in=b, out=notb);
+    Or(a=nota, b=notb, out=out);
+}

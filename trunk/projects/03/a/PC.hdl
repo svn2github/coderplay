@@ -1,0 +1,45 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/PC.hdl
+
+/**
+ * A 16-bit counter with load and reset control bits.
+ * if      (reset[t]==1) out[t+1] = 0
+ * else if (load[t]==1)  out[t+1] = in[t]
+ * else if (inc[t]==1)   out[t+1] = out[t] + 1  (integer addition)
+ * else                  out[t+1] = out[t]
+ */
+
+CHIP PC {
+    IN in[16],load,inc,reset;
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+
+    // reset and load in are highest priority
+    // Inc works only when both reset and load in are off
+    // The load of the Register has to be turned on when
+    // either of the reset, load in, inc is set.
+    // We prepare two sets of data canditate (data1, data2) as
+    // the results from reset/load in (data1) and inc (data2).
+    // We then test which flag (load, inc, reset) we honor.
+
+    Mux16(a=in, b=false, sel=reset, out=data1); // data1 is load in or reset
+
+    Or(a=reset, b=load, out=or1);
+    Or(a=or1, b=inc, out=or2); // This is to turn on the register load
+    Not(in=or1, out=notout); // This and the following and are to select between data1 and data2
+    And(a=notout, b=inc, out=datasel);
+
+    Mux16(a=data1, b=data2, sel=datasel, out=m2);
+
+    Register(in=m2, load=or2, out=out, out=r1);
+    Inc16(in=r1, out=data2); // data2 is increment
+
+}
+
+
+
+
