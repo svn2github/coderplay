@@ -40,4 +40,50 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+
+    // Send signal to A based on the instruction type, it is either an address or a value from ALU
+    // If it is an address, i.e. instruction[15] == 0, the instruction will be picked through input a
+    Mux16(a[15]=false, a[0..14]=instruction[0..14], b=aluout1, sel=instruction[15], out=mtoa);
+
+    // A gets to store the incoming data for either an address command or a store command (a=xxx)
+    Not(in=instruction[15], out=isAinstr); // test if its an address command
+    Or(a=isAinstr, b=instruction[5], out=writeA);
+    ARegister(in=mtoa, load=writeA, out=aout1, out=aout2, out[0..14]=addressM);
+
+    // Pre-filter between A or M for ALU
+    Mux16(a=aout1, b=inM, sel=instruction[12], out=aorm);
+
+    // The centre ALU chip
+    ALU(x=dout, y=aorm, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluout1, out=aluout2, out=outM, zr=zrout, ng=ngout);
+
+    // must be a compute instruction to write D
+    And(a=instruction[15], b=instruction[4], out=writeD);
+    DRegister(in=aluout2, load=writeD, out=dout);
+
+    // Check for any jumps
+    And(a=instruction[1], b=zrout, out=ja1);
+    And(a=instruction[2], b=ngout, out=ja2);
+    Or(a=zrout, b=ngout, out=nor1);
+    Not(in=nor1, out=norout);
+    And(a=instruction[0], b=norout, out=ja3);
+
+    And(a=instruction[0], b=instruction[1], out=jall1);
+    And(a=jall1, b=instruction[2], out=jall2);
+
+    Or(a=ja1, b=ja2, out=or1);
+    Or(a=or1, b=ja3, out=or2);
+    Or(a=or2, b=jall2, out=or3);
+
+    // Must be a compute instruction to jump
+    And(a=instruction[15], b=or3, out=ifjump);
+
+    // If no jumps, we should increase the program counter
+    Not(in=ifjump, out=incin);
+
+    // Input is from A register
+    PC(in=aout2, reset=reset, load=ifjump, inc=incin, out[0..14]=pc);
+
+    // To write M, it must also be a compute instruction
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
 }
