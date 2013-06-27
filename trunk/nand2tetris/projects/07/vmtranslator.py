@@ -76,8 +76,7 @@ class CodeWriter(object):
             self.bool_counter += 1
             codelist += [
                 'D=A-D', 
-                '@' + label_1, 
-            ]
+                '@' + label_1]
             if command == 'eq':
                 codelist += ['D;JEQ'] 
             elif command == 'gt':
@@ -91,8 +90,7 @@ class CodeWriter(object):
                 '0;JMP', 
                 '(' + label_1 + ')', 
                 'D=-1', 
-                '(' + label_2 + ')', 
-            ]
+                '(' + label_2 + ')']
 
         # push back to the stack
         codelist += [
