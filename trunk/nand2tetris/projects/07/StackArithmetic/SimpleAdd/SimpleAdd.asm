@@ -20,9 +20,12 @@ D=M
 M=M-1
 A=M
 A=M
-D=D+A
+D=A+D
 @SP
 A=M
 M=D
 @SP
 M=M+1
+(end.of.asm)
+@end.of.asm
+0;JMP
