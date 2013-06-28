@@ -17,8 +17,10 @@ class CodeWriter(object):
         self.outfile = outfile
         self.outs = open(outfile, 'w')
         self.fname = None
-        self.bool_counter = None
         self.codelist = []
+        self.label_counter = 0
+        self.bool_counter = None
+        self.functionName = 'null'
 
     def setFileName(self, filename):
         self.fname = filename # the file to process, prefix for variables
@@ -137,7 +139,7 @@ class CodeWriter(object):
                     'D=M']
             elif segment  == 'static':
                 self.codelist += [
-                    '@' + str(16+index),
+                    '@' + self.fname + '.' + str(index),
                     'D=M']
             elif segment == 'pointer':
                 self.codelist += [
@@ -167,7 +169,7 @@ class CodeWriter(object):
                 if segment  == 'temp':
                     self.codelist += ['@' + str(5+index)]
                 elif segment  == 'static':
-                    self.codelist += ['@' + str(16+index)]
+                    self.codelist += ['@' + self.fname + '.' + str(index)]
                 elif segment == 'pointer':
                     self.codelist += ['@' + self.getAddress(segment,index)]
 
@@ -199,9 +201,13 @@ class CodeWriter(object):
 
 
     def writeLabel(self, label):
+        if self.functionName:
+            label = self.functionName + '$' + label
         self.codelist += ['(' + label + ')']
 
     def writeGoto(self, label):
+        if self.functionName:
+            label = self.functionName + '$' + label
         self.codelist += [
             '@' + label, 
             '0;JMP']
@@ -213,15 +219,18 @@ class CodeWriter(object):
         # if test==0 we have -1 on stack top, so no jump
         # thus jump if a 0 on stack top
         self.writePopStack() # get the stack top to D register
+        if self.functionName:
+            label = self.functionName + '$' + label
         self.codelist += [
             '@' + label,
             'D;JEQ'] 
 
     def writeFunction(self, functionName, numLocals):
-        self.writeLabel(functionName)
+        self.codelist += ['(' + functionName + ')']
         for ii in range(numLocals):
             self.writePushPop(C_PUSH, 'constant', 0)
             self.writePushPop(C_POP, 'local', ii)
+        self.functionName = functionName
 
     def writeReturn(self):
         self.codelist += [
@@ -286,12 +295,14 @@ class CodeWriter(object):
             'A=M', 
             '0;JMP']
 
+
     def writeCall(self, functionName, numArgs):
-        returnAddress = functionName + '.returnAddress'
+        returnLabel = functionName + '$L_Return.' + str(self.label_counter)
+        self.label_counter += 1
 
         # save return address to stack
         self.codelist += [
-            '@' + returnAddress,
+            '@' + returnLabel,
             'D=A']
         self.writePushStack() 
 
@@ -343,22 +354,22 @@ class CodeWriter(object):
             '0;JMP']
 
         # the return address
-        self.codelist += ['(' + returnAddress + ')']
+        self.codelist += ['(' + returnLabel + ')']
 
 
-    def writeBootstrap(self):
+    def writeInit(self):
         self.codelist += [
             '@256',
             'D=A',
             '@SP',
-            'M=D',
-            '@Sys.init',
-            '0;JMP'] 
-        #endlabel = self.outfile + '.end'
-        #self.codelist += [
-        #    '(' + endlabel + ')',
-        #    '@' + endlabel,
-        #    '0;JMP']
+            'M=D']
+        self.writeCall('Sys.init', 0)
+
+    def writeDebug(self, address=19999):
+        self.codelist += [
+            '@' + str(address),
+            'M=1',
+            'M=0']
 
     def close(self):
         'Write out the file and close it'
@@ -454,7 +465,7 @@ if __name__ == '__main__':
     outfile = filestub + '.asm'
 
     writer = CodeWriter(outfile)
-    writer.writeBootstrap()
+    writer.writeInit()
 
     for file in filelist:
         parser = Parser(file)
@@ -493,6 +504,9 @@ if __name__ == '__main__':
             elif c_type == C_CALL:
                 writer.writeCall(parser.arg1(), parser.arg2())
 
+            #writer.writeDebug()
+
+    # clean up the writer
     writer.close()
 
 
