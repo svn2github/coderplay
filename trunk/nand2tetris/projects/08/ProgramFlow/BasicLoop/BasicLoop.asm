@@ -1,0 +1,156 @@
+// push constant 0
+@0
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// pop local 0
+@SP
+M=M-1
+A=M
+D=M
+@LCL
+A=M
+M=D
+// label LOOP_START
+(LOOP_START)
+// push argument 0
+@ARG
+A=M
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// push local 0
+@LCL
+A=M
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// add
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+A=M
+D=A+D
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// pop local 0
+@SP
+M=M-1
+A=M
+D=M
+@LCL
+A=M
+M=D
+// push argument 0
+@ARG
+A=M
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// push constant 1
+@1
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// sub
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+A=M
+D=A-D
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// pop argument 0
+@SP
+M=M-1
+A=M
+D=M
+@ARG
+A=M
+M=D
+// push argument 0
+@ARG
+A=M
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// if-goto LOOP_START
+@0
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+A=M
+D=A-D
+@BasicLoop.0.true.eq
+D;JEQ
+D=0
+@BasicLoop.0.end.eq
+0;JMP
+(BasicLoop.0.true.eq)
+D=-1
+(BasicLoop.0.end.eq)
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@SP
+M=M-1
+A=M
+D=M
+@LOOP_START
+D;JEQ
+// push local 0
+@LCL
+A=M
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+(BasicLoop.asm.end)
+@BasicLoop.asm.end
+0;JMP
