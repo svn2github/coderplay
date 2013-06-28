@@ -97,6 +97,6 @@ A=M
 M=D
 @SP
 M=M+1
-(end.of.asm)
-@end.of.asm
+(StaticTest.asm.end)
+@StaticTest.asm.end
 0;JMP

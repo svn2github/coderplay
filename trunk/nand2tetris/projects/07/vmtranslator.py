@@ -14,12 +14,14 @@ C_CALL              = 8
 class CodeWriter(object):
 
     def __init__(self, outfile):
+        self.outfile = outfile
         self.outs = open(outfile, 'w')
         self.fname = None
         self.bool_counter = None
+        self.codelist = []
 
     def setFileName(self, filename):
-        self.fname = filename # prefix for variables
+        self.fname = filename # the file to process, prefix for variables
         self.bool_counter = 0
 
     def getAddress(self, segment, index):
@@ -35,56 +37,64 @@ class CodeWriter(object):
             address = 'THIS' if index == 0 else 'THAT'
         return address
 
+    def writeComments(self, s):
+        self.codelist += ['// ' + s]
+
+    def writePopStack(self, register='D'):
+        'Get the data from stack and save in a register, default is D'
+        self.codelist += [
+            '@SP',
+            'M=M-1', # stack count decrease by 1
+            'A=M',
+            register + '=M']
+
+    def writePushStack(self):
+        'Assume the data to be pushed is already in D register'
+        self.codelist += [
+            '@SP',
+            'A=M', 
+            'M=D', 
+            '@SP', 
+            'M=M+1'] # stack top address increase by 1
+
     def writeArithmetic(self, command):
-        if command in ['add', 'sub', 'eq', 'gt', 'lt', 'and', 'or']:
-            # binary op
-            codelist = [
-                '@SP',  # first operand from stack
-                'M=M-1', 
-                'A=M', 
-                'D=M', 
-                '@SP',  # second operand from stack
-                'M=M-1', 
-                'A=M', 
-                'A=M']
-        else:
-            # unary
-            codelist = [
-                '@SP', # operand from stack
-                'M=M-1', 
-                'A=M', 
-                'D=M']
 
-        # operations directly supported by CPU instructions
+        self.writePopStack() # get 1st operand from stack and save to D register
+        # for binary op we get 2nd operand
+        if command in ['add', 'sub', 'eq', 'gt', 'lt', 'and', 'or']: # binary op
+            self.writePopStack('A') # get 2nd operand from stack and save to A register
+
+        # Arithmetic operations directly supported by CPU instructions
         if command == 'add':
-            codelist.extend(['D=A+D'])
+            self.codelist += ['D=A+D']
         elif command == 'sub':
-            codelist.extend(['D=A-D'])
+            self.codelist += ['D=A-D']
         elif command == 'neg':
-            codelist.extend(['D=-D'])
+            self.codelist += ['D=-D']
         elif command == 'and':
-            codelist.extend(['D=D&A'])
+            self.codelist += ['D=D&A']
         elif command == 'or':
-            codelist.extend(['D=D|A'])
+            self.codelist += ['D=D|A']
         elif command == 'not':
-            codelist.extend(['D=!D'])
+            self.codelist += ['D=!D']
 
-        # operations not directly supported by CPU instructions
+        # boolean operations not directly supported by CPU instructions
+        # we have to use jumps for boolean tests
         elif command in ['eq', 'gt', 'lt']:
-            label_1 = self.fname + '.' + str(self.bool_counter) + '.0.' + command
-            label_2 = self.fname + '.' + str(self.bool_counter) + '.1.' + command
+            label_1 = self.fname + '.' + str(self.bool_counter) + '.true.' + command
+            label_2 = self.fname + '.' + str(self.bool_counter) + '.end.' + command
             self.bool_counter += 1
-            codelist += [
+            self.codelist += [
                 'D=A-D', 
                 '@' + label_1]
             if command == 'eq':
-                codelist += ['D;JEQ'] 
+                self.codelist += ['D;JEQ'] 
             elif command == 'gt':
-                codelist += ['D;JGT']
+                self.codelist += ['D;JGT']
             elif command == 'lt':
-                codelist += ['D;JLT']
+                self.codelist += ['D;JLT']
 
-            codelist += [
+            self.codelist += [
                 'D=0', 
                 '@' + label_2, 
                 '0;JMP', 
@@ -93,130 +103,111 @@ class CodeWriter(object):
                 '(' + label_2 + ')']
 
         # push back to the stack
-        codelist += [
-            '@SP',
-            'A=M',
-            'M=D',
-            '@SP',
-            'M=M+1']
+        self.writePushStack()
 
-        # write the code
-        self.outs.write('// ' + command + '\n')
-        for s in codelist: 
-            self.outs.write(s+'\n')
-            print s
 
     def writePushPop(self, command, segment, index):
-        if command == 'push':
+        '''
+        Push data
+            1. Get address of the data to be pushed (pointer calculations
+               may be needed for get the correct address of a segment)
+            2. Get the data and save it to D
+            3. Push the Data from D to the stack (stack management is needed)
+        Pop data
+              If the index into a segment is less than or equal to 1, the
+            pointer calculation is supported by direct CPU instruction.
+            So it is simply as
+            1. Get the data from stack and store to D register
+            2. Get the address of the index of the segment, store in A
+            3. Store content of D to M[A]
+              If index is 2 or up, the address of the segment index has to
+            be calculated first and store in R13. We can then start the above
+            three steps.
+        '''
+
+        if command == C_PUSH:
             # get value from the segment index and save to D regsiter for push
             if segment == 'constant':
-                codelist = [
+                self.codelist += [
                     '@' + str(index), 
                     'D=A']
             elif segment  == 'temp':
-                codelist = [
+                self.codelist += [
                     '@' + str(5+index), 
                     'D=M']
             elif segment  == 'static':
-                codelist = [
+                self.codelist += [
                     '@' + str(16+index),
                     'D=M']
             elif segment == 'pointer':
-                codelist = [
+                self.codelist += [
                     '@' + self.getAddress(segment, index), 
                     'D=M']
             else:
-                codelist = ['@' + self.getAddress(segment, index)]
+                self.codelist += ['@' + self.getAddress(segment, index)]
+                # index 0 and 1 have direct CPU support
+                # index 2 and up have to do extra work
                 if index == 0:
-                    codelist += ['A=M']
+                    self.codelist += ['A=M']
                 elif index == 1:
-                    codelist += ['A=M+1']
+                    self.codelist += ['A=M+1']
                 else:
-                    codelist += [
+                    self.codelist += [
                         'D=M', 
                         '@' + str(index), 
                         'A=D+A']
-                codelist += ['D=M']
+                self.codelist += ['D=M']
 
             # Push to the stack
-            codelist += [
-                '@SP', 
-                'A=M', 
-                'M=D', 
-                '@SP', # stack count increase by 1
-                'M=M+1']
+            self.writePushStack()
 
         else: # pop
-            if segment  == 'temp':
-                codelist = [
-                    '@SP',
-                    'M=M-1', # stack count decrease by 1
-                    'A=M',
-                    'D=M',
-                    '@' + str(5+index),
-                    'M=D']
-            elif segment  == 'static':
-                codelist = [
-                    '@SP',
-                    'M=M-1',
-                    'A=M',
-                    'D=M',
-                    '@' + str(16+index),
-                    'M=D']
-            elif segment == 'pointer':
-                codelist = [
-                    '@SP',
-                    'M=M-1', # stack count decrease by 1
-                    'A=M', 
-                    'D=M',
-                    '@' + self.getAddress(segment, index),
-                    'M=D']
+            if segment in ['temp', 'static', 'pointer']:
+                self.writePopStack()
+                if segment  == 'temp':
+                    self.codelist += ['@' + str(5+index)]
+                elif segment  == 'static':
+                    self.codelist += ['@' + str(16+index)]
+                elif segment == 'pointer':
+                    self.codelist += ['@' + self.getAddress(segment,index)]
+
             else:
                 # store the value to segment index
-                if index == 0:
-                    codelist = [
-                        '@SP',  # get stack data
-                        'M=M-1',  # stack count decrease by 1
-                        'A=M', 
-                        'D=M',
+                if index <= 1:
+                    self.writePopStack()
+                    self.codelist += [
                         '@' + self.getAddress(segment, index),
-                        'A=M',
-                        'M=D']
-                elif index == 1:
-                    codelist = [
-                        '@SP',  # get stack data
-                        'M=M-1',  # stack count decrease by 1
-                        'A=M', 
-                        'D=M',
-                        '@' + self.getAddress(segment, index),
-                        'A=M+1',
-                        'M=D']
+                        'A=M' + ('+1' if index ==1 else '')]
                 else:
-                    codelist = [
-                        '@' + self.getAddress(segment, index), # pointer arithmatic
+                    # first get the correct pointer address by pointer arithmatic
+                    # the calculated address is saved in R13
+                    self.codelist += [
+                        '@' + self.getAddress(segment, index), 
                         'D=M',  
                         '@' + str(index),
                         'D=D+A',
                         '@R13',
-                        'M=D',
-                        '@SP', # get stack data
-                        'M=M-1', # stack count decrease by 1
-                        'A=M',
-                        'D=M',
-                        '@R13',
-                        'A=M',
                         'M=D']
+                    self.writePopStack() # get data from stack and save to D
+                    self.codelist += [
+                        '@R13',
+                        'A=M']
 
-        # Write the code
-        self.outs.write('// ' + command + ' ' + segment + ' ' + str(index) + '\n')
-        for s in codelist: 
-            self.outs.write(s+'\n')
-            print s
+            # We assign the content of segment index to the content of D register
+            # This finish the entire pop operation
+            self.codelist += ['M=D']
+
 
     def close(self):
-        self.outs.write('(end.of.asm)\n')
-        self.outs.write('@end.of.asm\n')
-        self.outs.write('0;JMP\n')
+        'Write out the file and close it'
+        endlabel = self.outfile + '.end'
+        self.codelist += [
+            '(' + endlabel + ')',
+            '@' + endlabel,
+            '0;JMP']
+        for s in self.codelist:
+            self.outs.write(s + '\n')
+            print s
         self.outs.close()
 
 
@@ -303,17 +294,17 @@ if __name__ == '__main__':
         while parser.hasMoreCommands():
             parser.advance()
             c_type = parser.commandType()
+
+            # Save the original vm code as comments
+            writer.writeComments(parser.cur_command)
             
             if c_type == C_ARITHMETIC:
-                writer.writeArithmetic(parser.cur_command)
-            elif c_type == C_PUSH:
+                writer.writeArithmetic(parser.arg1())
+
+            elif c_type in [C_PUSH, C_POP]:
                 arg1 = parser.arg1()
                 arg2 = parser.arg2()
-                writer.writePushPop('push', arg1, arg2)
-            elif c_type == C_POP:
-                arg1 = parser.arg1()
-                arg2 = parser.arg2()
-                writer.writePushPop('pop', arg1, arg2)
+                writer.writePushPop(c_type, arg1, arg2)
 
     writer.close()
 
