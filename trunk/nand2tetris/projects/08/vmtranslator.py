@@ -1,4 +1,5 @@
 import sys, os
+import re
 
 C_ARITHMETIC        = 0
 C_PUSH              = 1
@@ -10,6 +11,50 @@ C_FUNCTION          = 6
 C_RETURN            = 7
 C_CALL              = 8
 
+
+class Optimizer(object):
+
+    def __init__(self, filename):
+        self.filename = filename
+        f = open(self.filename)
+        self.stream = f.read()
+        f.close()
+
+    def opt_constant_push_pop(self):
+        '''
+        Optimize the constant push following by a immediate pop
+        '''
+        regex = re.compile(r'(@[0-9]+\nD=A\n)@SP\nAM=M\+1\nA=A-1\nM=D\n@SP\nAM=M-1\nD=M\n')
+        matched = [(x.start(), x.end(), x.groups()[0]) for x in regex.finditer(self.stream)]
+        s = self.stream
+        pos = 0
+        self.stream = ''
+        for m in matched:
+            self.stream += s[pos:m[0]]
+            self.stream += m[2]
+            pos = m[1]
+        self.stream += s[pos:]
+
+    def opt_push_pop(self):
+        '''
+        Optimize the push from D to stack and immediate Pop from Stack to D
+        '''
+        regex = re.compile(r'@SP\nAM=M\+1\nA=A-1\nM=D\n@SP\nAM=M-1\nD=M\n')
+        matched = [(x.start(), x.end()) for x in regex.finditer(self.stream)]
+        s = self.stream
+        pos = 0
+        self.stream = ''
+        for m in matched:
+            self.stream += s[pos:m[0]]
+            pos = m[1]
+        self.stream += s[pos:]
+
+    def run(self):
+        self.opt_constant_push_pop()
+        self.opt_push_pop()
+        f = open(self.filename, 'w')
+        f.write(self.stream)
+        f.close()
 
 class CodeWriter(object):
 
@@ -169,66 +214,65 @@ class CodeWriter(object):
         'Get the data from stack and save in a register, default is D'
         self.codelist += [
             '@SP',
-            'M=M-1', # stack count decrease by 1
-            'A=M',
+            'AM=M-1', # stack count decrease by 1
             register + '=M']
 
     def writePushStack(self, register='D'):
         'Push the data from register to stack'
         self.codelist += [
             '@SP',
-            'A=M', 
-            'M=D', 
-            '@SP', 
-            'M=M+1'] # stack top address increase by 1
+            'AM=M+1',  # stack top address increase by 1
+            'A=A-1',
+            'M=D'] 
 
     def writeArithmetic(self, command):
 
-        self.writePopStack() # get 1st operand from stack and save to D register
-        # for binary op we get 2nd operand
         if command in ['add', 'sub', 'eq', 'gt', 'lt', 'and', 'or']: # binary op
-            self.writePopStack('A') # get 2nd operand from stack and save to A register
-
-        # Arithmetic operations directly supported by CPU instructions
-        if command == 'add':
-            self.codelist += ['D=A+D']
-        elif command == 'sub':
-            self.codelist += ['D=A-D']
-        elif command == 'neg':
-            self.codelist += ['D=-D']
-        elif command == 'and':
-            self.codelist += ['D=D&A']
-        elif command == 'or':
-            self.codelist += ['D=D|A']
-        elif command == 'not':
-            self.codelist += ['D=!D']
-
-        # boolean operations not directly supported by CPU instructions
-        # we have to use jumps for boolean tests
-        elif command in ['eq', 'gt', 'lt']:
-            label_1 = self.fname + '.' + str(self.bool_counter) + '.true.' + command
-            label_2 = self.fname + '.' + str(self.bool_counter) + '.end.' + command
-            self.bool_counter += 1
+            self.writePopStack() # get 1st operand from stack and save to D register
             self.codelist += [
-                'D=A-D', 
-                '@' + label_1]
-            if command == 'eq':
-                self.codelist += ['D;JEQ'] 
-            elif command == 'gt':
-                self.codelist += ['D;JGT']
-            elif command == 'lt':
-                self.codelist += ['D;JLT']
+                '@SP', 
+                'A=M-1']
+            if command == 'add':
+                self.codelist += ['M=M+D']
+            elif command == 'sub':
+                self.codelist += ['M=M-D']
+            elif command == 'and':
+                self.codelist += ['M=D&M']
+            elif command == 'or':
+                self.codelist += ['M=D|M']
+            else: # logical operator
+                label_true = self.fname + '.' + str(self.bool_counter) + '.true.' + command
+                label_end = self.fname + '.' + str(self.bool_counter) + '.end.' + command
+                self.bool_counter += 1
+                self.codelist += [
+                    'D=M-D', 
+                    '@' + label_true]
+                if command == 'eq':
+                    self.codelist += ['D;JEQ']
+                elif command == 'gt':
+                    self.codelist += ['D;JGT']
+                else:  # lt
+                    self.codelist += ['D;JLT']
+                self.codelist += [
+                    '@SP',
+                    'A=M-1',
+                    'M=0',
+                    '@' + label_end, 
+                    '0;JMP', 
+                    '(' + label_true + ')', 
+                    '@SP',
+                    'A=M-1',
+                    'M=-1', 
+                    '(' + label_end + ')']
 
+        else: # unary op [neg, not]
             self.codelist += [
-                'D=0', 
-                '@' + label_2, 
-                '0;JMP', 
-                '(' + label_1 + ')', 
-                'D=-1', 
-                '(' + label_2 + ')']
-
-        # push back to the stack
-        self.writePushStack()
+                '@SP',
+                'A=M-1']
+            if command == 'neg':
+                self.codelist += ['M=-M']
+            else: # not
+                self.codelist += ['M=!M']
 
 
     def writePushPop(self, command, segment, index):
@@ -506,7 +550,7 @@ if __name__ == '__main__':
             c_type = parser.commandType()
 
             # Save the original vm code as comments
-            writer.writeComments(parser.cur_command)
+            #writer.writeComments(parser.cur_command)
             
             if c_type == C_ARITHMETIC:
                 writer.writeArithmetic(parser.arg1())
@@ -538,5 +582,8 @@ if __name__ == '__main__':
 
     # clean up the writer
     writer.close()
+
+    optimizer = Optimizer(outfile)
+    optimizer.run()
 
 
