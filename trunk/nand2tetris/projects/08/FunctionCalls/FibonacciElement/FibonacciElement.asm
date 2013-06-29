@@ -66,11 +66,11 @@ A=M
 (GLOBAL_COMMON_RETURN)
 @LCL
 D=M
-@R5
+@R13
 M=D
 @5
 D=A
-@R5
+@R13
 A=M-D
 D=M
 @R6
@@ -85,22 +85,22 @@ M=D
 D=M+1
 @SP
 M=D
-@R5
+@R13
 AM=M-1
 D=M
 @THAT
 M=D
-@R5
+@R13
 AM=M-1
 D=M
 @THIS
 M=D
-@R5
+@R13
 AM=M-1
 D=M
 @ARG
 M=D
-@R5
+@R13
 AM=M-1
 D=M
 @LCL
@@ -108,7 +108,9 @@ M=D
 @R6
 A=M
 0;JMP
+// function Main.fibonacci 0
 (Main.fibonacci)
+// push argument 0
 @ARG
 A=M
 D=M
@@ -116,8 +118,17 @@ D=M
 AM=M+1
 A=A-1
 M=D
+// push constant 2
 @2
 D=A
+@SP
+AM=M+1
+A=A-1
+M=D
+// lt
+@SP
+AM=M-1
+D=M
 @SP
 A=M-1
 D=M-D
@@ -133,6 +144,7 @@ M=0
 A=M-1
 M=-1
 (Main.0.end.lt)
+// if-goto IF_TRUE
 @0
 D=A
 @SP
@@ -155,9 +167,12 @@ AM=M-1
 D=M
 @Main.fibonacci$IF_TRUE
 D;JEQ
+// goto IF_FALSE
 @Main.fibonacci$IF_FALSE
 0;JMP
+// label IF_TRUE
 (Main.fibonacci$IF_TRUE)
+// push argument 0
 @ARG
 A=M
 D=M
@@ -165,9 +180,12 @@ D=M
 AM=M+1
 A=A-1
 M=D
+// return
 @GLOBAL_COMMON_RETURN
 0;JMP
+// label IF_FALSE
 (Main.fibonacci$IF_FALSE)
+// push argument 0
 @ARG
 A=M
 D=M
@@ -175,11 +193,21 @@ D=M
 AM=M+1
 A=A-1
 M=D
+// push constant 2
 @2
 D=A
 @SP
+AM=M+1
+A=A-1
+M=D
+// sub
+@SP
+AM=M-1
+D=M
+@SP
 A=M-1
 M=M-D
+// call Main.fibonacci 1
 @Main.fibonacci$L_Return.1
 D=A
 @R13
@@ -195,6 +223,7 @@ M=D
 @GLOBAL_COMMON_CALL
 0;JMP
 (Main.fibonacci$L_Return.1)
+// push argument 0
 @ARG
 A=M
 D=M
@@ -202,11 +231,21 @@ D=M
 AM=M+1
 A=A-1
 M=D
+// push constant 1
 @1
 D=A
 @SP
+AM=M+1
+A=A-1
+M=D
+// sub
+@SP
+AM=M-1
+D=M
+@SP
 A=M-1
 M=M-D
+// call Main.fibonacci 1
 @Main.fibonacci$L_Return.2
 D=A
 @R13
@@ -222,21 +261,26 @@ M=D
 @GLOBAL_COMMON_CALL
 0;JMP
 (Main.fibonacci$L_Return.2)
+// add
 @SP
 AM=M-1
 D=M
 @SP
 A=M-1
 M=M+D
+// return
 @GLOBAL_COMMON_RETURN
 0;JMP
+// function Sys.init 0
 (Sys.init)
+// push constant 4
 @4
 D=A
 @SP
 AM=M+1
 A=A-1
 M=D
+// call Main.fibonacci 1
 @Main.fibonacci$L_Return.3
 D=A
 @R13
@@ -252,6 +296,8 @@ M=D
 @GLOBAL_COMMON_CALL
 0;JMP
 (Main.fibonacci$L_Return.3)
+// label WHILE
 (Sys.init$WHILE)
+// goto WHILE
 @Sys.init$WHILE
 0;JMP

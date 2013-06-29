@@ -2,14 +2,12 @@
 @3030
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop pointer 0
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @THIS
 M=D
@@ -17,14 +15,12 @@ M=D
 @3040
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop pointer 1
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @THAT
 M=D
@@ -32,10 +28,9 @@ M=D
 @32
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop this 2
 @THIS
 D=M
@@ -44,8 +39,7 @@ D=D+A
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
@@ -54,10 +48,9 @@ M=D
 @46
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop that 6
 @THAT
 D=M
@@ -66,8 +59,7 @@ D=D+A
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
@@ -76,33 +68,23 @@ M=D
 @THIS
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // push pointer 1
 @THAT
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // add
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @SP
-M=M-1
-A=M
-A=M
-D=A+D
-@SP
-A=M
-M=D
-@SP
-M=M+1
+A=M-1
+M=M+D
 // push this 2
 @THIS
 D=M
@@ -110,25 +92,16 @@ D=M
 A=D+A
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // sub
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @SP
-M=M-1
-A=M
-A=M
-D=A-D
-@SP
-A=M
-M=D
-@SP
-M=M+1
+A=M-1
+M=M-D
 // push that 6
 @THAT
 D=M
@@ -136,25 +109,13 @@ D=M
 A=D+A
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // add
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @SP
-M=M-1
-A=M
-A=M
-D=A+D
-@SP
-A=M
-M=D
-@SP
-M=M+1
-(PointerTest.asm.end)
-@PointerTest.asm.end
-0;JMP
+A=M-1
+M=M+D

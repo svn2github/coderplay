@@ -154,11 +154,11 @@ class CodeWriter(object):
         self.codelist += [
             '@LCL', 
             'D=M',
-            '@R5',
-            'M=D',  # save as frame to R5
+            '@R13',
+            'M=D',  # save as frame to R13
             '@5',   # start calculting the return address
             'D=A',
-            '@R5',
+            '@R13',
             'A=M-D',
             'D=M',
             '@R6',
@@ -175,28 +175,28 @@ class CodeWriter(object):
             'M=D', 
 
             # restore caller's THAT
-            '@R5', 
+            '@R13', 
             'AM=M-1', 
             'D=M', 
             '@THAT', 
             'M=D', 
 
             # restore caller's THIS
-            '@R5', 
+            '@R13', 
             'AM=M-1', 
             'D=M', 
             '@THIS', 
             'M=D', 
 
             # restore caller's ARG
-            '@R5', 
+            '@R13', 
             'AM=M-1', 
             'D=M', 
             '@ARG', 
             'M=D', 
 
             # restore caller's LCL
-            '@R5', 
+            '@R13', 
             'AM=M-1', 
             'D=M', 
             '@LCL', 
@@ -550,7 +550,7 @@ if __name__ == '__main__':
             c_type = parser.commandType()
 
             # Save the original vm code as comments
-            #writer.writeComments(parser.cur_command)
+            writer.writeComments(parser.cur_command)
             
             if c_type == C_ARITHMETIC:
                 writer.writeArithmetic(parser.arg1())
@@ -585,5 +585,4 @@ if __name__ == '__main__':
 
     optimizer = Optimizer(outfile)
     optimizer.run()
-
 

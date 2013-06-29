@@ -2,14 +2,12 @@
 @10
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop local 0
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @LCL
 A=M
@@ -18,18 +16,16 @@ M=D
 @21
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // push constant 22
 @22
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop argument 2
 @ARG
 D=M
@@ -38,16 +34,14 @@ D=D+A
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
 M=D
 // pop argument 1
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @ARG
 A=M+1
@@ -56,10 +50,9 @@ M=D
 @36
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop this 6
 @THIS
 D=M
@@ -68,8 +61,7 @@ D=D+A
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
@@ -78,18 +70,16 @@ M=D
 @42
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // push constant 45
 @45
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop that 5
 @THAT
 D=M
@@ -98,8 +88,7 @@ D=D+A
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
@@ -112,8 +101,7 @@ D=D+A
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
@@ -122,14 +110,12 @@ M=D
 @510
 D=A
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // pop temp 6
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @11
 M=D
@@ -138,10 +124,9 @@ M=D
 A=M
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // push that 5
 @THAT
 D=M
@@ -149,49 +134,31 @@ D=M
 A=D+A
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // add
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @SP
-M=M-1
-A=M
-A=M
-D=A+D
-@SP
-A=M
-M=D
-@SP
-M=M+1
+A=M-1
+M=M+D
 // push argument 1
 @ARG
 A=M+1
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // sub
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @SP
-M=M-1
-A=M
-A=M
-D=A-D
-@SP
-A=M
-M=D
-@SP
-M=M+1
+A=M-1
+M=M-D
 // push this 6
 @THIS
 D=M
@@ -199,10 +166,9 @@ D=M
 A=D+A
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // push this 6
 @THIS
 D=M
@@ -210,63 +176,34 @@ D=M
 A=D+A
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // add
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @SP
-M=M-1
-A=M
-A=M
-D=A+D
-@SP
-A=M
-M=D
-@SP
-M=M+1
+A=M-1
+M=M+D
 // sub
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @SP
-M=M-1
-A=M
-A=M
-D=A-D
-@SP
-A=M
-M=D
-@SP
-M=M+1
+A=M-1
+M=M-D
 // push temp 6
 @11
 D=M
 @SP
-A=M
+AM=M+1
+A=A-1
 M=D
-@SP
-M=M+1
 // add
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @SP
-M=M-1
-A=M
-A=M
-D=A+D
-@SP
-A=M
-M=D
-@SP
-M=M+1
-(BasicTest.asm.end)
-@BasicTest.asm.end
-0;JMP
+A=M-1
+M=M+D
