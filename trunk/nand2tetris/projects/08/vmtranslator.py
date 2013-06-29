@@ -39,6 +39,63 @@ class CodeWriter(object):
             address = 'THIS' if index == 0 else 'THAT'
         return address
 
+    def writeCommonCall(self):
+        'Assume the return address is saved in R13 and numArgs is saved in R14'
+        self.codelist += [
+            '(GLOBAL_COMMON_CALL)',
+            '@R13',  # get the return address
+            'D=M']
+        self.writePushStack() 
+
+        # save LCL
+        self.codelist += [
+            '@LCL',
+            'D=M']
+        self.writePushStack() 
+
+        # save ARG
+        self.codelist += [
+            '@ARG',
+            'D=M']
+        self.writePushStack() 
+
+        # save THIS
+        self.codelist += [
+            '@THIS',
+            'D=M']
+        self.writePushStack() 
+
+        # save THAT
+        self.codelist += [
+            '@THAT',
+            'D=M']
+        self.writePushStack() 
+
+        # reposition ARG for callee
+        self.codelist += [
+            '@SP', 
+            'D=M', 
+            '@R14',  # get numArgs
+            'D=D-M', 
+            '@5', 
+            'D=D-A', 
+            '@ARG', 
+            'M=D']
+
+        # reposition LCL for callee
+        self.codelist += [
+            '@SP',
+            'D=M',
+            '@LCL',
+            'M=D']
+
+        # transfer control to callee
+        self.codelist += [
+            '@R15', # get the function address
+            'A=M',
+            '0;JMP']
+
+
     def writeComments(self, s):
         self.codelist += ['// ' + s]
 
@@ -50,8 +107,8 @@ class CodeWriter(object):
             'A=M',
             register + '=M']
 
-    def writePushStack(self):
-        'Assume the data to be pushed is already in D register'
+    def writePushStack(self, register='D'):
+        'Push the data from register to stack'
         self.codelist += [
             '@SP',
             'A=M', 
@@ -303,54 +360,18 @@ class CodeWriter(object):
         # save return address to stack
         self.codelist += [
             '@' + returnLabel,
-            'D=A']
-        self.writePushStack() 
-
-        # save LCL
-        self.codelist += [
-            '@LCL',
-            'D=M']
-        self.writePushStack() 
-
-        # save ARG
-        self.codelist += [
-            '@ARG',
-            'D=M']
-        self.writePushStack() 
-
-        # save THIS
-        self.codelist += [
-            '@THIS',
-            'D=M']
-        self.writePushStack() 
-
-        # save THAT
-        self.codelist += [
-            '@THAT',
-            'D=M']
-        self.writePushStack() 
-
-        # reposition ARG for callee
-        self.codelist += [
-            '@SP', 
-            'D=M', 
+            'D=A',
+            '@R13', # save return address to R13
+            'M=D', 
             '@' + str(numArgs), 
-            'D=D-A', 
-            '@5', 
-            'D=D-A', 
-            '@ARG', 
-            'M=D']
-
-        # reposition LCL for callee
-        self.codelist += [
-            '@SP',
-            'D=M',
-            '@LCL',
-            'M=D']
-
-        # transfer control to callee
-        self.codelist += [
-            '@' + functionName, 
+            'D=A', 
+            '@R14', # save numArgs to R14
+            'M=D', 
+            '@' + functionName,
+            'D=A', 
+            '@R15', # save the function address to R15
+            'M=D',
+            '@GLOBAL_COMMON_CALL',
             '0;JMP']
 
         # the return address
@@ -466,6 +487,7 @@ if __name__ == '__main__':
 
     writer = CodeWriter(outfile)
     writer.writeInit()
+    writer.writeCommonCall()
 
     for file in filelist:
         parser = Parser(file)
