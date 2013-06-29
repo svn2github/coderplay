@@ -40,7 +40,12 @@ class CodeWriter(object):
         return address
 
     def writeCommonCall(self):
-        'Assume the return address is saved in R13 and numArgs is saved in R14'
+        '''
+        A common builtin asm function to take care of all the chores before 
+        calling a user defined function.
+        Assume the return address is saved in R13, numArgs is saved in R14,
+        function address in R15.
+        '''
         self.codelist += [
             '(GLOBAL_COMMON_CALL)',
             '@R13',  # get the return address
@@ -95,6 +100,67 @@ class CodeWriter(object):
             'A=M',
             '0;JMP']
 
+    def writeCommonReturn(self):
+        '''
+        A builtin asm function to take care all the chores to before return
+        from an user defined function.
+        '''
+        self.codelist += ['(GLOBAL_COMMON_RETURN)']
+        self.codelist += [
+            '@LCL', 
+            'D=M',
+            '@R5',
+            'M=D',  # save as frame to R5
+            '@5',   # start calculting the return address
+            'D=A',
+            '@R5',
+            'A=M-D',
+            'D=M',
+            '@R6',
+            'M=D']  # save the return address to R6
+
+        # Put the return value
+        self.writePushPop(C_POP, 'argument', 0)
+
+        self.codelist += [
+            # restore caller's SP
+            '@ARG', 
+            'D=M+1', 
+            '@SP', 
+            'M=D', 
+
+            # restore caller's THAT
+            '@R5', 
+            'AM=M-1', 
+            'D=M', 
+            '@THAT', 
+            'M=D', 
+
+            # restore caller's THIS
+            '@R5', 
+            'AM=M-1', 
+            'D=M', 
+            '@THIS', 
+            'M=D', 
+
+            # restore caller's ARG
+            '@R5', 
+            'AM=M-1', 
+            'D=M', 
+            '@ARG', 
+            'M=D', 
+
+            # restore caller's LCL
+            '@R5', 
+            'AM=M-1', 
+            'D=M', 
+            '@LCL', 
+            'M=D', 
+
+            # go to retAddress
+            '@R6', 
+            'A=M', 
+            '0;JMP']
 
     def writeComments(self, s):
         self.codelist += ['// ' + s]
@@ -291,67 +357,8 @@ class CodeWriter(object):
 
     def writeReturn(self):
         self.codelist += [
-            '@LCL', 
-            'D=M',
-            '@R5',
-            'M=D',  # save as frame
-            '@5',   # start calculting the return address
-            'D=A',
-            '@R5',
-            'A=M-D',
-            'D=M',
-            '@R6',
-            'M=D']  # the return address
-
-        # Put the return value
-        self.writePushPop(C_POP, 'argument', 0)
-
-        self.codelist += [
-            # restore caller's SP
-            '@ARG', 
-            'D=M+1', 
-            '@SP', 
-            'M=D', 
-
-            # restore caller's THAT
-            '@R5', 
-            'A=M-1', 
-            'D=M', 
-            '@THAT', 
-            'M=D', 
-
-            # restore caller's THIS
-            '@R5', 
-            'D=M', 
-            '@2', 
-            'A=D-A', 
-            'D=M', 
-            '@THIS', 
-            'M=D', 
-
-            # restore caller's ARG
-            '@R5', 
-            'D=M', 
-            '@3', 
-            'A=D-A', 
-            'D=M', 
-            '@ARG', 
-            'M=D', 
-
-            # restore caller's LCL
-            '@R5', 
-            'D=M', 
-            '@4', 
-            'A=D-A', 
-            'D=M', 
-            '@LCL', 
-            'M=D', 
-
-            # go to retAddress
-            '@R6', 
-            'A=M', 
+            '@GLOBAL_COMMON_RETURN',
             '0;JMP']
-
 
     def writeCall(self, functionName, numArgs):
         returnLabel = functionName + '$L_Return.' + str(self.label_counter)
@@ -488,6 +495,7 @@ if __name__ == '__main__':
     writer = CodeWriter(outfile)
     writer.writeInit()
     writer.writeCommonCall()
+    writer.writeCommonReturn()
 
     for file in filelist:
         parser = Parser(file)
