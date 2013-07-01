@@ -10,13 +10,23 @@ def writeToken(outs, tType, tValue, indent=0):
     elif tValue == SYM_AND:
         tValue ='&amp;'
 
+    # Set for the correct tType and tValue
+    if tType == T_INT_CONST:
+        tValue = int(tValue)
+    elif tType == T_STRING_CONST: 
+        tValue = tValue[1:-1] # strip double quotes
+
     # output to file
-    outs('  '*indent + '<' + tType + '> ' + str(tValue) + ' </' + tType + '>\n')
+    outs.write('  '*indent + '<' + tType + '> ' + str(tValue) 
+            + ' </' + tType + '>\n')
 
 
 class CompilationEngine(object):
 
-    def __init__(self, tokenizer, outfile):
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer # input
+        self.className = self.tokenizer.fileStub
+        self.outs = open(self.className + '.xml', 'w')
         self.indent = 0
 
     def writeStruct(self, struct, close=False):
@@ -39,9 +49,9 @@ class CompilationEngine(object):
         else:
             return True if self.tokenizer.cur_value == tValue else False
 
-    def compileClass():
+    def compileClass(self):
         success = self.tokenizer.advance()  # get the 1st token
-        if not success:
+        if not success: # if the file is empty
             return
 
         # Starting match the class struct
@@ -49,7 +59,7 @@ class CompilationEngine(object):
         self.indent += 1
 
         self.match(T_KEYWORD, KW_CLASS) # match and get next token
-        self.match(T_IDENTIFIER)
+        self.match(T_IDENTIFIER, self.className)
         self.match(T_SYMBOL, SYM_L_CURLY)
 
         # Try to figure out what struct comes next
@@ -57,11 +67,15 @@ class CompilationEngine(object):
             if self.nextTokenIsType(T_KEYWORD) \
                     and self.nextTokenIsValue([KW_STATIC, KW_FIELD]):
                 self.compileClassVarDec()
+            else:
+                break
            
         while True: # subroutines for the class
             if self.nextTokenIsType(T_KEYWORD) \
-                    and self.nextTokenIsValue([KW_CONSTRUCTOR, KW_FUNCTION, KW_METHOD])
+                    and self.nextTokenIsValue([KW_CONSTRUCTOR, KW_FUNCTION, KW_METHOD]):
                 self.compileSubroutine()
+            else:
+                break
 
         # End of the class definition
         self.match(T_SYMBOL, SYM_R_CURLY)
@@ -69,7 +83,7 @@ class CompilationEngine(object):
         self.indent -= 1
         self.writeStruct('class', True)
 
-    def compileClassVarDec():
+    def compileClassVarDec(self):
 
         # start parsing 
         self.writeStruct('classVarDec')
@@ -84,36 +98,256 @@ class CompilationEngine(object):
 
         while self.nextTokenIsValue(SYM_COMMA): # (',' varName)* 
             self.match(T_SYMBOL, SYM_COMMA)
-            self.matched(T_IDENTIFIER)
+            self.match(T_IDENTIFIER)
 
         # End of class variable declaration
         self.match(T_SYMBOL, SYM_SEMICOLON) # ';'
-
+        # closing
         self.indent -= 1
         self.writeStruct('classVarDec', True)
 
-    def compileSubroutine():
+    def compileSubroutine(self):
+        self.writeStruct('subroutineDec')
+        self.indent += 1
+        self.match(T_KEYWORD, [KW_CONSTRUCTOR, KW_FUNCTION, KW_METHOD])
+        if self.nextTokenIsType(T_KEYWORD):
+            self.match(T_KEYWORD, [KW_VOID, KW_INT, KW_CHAR, KW_BOOLEAN])
+        else:
+            self.match(T_IDENTIFIER)
+        self.match(T_IDENTIFIER) # subroutineName
+        self.match(T_SYMBOL, SYM_L_PAREN)
+        self.compileParameterList() # parameter list
+        self.match(T_SYMBOL, SYM_R_PAREN)
+        # subroutine body
+        self.compileSubroutineBody()
+        # closing
+        self.indent -= 1
+        self.writeStruct('subroutineDec', True)
 
-    def compileParameterList():
+    def compileParameterList(self):
+        self.writeStruct('parameterList')
+        self.indent += 1
+        # check if empty parameter list
+        if not self.nextTokenIsValue(SYM_R_PAREN):
+            # type
+            if self.nextTokenIsType(T_KEYWORD):
+                self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
+            else:
+                self.match(T_IDENTIFIER)
+            self.match(T_IDENTIFIER) # varName
+            while self.nextTokenIsValue(SYM_COMMA):
+                self.match(T_SYMBOL, SYM_COMMA) # ',' type varName
+                if self.nextTokenIsType(T_KEYWORD):
+                    self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
+                else:
+                    self.match(T_IDENTIFIER)
+                self.match(T_IDENTIFIER)
+        self.indent -= 1
+        self.writeStruct('parameterList', True)
 
-    def compileVarDec():
 
-    def compileStatements():
+    def compileSubroutineBody(self):
+        self.writeStruct('subroutineBody')
+        self.indent += 1
+        self.match(T_SYMBOL, SYM_L_CURLY)
+        while self.nextTokenIsValue(KW_VAR):
+            self.compileVarDec()
+        self.compileStatements()
+        self.match(T_SYMBOL, SYM_R_CURLY)
+        self.indent -= 1
+        self.writeStruct('subroutineBody', True)
 
-    def compileDo():
 
-    def compileLet():
+    def compileVarDec(self):
+        self.writeStruct('varDec')
+        self.indent += 1
+        self.match(T_KEYWORD, KW_VAR) # 'var'
+        # type
+        if self.nextTokenIsType(T_KEYWORD):
+            self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
+        else:
+            self.match(T_IDENTIFIER)
+        self.match(T_IDENTIFIER) # varName
+        while self.nextTokenIsValue(SYM_COMMA):
+            self.match(T_SYMBOL, SYM_COMMA) # ',' varName
+            self.match(T_IDENTIFIER)
+        self.match(T_SYMBOL, SYM_SEMICOLON)
+        self.indent -= 1
+        self.writeStruct('varDec', True)
 
-    def compileWhile():
 
-    def compileReturn():
+    def compileStatements(self):
+        self.writeStruct('statements')
+        self.indent += 1
 
-    def compileIf():
+        while True:
+            if self.nextTokenIsValue(KW_LET):
+                self.compileLet()
+            elif self.nextTokenIsValue(KW_IF):
+                self.compileIf()
+            elif self.nextTokenIsValue(KW_WHILE):
+                self.compileWhile()
+            elif self.nextTokenIsValue(KW_DO):
+                self.compileDo()
+            elif self.nextTokenIsValue(KW_RETURN):
+                self.compileReturn()
+            else:
+                break
 
-    def compileTerm():
+        self.indent -= 1
+        self.writeStruct('statements', True)
 
-    def compileExpressionList():
 
+    def compileDo(self):
+        self.writeStruct('doStatement')
+        self.indent += 1
+        self.match(T_KEYWORD, KW_DO)
+        # subroutine call
+        self.match(T_IDENTIFIER) # class or function name
+        self.compileSubroutineCall()
+        self.match(T_SYMBOL, SYM_SEMICOLON)
+        self.indent -= 1
+        self.writeStruct('doStatement', True)
+
+
+    def compileLet(self):
+        self.writeStruct('letStatement')
+        self.indent += 1
+        self.match(T_KEYWORD, KW_LET)
+        self.match(T_IDENTIFIER)
+        if self.nextTokenIsValue(SYM_L_BRACKET): # array element
+            self.match(T_SYMBOL, SYM_L_BRACKET)
+            self.compileExpression()
+            self.match(T_SYMBOL, SYM_R_BRACKET)
+        self.match(T_SYMBOL, SYM_EUQAL)
+        self.compileExpression()
+        self.match(T_SYMBOL, SYM_SEMICOLON)
+        self.indent -= 1
+        self.writeStruct('letStatement', True)
+
+
+    def compileWhile(self):
+        self.writeStruct('whileStatement')
+        self.indent += 1
+        self.match(T_KEYWORD, KW_WHILE)
+        self.match(T_SYMBOL, SYM_L_PAREN)
+        self.compileExpression()
+        self.match(T_SYMBOL, SYM_R_PAREN)
+        self.match(T_SYMBOL, SYM_L_CURLY)
+        self.compileStatements()
+        self.match(T_SYMBOL, SYM_R_CURLY)
+        self.indent -= 1
+        self.writeStruct('whileStatement', True)
+
+
+    def compileReturn(self):
+        self.writeStruct('returnStatement')
+        self.indent += 1
+        self.match(T_KEYWORD, KW_RETURN)
+        if not self.nextTokenIsValue(SYM_SEMICOLON):
+            self.compileExpression()
+        self.match(T_SYMBOL, SYM_SEMICOLON)
+        self.indent -= 1
+        self.writeStruct('returnStatement', True)
+
+
+    def compileIf(self):
+        self.writeStruct('ifStatement')
+        self.indent += 1
+        self.match(T_KEYWORD, KW_IF)
+        self.match(T_SYMBOL, SYM_L_PAREN)
+        self.compileExpression()
+        self.match(T_SYMBOL, SYM_R_PAREN)
+        self.match(T_SYMBOL, SYM_L_CURLY)
+        self.compileStatements()
+        self.match(T_SYMBOL, SYM_R_CURLY)
+        if self.nextTokenIsValue(KW_ELSE):
+            self.match(T_KEYWORD, KW_ELSE)
+            self.match(T_SYMBOL, SYM_L_CURLY)
+            self.compileStatements()
+            self.match(T_SYMBOL, SYM_R_CURLY)
+        self.indent -= 1
+        self.writeStruct('ifStatement', True)
+
+
+    def compileExpression(self):
+        self.writeStruct('expression')
+        self.indent += 1
+        self.compileTerm()
+        while True:
+            if self.nextTokenIsValue(SYM_ADD) or self.nextTokenIsValue(SYM_SUB) \
+                    or self.nextTokenIsValue(SYM_MUL) or self.nextTokenIsValue(SYM_DIV) \
+                    or self.nextTokenIsValue(SYM_AND) or self.nextTokenIsValue(SYM_OR) \
+                    or self.nextTokenIsValue(SYM_LT) or self.nextTokenIsValue(SYM_GT) \
+                    or self.nextTokenIsValue(SYM_EUQAL):
+                self.match(T_SYMBOL)
+                self.compileTerm()
+            else:
+                break
+        self.indent -= 1
+        self.writeStruct('expression', True)
+
+
+    def compileTerm(self):
+        self.writeStruct('term')
+        self.indent += 1
+
+        # leading unary op
+        if self.nextTokenIsValue(SYM_SUB) or self.nextTokenIsValue(SYM_NOT):
+            self.match(T_SYMBOL)
+            self.compileTerm()
+
+        else: # no leading unary op
+            if self.nextTokenIsType(T_INT_CONST):
+                self.match(T_INT_CONST)
+            elif self.nextTokenIsType(T_STRING_CONST):
+                self.match(T_STRING_CONST)
+            elif self.nextTokenIsType(T_KEYWORD):
+                self.match(T_KEYWORD, [KW_TRUE, KW_FALSE, KW_NULL, KW_THIS])
+            elif self.nextTokenIsType(T_IDENTIFIER):
+                self.match(T_IDENTIFIER)
+                if self.nextTokenIsValue(SYM_L_BRACKET): # array element
+                    self.match(T_SYMBOL, SYM_L_BRACKET)
+                    self.compileExpression()
+                    self.match(T_SYMBOL, SYM_R_BRACKET)
+                elif self.nextTokenIsValue(SYM_DOT) or self.nextTokenIsValue(SYM_L_PAREN): # class.method or function
+                    self.compileSubroutineCall()
+            elif self.nextTokenIsValue(SYM_L_PAREN): # (expression)
+                self.match(T_SYMBOL, SYM_L_PAREN)
+                self.compileExpression()
+                self.match(T_SYMBOL, SYM_R_PAREN)
+
+        self.indent -= 1
+        self.writeStruct('term', True)
+
+
+    def compileExpressionList(self):
+        self.writeStruct('expressionList')
+        self.indent += 1
+        # check if empty expression list
+        if not self.nextTokenIsValue(SYM_R_PAREN):
+            self.compileExpression()
+            while self.nextTokenIsValue(SYM_COMMA):
+                self.match(T_SYMBOL, SYM_COMMA)
+                self.compileExpression()
+        self.indent -= 1
+        self.writeStruct('expressionList', True)
+
+
+    def compileSubroutineCall(self):
+        '''
+        Parse for either a class.method call or a simple function call.
+        '''
+        if self.nextTokenIsValue(SYM_DOT): # class.method
+            self.match(T_SYMBOL, SYM_DOT)
+            self.match(T_IDENTIFIER)
+        self.match(T_SYMBOL, SYM_L_PAREN)
+        self.compileExpressionList()
+        self.match(T_SYMBOL, SYM_R_PAREN)
+
+
+    def close(self):
+        self.outs.close()
 
 
 T_WHITE           = 'white'
@@ -183,8 +417,8 @@ class JackTokenizer(object):
         f = open(infile)
         self.iStream = f.read()
         f.close()
-        outfile = infile[0:infile.rindex('.')] + 'T.xml'
-        self.outs = open(outfile, 'w')
+        self.fileStub = infile[0:infile.rindex('.')]
+        self.outs = open(self.fileStub + 'T.xml', 'w')
         self.outs.write('<tokens>\n')
         self.pos = 0 # position in the iStream
         # The currently matched token value and type
@@ -195,33 +429,34 @@ class JackTokenizer(object):
         return True if self.pos <= len(self.iStream)-1 else False
 
     def advance(self):
-        if not self.hasMoreTokens():
-            self.cur_type = None
-            self.cur_value = None
-            return False
+        '''
+        Read next token from the stream and set it as the current token.
+        '''
+        # Loop through the patterns to find a match
+        while self.hasMoreTokens():
+            matched = None
+            for regex, tType in pattern_recognizer:
+                matched = regex.match(self.iStream, self.pos)
+                if matched: # if something is matched
+                    tValue = matched.group(0)
+                    self.pos += len(tValue)
+                    if tType == T_WHITE or tType == T_COMMENT: # ignore white/comments
+                        break
+                    # Set for the correct tType and tValue
+                    self.cur_type = tType
+                    self.cur_value = tValue
+                    writeToken(self.outs, self.cur_type, self.cur_value)
+                    return True
+            if matched is None:
+                sys.stderr.write('Unrecognized charater: ' + self.iStream[self.pos] + '\n')
+                sys.exit(1)
+            # if we reach here thats because we got a white
 
-        for regex, tType in pattern_recognizer:
-            matched = regex.match(self.iStream, self.pos)
-            if matched: # if something is matched
-                tValue = matched.group(0)
-                self.pos += len(tValue)
-                if tType == T_WHITE or tType == T_COMMENT: # ignore white/comments
-                    continue
-                # Set for the correct tType and tValue
-                self.cur_type, self.cur_value = correctValueByType(tType, tValue)
-                writeToken(self.outs, self.cur_type, self.cur_value)
-                return True
-
-        sys.stderr.write('Unrecognized charater: ', self.iStream[self.pos] + '\n')
+        # if we reach here, we are at the end of the stream
+        self.cur_type = None
+        self.cur_value = None
         return False
 
-    def correctValueByType(self, tType, tValue):
-        # Set for the correct tType and tValue
-        if tType == T_INT_CONST:
-            tValue = int(tValue)
-        elif tType == T_STRING_CONST: 
-            tValue = tValue[1:-1] # strip double quotes
-        return tType, tValue
 
     def tokenType(self):
         return self.cur_type
@@ -242,24 +477,36 @@ class JackTokenizer(object):
         return self.cur_value[1:-1] # strip the double quotes
 
     def match(self, tType, tValue=None):
+        '''
+        Match the current token against the given token type and value.
+        Report error if not match.
+        '''
+        # Check for the end of file
         if self.cur_type is None and self.cur_value is None:
-            sys.stderr.write('End of file deteced. Expected token type: ' + str(tType) + '\n')
+            sys.stderr.write('End of file deteced. Expected token type: ' 
+                    + str(tType) + '\n')
+            sys.exit(1)
 
         # Trying to match multiple token types
         if type(tType) != list:
             tType = [tType]
         if self.cur_type not in tType:
             sys.stderr.write('Expected token type: ' + str(tType) + '\n')
+            sys.exit(1)
 
         # Trying to match multiple token values
         if tValue:
             if type(tValue) != list:
                 tValue = [tValue]
             if self.cur_value not in tValue:
-            sys.stderr.write('Expected token value: ' + str(tValue) + '\n')
+                sys.stderr.write('Expected token value: ' + str(tValue) + '\n')
+                sys.exit(1)
 
+        # The actual matched type and value
         tType = self.cur_type
         tValue = self.cur_value
+
+        print tType, ' - ', tValue
 
         # Everything is matched for the current token, so get the next token
         self.advance() 
@@ -276,6 +523,7 @@ def usage(prog):
     sys.stderr.write('usage: %s [filename]\n' % prog)
     sys.exit(0)
 
+
 if __name__ == '__main__':
     if len(sys.argv) > 2:
         usage(sys.argv[0])
@@ -290,14 +538,15 @@ if __name__ == '__main__':
             if file.endswith(".jack"):
                 filelist.append(file)
 
-
+    # process files
     for file in filelist:
         tokenizer = JackTokenizer(file)
+        compiler = CompilationEngine(tokenizer)
 
-        while tokenizer.hasMoreTokens():
-            tokenizer.advance()
+        # start parsing from the top class
+        compiler.compileClass()
 
-
-
+        # wrap up files
         tokenizer.close()
+        compiler.close()
 
