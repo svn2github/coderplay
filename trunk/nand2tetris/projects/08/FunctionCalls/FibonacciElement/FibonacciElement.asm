@@ -2,7 +2,7 @@
 D=A
 @SP
 M=D
-@Sys.init$L_Return.0
+@Sys.init$L_RETURN.0
 D=A
 @R13
 M=D
@@ -16,7 +16,7 @@ D=A
 M=D
 @GLOBAL_COMMON_CALL
 0;JMP
-(Sys.init$L_Return.0)
+(Sys.init$L_RETURN.0)
 (GLOBAL_COMMON_CALL)
 @R13
 D=M
@@ -108,9 +108,7 @@ M=D
 @R6
 A=M
 0;JMP
-// function Main.fibonacci 0
 (Main.fibonacci)
-// push argument 0
 @ARG
 A=M
 D=M
@@ -118,61 +116,48 @@ D=M
 AM=M+1
 A=A-1
 M=D
-// push constant 2
 @2
 D=A
 @SP
-AM=M+1
-A=A-1
-M=D
-// lt
-@SP
-AM=M-1
-D=M
-@SP
 A=M-1
 D=M-D
-@Main.0.true.lt
+@Main.fibonacci$0.TRUE.lt
 D;JLT
 @SP
 A=M-1
 M=0
-@Main.0.end.lt
+@Main.fibonacci$0.END.lt
 0;JMP
-(Main.0.true.lt)
+(Main.fibonacci$0.TRUE.lt)
 @SP
 A=M-1
 M=-1
-(Main.0.end.lt)
-// if-goto IF_TRUE
+(Main.fibonacci$0.END.lt)
 @0
 D=A
 @SP
 A=M-1
 D=M-D
-@Main.1.true.eq
+@Main.fibonacci$1.TRUE.eq
 D;JEQ
 @SP
 A=M-1
 M=0
-@Main.1.end.eq
+@Main.fibonacci$1.END.eq
 0;JMP
-(Main.1.true.eq)
+(Main.fibonacci$1.TRUE.eq)
 @SP
 A=M-1
 M=-1
-(Main.1.end.eq)
+(Main.fibonacci$1.END.eq)
 @SP
 AM=M-1
 D=M
 @Main.fibonacci$IF_TRUE
 D;JEQ
-// goto IF_FALSE
 @Main.fibonacci$IF_FALSE
 0;JMP
-// label IF_TRUE
 (Main.fibonacci$IF_TRUE)
-// push argument 0
 @ARG
 A=M
 D=M
@@ -180,12 +165,9 @@ D=M
 AM=M+1
 A=A-1
 M=D
-// return
 @GLOBAL_COMMON_RETURN
 0;JMP
-// label IF_FALSE
 (Main.fibonacci$IF_FALSE)
-// push argument 0
 @ARG
 A=M
 D=M
@@ -193,22 +175,12 @@ D=M
 AM=M+1
 A=A-1
 M=D
-// push constant 2
 @2
 D=A
 @SP
-AM=M+1
-A=A-1
-M=D
-// sub
-@SP
-AM=M-1
-D=M
-@SP
 A=M-1
 M=M-D
-// call Main.fibonacci 1
-@Main.fibonacci$L_Return.1
+@Main.fibonacci$L_RETURN.1
 D=A
 @R13
 M=D
@@ -222,8 +194,7 @@ D=A
 M=D
 @GLOBAL_COMMON_CALL
 0;JMP
-(Main.fibonacci$L_Return.1)
-// push argument 0
+(Main.fibonacci$L_RETURN.1)
 @ARG
 A=M
 D=M
@@ -231,22 +202,12 @@ D=M
 AM=M+1
 A=A-1
 M=D
-// push constant 1
 @1
 D=A
 @SP
-AM=M+1
-A=A-1
-M=D
-// sub
-@SP
-AM=M-1
-D=M
-@SP
 A=M-1
 M=M-D
-// call Main.fibonacci 1
-@Main.fibonacci$L_Return.2
+@Main.fibonacci$L_RETURN.2
 D=A
 @R13
 M=D
@@ -260,28 +221,23 @@ D=A
 M=D
 @GLOBAL_COMMON_CALL
 0;JMP
-(Main.fibonacci$L_Return.2)
-// add
+(Main.fibonacci$L_RETURN.2)
 @SP
 AM=M-1
 D=M
 @SP
 A=M-1
 M=M+D
-// return
 @GLOBAL_COMMON_RETURN
 0;JMP
-// function Sys.init 0
 (Sys.init)
-// push constant 4
 @4
 D=A
 @SP
 AM=M+1
 A=A-1
 M=D
-// call Main.fibonacci 1
-@Main.fibonacci$L_Return.3
+@Main.fibonacci$L_RETURN.3
 D=A
 @R13
 M=D
@@ -295,9 +251,7 @@ D=A
 M=D
 @GLOBAL_COMMON_CALL
 0;JMP
-(Main.fibonacci$L_Return.3)
-// label WHILE
+(Main.fibonacci$L_RETURN.3)
 (Sys.init$WHILE)
-// goto WHILE
 @Sys.init$WHILE
 0;JMP

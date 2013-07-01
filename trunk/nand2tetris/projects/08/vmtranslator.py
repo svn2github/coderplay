@@ -64,12 +64,11 @@ class CodeWriter(object):
         self.fname = None
         self.codelist = []
         self.label_counter = 0
-        self.bool_counter = None
+        self.bool_counter = 0
         self.functionName = 'null'
 
     def setFileName(self, filename):
         self.fname = filename # the file to process, prefix for variables
-        self.bool_counter = 0
 
     def getAddress(self, segment, index):
         if segment == 'local':
@@ -241,8 +240,8 @@ class CodeWriter(object):
             elif command == 'or':
                 self.codelist += ['M=D|M']
             else: # logical operator
-                label_true = self.fname + '.' + str(self.bool_counter) + '.true.' + command
-                label_end = self.fname + '.' + str(self.bool_counter) + '.end.' + command
+                label_true = self.functionName + '$' + str(self.bool_counter) + '.TRUE.' + command
+                label_end = self.functionName + '$' + str(self.bool_counter) + '.END.' + command
                 self.bool_counter += 1
                 self.codelist += [
                     'D=M-D', 
@@ -368,13 +367,11 @@ class CodeWriter(object):
 
 
     def writeLabel(self, label):
-        if self.functionName:
-            label = self.functionName + '$' + label
+        label = self.functionName + '$' + label
         self.codelist += ['(' + label + ')']
 
     def writeGoto(self, label):
-        if self.functionName:
-            label = self.functionName + '$' + label
+        label = self.functionName + '$' + label
         self.codelist += [
             '@' + label, 
             '0;JMP']
@@ -386,18 +383,17 @@ class CodeWriter(object):
         # if test==0 we have -1 on stack top, so no jump
         # thus jump if a 0 on stack top
         self.writePopStack() # get the stack top to D register
-        if self.functionName:
-            label = self.functionName + '$' + label
+        label = self.functionName + '$' + label
         self.codelist += [
             '@' + label,
             'D;JEQ'] 
 
     def writeFunction(self, functionName, numLocals):
+        self.functionName = functionName
         self.codelist += ['(' + functionName + ')']
         for ii in range(numLocals):
             self.writePushPop(C_PUSH, 'constant', 0)
             self.writePushPop(C_POP, 'local', ii)
-        self.functionName = functionName
 
     def writeReturn(self):
         self.codelist += [
@@ -405,7 +401,7 @@ class CodeWriter(object):
             '0;JMP']
 
     def writeCall(self, functionName, numArgs):
-        returnLabel = functionName + '$L_Return.' + str(self.label_counter)
+        returnLabel = functionName + '$L_RETURN.' + str(self.label_counter)
         self.label_counter += 1
 
         # save return address to stack
@@ -550,7 +546,7 @@ if __name__ == '__main__':
             c_type = parser.commandType()
 
             # Save the original vm code as comments
-            writer.writeComments(parser.cur_command)
+            #writer.writeComments(parser.cur_command)
             
             if c_type == C_ARITHMETIC:
                 writer.writeArithmetic(parser.arg1())
@@ -585,4 +581,7 @@ if __name__ == '__main__':
 
     optimizer = Optimizer(outfile)
     optimizer.run()
+    # Can still optimize
+    #   push constant 0 or 1
+    #   function call with 0 argument
 
