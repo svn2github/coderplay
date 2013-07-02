@@ -2,6 +2,118 @@ import sys, os
 import re
 
 
+# The kind of variables
+STATIC  = 'static'
+FIELD   = 'field'
+ARG     = 'argument'
+VAR     = 'var'
+
+class SymbolTable(object):
+
+    def __init__(self):
+        self.class_scope = {} # class scope
+        self.sub_scope = {} # subroutine scope
+        self.nStatic = 0
+        self.nField = 0
+        self.nArg = 0
+        self.nVar = 0
+
+    def startSubroutine(self):
+        self.sub_scope = {}
+        self.nArg = 0
+        self.nVar = 0
+
+    def define(self, name, type, kind):
+        if self.indexOf(name) is not None:
+            sys.stderr.write('Duplicate declaration of variable: ' + name + '\n')
+            sys.exit(1)
+
+        if kind == STATIC:
+            idx = self.nStatic
+            self.class_scope[name] = [type, kind, idx]
+            self.nStatic += 1
+        elif kind == FIELD:
+            idx = self.nField
+            self.class_scope[name] = [type, kind, idx]
+            self.nField += 1
+        elif kind == ARG:
+            idx = self.nArg
+            self.sub_scope[name] = [type, kind, idx]
+            self.nArg += 1
+        else: # kind == VAR
+            idx = self.nVar
+            self.sub_scope[name] = [type, kind, idx]
+            self.nVar += 1
+
+    def varCount(self, kind):
+        if kind == STATIC:
+            return self.nStatic
+        elif kind == FIELD:
+            return self.nField
+        elif kind == ARG:
+            return self.nArg
+        else: #kind == VAR
+            return self.nVar
+
+    def kindOf(self, name):
+        if self.class_scope.has_key(name):
+            return self.class_scope[name][1]
+        elif self.sub_scope.has_key(name):
+            return self.sub_scope[name][1]
+        else:
+            return None
+
+    def typeOf(self, name):
+        if self.class_scope.has_key(name):
+            return self.class_scope[name][0]
+        elif self.sub_scope.has_key(name):
+            return self.sub_scope[name][0]
+        else:
+            return None
+
+    def indexOf(self, name):
+        if self.class_scope.has_key(name):
+            return self.class_scope[name][2]
+        elif self.sub_scope.has_key(name):
+            return self.sub_scope[name][2]
+        else:
+            return None
+
+
+class VMWriter(object):
+
+    def __init__(self):
+        pass
+
+    def writePush(self, segment, index):
+        pass
+
+    def writePop(self, segment, index):
+        pass
+
+    def writeArithmetic(self, command):
+        pass
+
+    def writeLabel(self, label):
+        pass
+
+    def writeGoto(self, label):
+        pass
+
+    def writeIf(self, label):
+        pass
+
+    def writeCall(self, name, nArgs):
+        pass
+
+    def writeFunction(self, name, nLocals):
+        pass
+
+    def writeReturn(self):
+        pass
+
+    def close(self):
+        pass
 
 
 
@@ -32,8 +144,9 @@ def writeStruct(outs, struct, indent=0, close=False):
 
 class CompilationEngine(object):
 
-    def __init__(self, tokenizer):
+    def __init__(self, tokenizer, symtab):
         self.tokenizer = tokenizer # input
+        self.symtab = symtab
         self.className = self.tokenizer.fileStub
         self.outs = open(self.className + '.xml', 'w')
         self.indent = 0
@@ -44,6 +157,7 @@ class CompilationEngine(object):
         '''
         tType, tValue = self.tokenizer.match(tType, tValue)
         writeToken(self.outs, tType, tValue, self.indent)
+        return tType, tValue
 
     def nextTokenIsType(self, tType):
         return True if self.tokenizer.cur_type == tType else False
@@ -93,17 +207,22 @@ class CompilationEngine(object):
         # start parsing 
         writeStruct(self.outs, 'classVarDec', self.indent)
         self.indent += 1
-        self.match(T_KEYWORD, [KW_STATIC, KW_FIELD]) # static, field
+        _, kind = self.match(T_KEYWORD, [KW_STATIC, KW_FIELD]) # static, field
         # type | className
         if self.nextTokenIsType(T_KEYWORD):
-            self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
+            _, type = self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
         else:
-            self.match(T_IDENTIFIER)
-        self.match(T_IDENTIFIER) # varName
+            _, type = self.match(T_IDENTIFIER)
+        _, name = self.match(T_IDENTIFIER) # varName
 
+        # add to the symbol table
+        self.symtab.define(name, type, kind)
+
+        # list of vars
         while self.nextTokenIsValue(SYM_COMMA): # (',' varName)* 
             self.match(T_SYMBOL, SYM_COMMA)
-            self.match(T_IDENTIFIER)
+            _, name = self.match(T_IDENTIFIER)
+            self.symtab.define(name, type, kind) # add to symbol table
 
         # End of class variable declaration
         self.match(T_SYMBOL, SYM_SEMICOLON) # ';'
@@ -136,17 +255,21 @@ class CompilationEngine(object):
         if not self.nextTokenIsValue(SYM_R_PAREN):
             # type
             if self.nextTokenIsType(T_KEYWORD):
-                self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
+                _, type = self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
             else:
-                self.match(T_IDENTIFIER)
-            self.match(T_IDENTIFIER) # varName
+                _, type = self.match(T_IDENTIFIER)
+            _, name = self.match(T_IDENTIFIER) # varName
+            # add to symbol table
+            self.symtab.define(name, type, ARG)
+            # following vars
             while self.nextTokenIsValue(SYM_COMMA):
                 self.match(T_SYMBOL, SYM_COMMA) # ',' type varName
                 if self.nextTokenIsType(T_KEYWORD):
-                    self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
+                    _, type = self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
                 else:
-                    self.match(T_IDENTIFIER)
-                self.match(T_IDENTIFIER)
+                    _, type = self.match(T_IDENTIFIER)
+                _, name = self.match(T_IDENTIFIER)
+                self.symtab.define(name, type, ARG)
         self.indent -= 1
         writeStruct(self.outs, 'parameterList', self.indent, True)
 
@@ -166,16 +289,20 @@ class CompilationEngine(object):
     def compileVarDec(self):
         writeStruct(self.outs, 'varDec', self.indent)
         self.indent += 1
-        self.match(T_KEYWORD, KW_VAR) # 'var'
+        _, kind = self.match(T_KEYWORD, KW_VAR) # 'var'
         # type
         if self.nextTokenIsType(T_KEYWORD):
-            self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
+            _, type = self.match(T_KEYWORD, [KW_INT, KW_CHAR, KW_BOOLEAN])
         else:
-            self.match(T_IDENTIFIER)
-        self.match(T_IDENTIFIER) # varName
+            _, type = self.match(T_IDENTIFIER)
+        _, name = self.match(T_IDENTIFIER) # varName
+        # add to the symbol table
+        self.symtab.define(name, type, kind)
+        # list of vars
         while self.nextTokenIsValue(SYM_COMMA):
             self.match(T_SYMBOL, SYM_COMMA) # ',' varName
-            self.match(T_IDENTIFIER)
+            _, name = self.match(T_IDENTIFIER)
+            self.symtab.define(name, type, kind) # add to symbol table
         self.match(T_SYMBOL, SYM_SEMICOLON)
         self.indent -= 1
         writeStruct(self.outs, 'varDec', self.indent, True)
@@ -350,11 +477,11 @@ class CompilationEngine(object):
         self.compileExpressionList()
         self.match(T_SYMBOL, SYM_R_PAREN)
 
-
     def close(self):
         self.outs.close()
 
 
+# Type of tokens
 T_WHITE           = 'white'
 T_COMMENT         = 'comment'
 T_KEYWORD         = 'keyword'
@@ -363,6 +490,7 @@ T_IDENTIFIER      = 'identifier'
 T_INT_CONST       = 'integerConstant'
 T_STRING_CONST    = 'stringConstant'
 
+# detailed token tags
 KW_CLASS = 'class'
 KW_CONSTRUCTOR = 'constructor'
 KW_FUNCTION = 'function'
@@ -511,10 +639,11 @@ class JackTokenizer(object):
         tType = self.cur_type
         tValue = self.cur_value
 
-        print tType, ' - ', tValue
-
         # Everything is matched for the current token, so get the next token
         self.advance() 
+
+        # debug print
+        # print tType, ' - ', tValue
 
         # The actual type and value matched
         return tType, tValue
@@ -546,7 +675,8 @@ if __name__ == '__main__':
     # process files
     for file in filelist:
         tokenizer = JackTokenizer(file)
-        compiler = CompilationEngine(tokenizer)
+        symtab = SymbolTable()
+        compiler = CompilationEngine(tokenizer, symtab)
 
         # start parsing from the top class
         compiler.compileClass()
@@ -554,4 +684,7 @@ if __name__ == '__main__':
         # wrap up files
         tokenizer.close()
         compiler.close()
+
+        print symtab.class_scope
+        print symtab.sub_scope
 
