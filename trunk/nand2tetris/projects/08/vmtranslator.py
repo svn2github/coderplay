@@ -79,8 +79,6 @@ class CodeWriter(object):
             address = 'THIS'
         elif segment == 'that':
             address = 'THAT'
-        elif segment == 'pointer':
-            address = 'THIS' if index == 0 else 'THAT'
         return address
 
     def writeCommonCall(self):
@@ -309,9 +307,9 @@ class CodeWriter(object):
                     'D=M']
             elif segment == 'pointer':
                 self.codelist += [
-                    '@' + self.getAddress(segment, index), 
+                    '@' + str(3 + index),
                     'D=M']
-            else:
+            else: # local, argument, this, that
                 self.codelist += ['@' + self.getAddress(segment, index)]
                 # index 0 and 1 have direct CPU support
                 # index 2 and up have to do extra work
@@ -337,9 +335,9 @@ class CodeWriter(object):
                 elif segment  == 'static':
                     self.codelist += ['@' + self.fname + '.' + str(index)]
                 elif segment == 'pointer':
-                    self.codelist += ['@' + self.getAddress(segment,index)]
+                    self.codelist += ['@' + str(3 + index)]
 
-            else:
+            else: # local, argument, this, that
                 # store the value to segment index
                 if index <= 1:
                     self.writePopStack()
