@@ -8,25 +8,35 @@
  */ 
 class Memory {
 
+    static int base;
+
     /** Initializes memory parameters. */
     function void init() {
+        let base = 0;
+        let base[2048] = 14334;
+        let base[2049] = 2050;
+        return;
     }
 
     /** Returns the value of the main memory at the given address. */
     function int peek(int address) {
+        return 0;
     }
 
     /** Sets the value of the main memory at this address
      *  to the given value. */
     function void poke(int address, int value) {
+        return;
     }
 
     /** finds and allocates from the heap a memory block of the 
      *  specified size and returns a reference to its base address. */
     function int alloc(int size) {
+        return 0;
     }
 
     /** De-allocates the given object and frees its space. */
     function void deAlloc(int object) {
+        return;
     }    
 }
