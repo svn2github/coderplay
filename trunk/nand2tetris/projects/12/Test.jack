@@ -5,10 +5,25 @@ class Test {
     constructor Test new(int a1) {
         let a1 = 9;
         let f1 = s1;
-        do do_2_thing(a1[9+f1], a1[f1+s1+Test.new(a1[5])]);
-        do Test.new(5+7+11);
+        let a1 = 3 + 5 + 7;
         do Array.new();
+        do Test.new(5+7+11);
         let a1[59] = Test.new(a1);
+        do do_2_thing(a1[9+f1], a1[f1+s1+Test.new(a1[5])]);
+        while (a1 > 15) {
+            let a1 = 2;
+            let f1 = 2 + 9 + a1[35];
+        }
+        if (a1 = 2) {
+            let a1 = 3;
+        }
+
+        if (f1 = 9) {
+            do Array.new();
+        }
+        else {
+            let s1 = f1;
+        }
         return this;
     }
 
