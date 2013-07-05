@@ -52,7 +52,8 @@ JACK_VAR[M_THIS]        = 'fld'
 
 class StackEmulator(object):
 
-    def __init__(self, jackcode):
+    def __init__(self, className, jackcode):
+        self.className = className
         self.jackcode = jackcode
         self.stack = []
         self.that = {}
@@ -199,11 +200,18 @@ class StackEmulator(object):
 
 
             elif cmd.startswith(VM_CALL): # stack - n + 1
-                _, funcName, nargs = cmd.split()
+                _, callName, nargs = cmd.split()
+                className, funcName = callName.split('.')
                 arglist = []
                 for ii in range(int(nargs)):
                     arglist.insert(0, self.pop())
-                vmNode = VmCallNode(funcName, arglist)
+                if len(arglist) > 0:
+                    # If it is this class's method call, we do not need
+                    # show the hidden arg and the class name.
+                    if arglist[0] == 'this' and self.className==className:
+                        arglist = arglist[1:] # get rid of the hidden arg
+                        callName = funcName
+                vmNode = VmCallNode(callName, arglist)
                 self.push(vmNode)
 
 
@@ -333,19 +341,13 @@ class VmDoNode(VmNode):
 
 class VmCallNode(VmNode):
 
-    def __init__(self, funcName=None, arglist=None):
-        self.funcName = funcName
+    def __init__(self, callName=None, arglist=None):
+        self.callName = callName
         self.arglist = arglist
 
     def __repr__(self):
-        funcName = self.funcName
-        argstrlist = []
-        for arg in self.arglist:
-            if arg == 'this': # honor method call by not showing the hidden arg
-                funcName = funcName.split('.')[1]
-                continue
-            argstrlist.append(str(arg))
-        ret = str(funcName) + '('
+        argstrlist = [str(arg) for arg in self.arglist]
+        ret = str(self.callName) + '('
         ret += ', '.join(argstrlist) + ')'
         return ret
 
@@ -412,7 +414,7 @@ class Decompiler(object):
         f.close()
         self.className = fileStub
         self.jackcode = JackCode()
-        self.vmemu = StackEmulator(self.jackcode)
+        self.vmemu = StackEmulator(self.className, self.jackcode)
 
 
     def addCode(self, *args):
