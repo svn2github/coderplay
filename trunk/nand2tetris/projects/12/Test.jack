@@ -32,7 +32,6 @@ class Test {
     }
 
     function void do_1_thing(int a1) {
-        var int l1, l2;
         let a1[8] = 7;
         return;
     }
