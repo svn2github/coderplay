@@ -44,14 +44,24 @@ JACK_OP[VM_OR]  = '|'
 JACK_OP[VM_NEG] = '-'
 JACK_OP[VM_NOT] = '~'
 
+JACK_VAR        = {}
+JACK_VAR[M_STATIC]      = '_st'
+JACK_VAR[M_ARG]         = 'arg'
+JACK_VAR[M_LOCAL]       = 'lcl'
+JACK_VAR[M_THIS]        = 'fld'
+
 class StackEmulator(object):
 
-    def __init__(self):
+    def __init__(self, jackcode):
+        self.jackcode = jackcode
         self.stack = []
         self.that = {}
         self.pointer = {}
         self.pointer['0'] = 'this'
         self.temp = {}
+
+    def addCode(self, *args):
+        self.jackcode.addLine(*args)
 
     def push(self, item):
         self.stack.append(item)
@@ -61,32 +71,43 @@ class StackEmulator(object):
 
     def run_cmdlist(self, cmdlist, exitPattern=None):
         '''
-        Run through the command list till any of the exit patterns is matched.
-        Build up program structs along the way.
+        Run through the command list till the end or any of the exit patterns 
+        is matched.
+        Build up program structs along the way and output them if stack is
+        empty and the program struct is certain type.
+        This function is recursive and called by itself to parse IF and WHILE
+        structures.
         '''
-        vmNodeList = []
         # vmNode is only built for Let, Return, Call statements.
-        # This ensures that no code will be generated for intermediate
-        # expressions.
+        # This ensures that no code will be generated for intermediate expressions.
         vmNode = None 
-        pc = 0
+        pc = 0 # program counter
+
+        # Loop through the command list
         while pc < len(cmdlist):
             cmd = cmdlist[pc]
 
-            # check for exit conditions 
+            # check for exit condition 
             if exitPattern is not None:
                 if cmd.startswith(exitPattern):
                     return pc
 
             # now we can emulate this command
+
             # Push an item into the stack
             if cmd.startswith(VM_PUSH): # stack + 1
+
                 _, segment, index = cmd.split()
+
                 if segment == M_CONSTANT:
                     self.push(index)
+
                 elif segment == M_THAT:
                     # THAT segment is to use pointer 1's content as address
                     # push that 0 usually is preceded by a pop pointer 1
+                    # In that case, the content saved in pointer 1 is needed
+                    # to be converted as array element type from a (most likely
+                    # binary operation type.
                     if isinstance(self.pointer['1'], VmBinOpNode):
                         if self.pointer['1'].op == VM_ADD:
                             array = self.pointer['1'].rhs
@@ -95,6 +116,7 @@ class StackEmulator(object):
                                 oldIdx = VmBinOpNode(VM_ADD, oldIdx, index)
                             self.push(VmArrayElementNode(array, oldIdx))
                         else:
+                            # The binary operation has to be ADD, .i.e. BASE + offset
                             sys.stderr.write('Error on pushing THAT memory segment\n')
                             sys.exit(1)
                     else:
@@ -107,34 +129,39 @@ class StackEmulator(object):
                 elif segment == M_POINTER:
                     self.push(self.pointer[index])
 
-                else: # static, arg, this, local
-                    self.push(segment + '_' + index)
-
+                else: # static, argument, this, local
+                    self.push(JACK_VAR[segment] + '_' + index)
             
             elif cmd.startswith(VM_IFGOTO): # stack - 1
                 item = self.pop()
+                # We need recursive calls here to solve the IF and WHILE blocks
                 if cmd.startswith(VM_IFGOTO + ' WHILE_END'):
+                    # The VM code use NOT on WHILE_EXP, so we need to reverse it
                     if not isinstance(item, VmUnaryOpNode) or item.op != VM_NOT:
                         sys.stderr.write('Error on parsing WHILE predicate\n')
                         sys.exit(1)
                     else:
                         item = item.operand
-                    print 'while (' + str(item) + ') {' # we need to take off the not of this predicate
+                    self.addCode('while (' + str(item) + ') {')
+                    # recursive call
                     pc_while = self.run_cmdlist(cmdlist[pc+1:], exitPattern=VM_LABEL+' WHILE_END')
-                    pc += pc_while + 1
-                    print '}'
+                    pc += pc_while + 1 # skip the code that has been ran by the recursive call
+                    self.addCode('}')
 
                 elif cmd.startswith(VM_IFGOTO + ' IF_TRUE'):
-                    print 'if (' + str(item) + ') {'
+                    self.addCode('if (' + str(item) + ') {')
+                    # recursive call and assume it is only a IF-BLOCK, NOT IF-ELSE
                     pc_if = self.run_cmdlist(cmdlist[pc+1:], exitPattern=VM_LABEL+' IF_FALSE')
                     pc += pc_if + 1
-                    print '}'
+                    self.addCode('}')
 
             elif cmd.startswith(VM_GOTO+' IF_END'):
-                # we must have an else clause and we must be already in the IF run
-                exitPattern = VM_LABEL+' IF_END'
-                print '}'
-                print 'else {'
+                # This command can only be reached in a IF recursive call, which
+                # is assumed to be IF-BLOCK. Now we run into this command, we know
+                # that the assumption is wrong and we got a IF-ELSE block.
+                exitPattern = VM_LABEL+' IF_END'  # change the exit pattern to IF-ELSE
+                self.addCode('}')
+                self.addCode('else {')
 
             # Pop an item from the stack
             elif cmd.startswith(VM_POP): # stack - 1
@@ -144,6 +171,8 @@ class StackEmulator(object):
                     sys.stderr.write('Cannot pop to CONSTANT memory segment\n')
                     sys.exit(1)
                 elif segment == M_THAT:
+                    # THAT segment involves array element handling. See comments
+                    # in previous PUSH code.
                     if isinstance(self.pointer['1'], VmBinOpNode):
                         if self.pointer['1'].op == VM_ADD:
                             array = self.pointer['1'].rhs
@@ -164,8 +193,8 @@ class StackEmulator(object):
                 elif segment == M_POINTER:
                     self.pointer[index] = item
 
-                else: # static, arg, this, local
-                    vmNode = VmLetNode(segment + '_' + index, item)
+                else: # static, argument, this, local
+                    vmNode = VmLetNode(JACK_VAR[segment] + '_' + index, item)
 
 
             elif cmd.startswith(VM_CALL): # stack - n + 1
@@ -197,16 +226,14 @@ class StackEmulator(object):
             if len(self.stack) == 0:
 
                 if isinstance(vmNode, VmLetNode) or isinstance(vmNode, VmReturnNode):
-                    vmNodeList.append(vmNode)
-                    print vmNode
+                    self.addCode(str(vmNode), ';')
                     vmNode = None
 
                 elif isinstance(vmNode, VmCallNode) and cmd.startswith(VM_POP+' '+M_TEMP):
                     # A Do statement should always be ended by a 'pop temp 0'
                     # Otherwise it is not a do statement
                     vmNode = VmDoNode(vmNode)
-                    vmNodeList.append(vmNode)
-                    print vmNode
+                    self.addCode(str(vmNode), ';')
                     vmNode = None
 
             # increase the program counter
@@ -216,8 +243,10 @@ class StackEmulator(object):
         return pc
 
 
+
 class VmNode(object):
     pass
+
 
 class VmBinOpNode(VmNode):
 
@@ -357,6 +386,18 @@ class JackCode(object):
             if n == 1:
                 nindent += 1
 
+    def write(self, file):
+        outs = open(file, 'w')
+        ws = '    '
+        nindent = 0
+        for line in self.linelist:
+            n = self.indentLevel(line)
+            if n == -1:
+                nindent -= 1
+            outs.write(ws*nindent + line + '\n')
+            if n == 1:
+                nindent += 1
+        outs.close()
 
 
 class Decompiler(object):
@@ -366,64 +407,18 @@ class Decompiler(object):
         self.contents = f.readlines()
         f.close()
         self.className = fileStub
-        self.vmemu = StackEmulator()
         self.jackcode = JackCode()
+        self.vmemu = StackEmulator(self.jackcode)
 
 
     def addCode(self, *args):
         self.jackcode.addLine(*args)
 
 
-    def decompileStatic(self):
-        '''
-        Scan through the file contents and find out all static variables. 
-        They must be defined before any of the subroutines.
-        '''
-        static_variables = []
-        regex = re.compile(r'.* (static [0-9]+)')
-        for line in self.contents:
-            matched = regex.match(line)
-            if matched:
-                varname = matched.groups()[0].replace(' ', '_')
-                if varname not in static_variables:
-                    self.addCode('static', 'int', varname, ';')
-                    static_variables.append(varname)
-
-
-    def decompileField(self):
-        '''
-        Scan through the file contents and find out all field variables. 
-        They must be defined before any of the subroutines.
-        '''
-        field_variables = []
-        regex = re.compile(r'.* (this [0-9]+)')
-        for line in self.contents:
-            matched = regex.match(line)
-            if matched:
-                varname = matched.groups()[0].replace(' ', '_')
-                if varname not in field_variables:
-                    self.addCode('field', 'int', varname, ';')
-                    field_variables.append(varname)
-
-
-    def getFuncPositions(self):
-        sLines = []
-        eLines = []
-        iLine = 0
-        while iLine < len(self.contents):
-            if self.contents[iLine].startswith('function '):
-                if len(sLines) > 0:
-                    eLines.append(iLine-1)
-                sLines.append(iLine)
-            iLine += 1
-        eLines.append(len(self.contents)-1)
-        return zip(sLines, eLines)
-
-
     def decompileClass(self):
-        print '--------------------------------------------------'
-        print 'Class ', self.className
-        print '--------------------------------------------------'
+        '''
+        Main entry of the decompiler. Each jack file is a single jack class.
+        '''
         self.addCode('class', self.className, '{')
 
         self.decompileStatic()
@@ -434,86 +429,190 @@ class Decompiler(object):
 
         # decompile each functions
         for sLine, eLine in func_pos:
-            contents = [line.strip() for line in self.contents[sLine:eLine+1]]
+            contents = [line.strip() for line in self.contents[sLine:eLine]]
             self.decompileFunction(contents)
 
         self.addCode('}')
 
 
-    def decompileFunction(self, contents):
+    def decompileStatic(self):
+        '''
+        Scan through the file contents and find out all static variables. 
+        They must be defined before any of the subroutines.
+        '''
+        static_varlist = []
+        regex = re.compile(r'.* (static [0-9]+)')
+        for line in self.contents:
+            matched = regex.match(line)
+            if matched:
+                idx = int(matched.groups()[0].split()[1])
+                if idx not in static_varlist:
+                    static_varlist.append(idx)
+        # sort the index, so the variable definitions come in order.
+        # it does not have any real effects, only for eye pleasing
+        static_varlist.sort()
+        for idx in static_varlist:
+            self.addCode('static', 'int', JACK_VAR[M_STATIC]+'_'+str(idx), ';')
 
+
+    def decompileField(self):
+        '''
+        Scan through the file contents and find out all field variables. 
+        They must be defined before any of the subroutines.
+        '''
+        field_varlist = []
+        regex = re.compile(r'.* (this [0-9]+)')
+        for line in self.contents:
+            matched = regex.match(line)
+            if matched:
+                idx = int(matched.groups()[0].split()[1])
+                if idx not in field_varlist:
+                    field_varlist.append(idx)
+        field_varlist.sort()
+        for idx in field_varlist:
+            self.addCode('field', 'int', JACK_VAR[M_THIS]+'_'+str(idx), ';')
+
+    def getFuncPositions(self):
+        '''
+        Get the start and ending positions of each function in the class.
+        Whenever a new function keyword appears, it means that the previous 
+        function has ended.
+        '''
+        sLines = []
+        eLines = []
         iLine = 0
-        nLines = len(contents)
+        while iLine < len(self.contents):
+            if self.contents[iLine].startswith('function '):
+                if len(sLines) > 0:
+                    eLines.append(iLine)
+                sLines.append(iLine)
+            iLine += 1
+        eLines.append(len(self.contents))
+        return zip(sLines, eLines)
+
+
+    def decompileFunction(self, contents):
+        '''
+        Decompile a single function by:
+            0. Read the first line to find out the function name
+            1. Read first few lines to find out the function kind
+            2. Read last 2 lines to find out the function type
+            3. scan through to build up the argument list
+            4. Run stack emulator to build up the function body
+        '''
 
         # get the function name
-        line = contents[0]
-        funcName = line.split()[1].split('.')[1]
+        funcName = self.decompileFuncName(contents)
 
         # find out the function type (void or not)
-        line = contents[nLines-2]
+        type = self.decompileFuncType(contents)
+
+        # find out the function kind
+        kind, iLine = self.decompileFuncKind(contents)
+        
+        # Build the argument list for the subroutine
+        arglist = self.decompileArgument(contents, kind)
+
+        # Now we can finish the function header
+        self.addCode(kind, type, funcName, '(', arglist, ')', '{')
+
+        # get rid of the lines that belongs to the function header
+        contents = contents[iLine:]
+
+        # build up the local variables for the function
+        self.decompileFuncVars(contents)
+
+        # Run through the function body in the Vm Emulator
+        self.vmemu.run_cmdlist(contents)
+        
+        # Ending curly bracket for the class
+        self.addCode('}')
+
+
+    def decompileFuncName(self, contents):
+        # get the function name
+        line = contents[0]
+        return line.split()[1].split('.')[1]
+
+    
+    def decompileFuncType(self, contents):
+        line = contents[-2]
         if line == 'push constant 0':
             type = 'void'
         elif line == 'push pointer 0': # return this
             type = self.className
         else:
             type = 'int'
+        return type
 
-        # find out the function kind
+
+    def decompileFuncKind(self, contents):
+        '''
+        Read the first few lines to find out the function kind.
+        Also return the line position where the function body starts.
+        '''
         if self.matchLines(contents[1:], 
                 ['push constant .*', 'call Memory.alloc .*']):
             kind = 'constructor'
-            # run pass 3 lines after the func def
+            # run pass 3 lines after the func def line
             # push constant x
             # call Memory.alloc 1
             # pop pointer 0
             iLine = 4
-        elif self.matchLines(contents[1:], 
-                ['push argument 0', 'pop pointer 0']):
+
+        elif self.matchLines(contents[1:], ['push argument 0', 'pop pointer 0']):
             kind = 'method'
-            # run pass 2 lines after the func def
+            # run pass 2 lines after the func def line
             # push argument 0
             # pop pointer 0
             iLine = 3
+
         else:
             kind = 'function'
             iLine = 1
-        
-        # Build the parameter list for the subroutine
-        max_idx = -1
+
+        return kind, iLine
+
+
+    def decompileArgument(self, contents, kind):
+        '''
+        Scan through the function contents and build up the function argument list.
+        '''
+        # Build the argument list for the subroutine
+        arglist = []
         regex = re.compile('.* (argument [0-9]+)')
+        for line in contents: # find all unique arguments
+            matched = regex.match(line)
+            if matched:
+                idx = int(matched.groups()[0].split()[1])
+                if idx not in arglist:
+                    arglist.append(idx)
+        # sort the argument, so they come in order. In contrast to static and field
+        # variables, this sort is mandatory.
+        arglist.sort()
+        if kind == 'method': # we don't wanna list the hidden argment
+            arglist = ['int '+JACK_VAR[M_ARG]+'_' + str(idx) for idx in arglist if idx != 0]
+        else:
+            arglist = ['int '+JACK_VAR[M_ARG]+'_' + str(idx) for idx in arglist]
+        arglist = ', '.join(arglist)
+        return arglist
+
+
+    def decompileFuncVars(self, contents):
+        '''
+        Scan through the function body to build up the local variable list.
+        '''
+        local_varlist = []
+        regex = re.compile(r'.* (local [0-9]+)')
         for line in contents:
             matched = regex.match(line)
             if matched:
                 idx = int(matched.groups()[0].split()[1])
-                if max_idx < idx:
-                    max_idx = idx
-        if max_idx > -1:
-            parmlist = []
-            if kind == 'method':
-                for ii in range(1, max_idx+1):
-                    parmlist.append('int argument_' + str(ii))
-            else:
-                for ii in range(max_idx+1):
-                    parmlist.append('int argument_' + str(ii))
-            parmlist = ', '.join(parmlist)
-        else:
-            parmlist = ''
-        self.addCode(kind, type, funcName, '(', parmlist, ')', '{')
-
-
-        # get rid of the lines that belongs to the function definition
-        contents = contents[iLine:]
-
-
-        print '==========='
-        print funcName
-        print '==========='
-        self.vmemu.run_cmdlist(contents)
-        print
-        
-        
-        self.addCode('}')
-
+                if idx not in local_varlist:
+                    local_varlist.append(idx)
+        local_varlist.sort()
+        for idx in local_varlist:
+            self.addCode('var', 'int', JACK_VAR[M_LOCAL]+'_'+str(idx), ';')
 
 
     def matchLines(self, contents, patternList):
@@ -524,8 +623,8 @@ class Decompiler(object):
 
 
     def close(self):
-        pass
-
+        self.jackcode.printit()
+        self.jackcode.write(self.className+'.jack')
 
 
 def usage(prog):
