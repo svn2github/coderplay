@@ -59,6 +59,7 @@ class StackEmulator(object):
         self.pointer = {}
         self.pointer['0'] = 'this'
         self.temp = {}
+        self.funcType = None
 
     def addCode(self, *args):
         self.jackcode.addLine(*args)
@@ -208,7 +209,10 @@ class StackEmulator(object):
 
             elif cmd.startswith(VM_RETURN): # stack - 1
                 item = self.pop()
-                vmNode = VmReturnNode(item)
+                if self.funcType == 'void':
+                    vmNode = VmReturnNode()
+                else:
+                    vmNode = VmReturnNode(item)
 
             elif cmd in VM_BIN_OP: # stack - 1
                 rhs = self.pop()
@@ -505,7 +509,7 @@ class Decompiler(object):
         funcName = self.decompileFuncName(contents)
 
         # find out the function type (void or not)
-        type = self.decompileFuncType(contents)
+        funcType = self.decompileFuncType(contents)
 
         # find out the function kind
         kind, iLine = self.decompileFuncKind(contents)
@@ -514,7 +518,7 @@ class Decompiler(object):
         arglist = self.decompileArgument(contents, kind)
 
         # Now we can finish the function header
-        self.addCode(kind, type, funcName, '(', arglist, ')', '{')
+        self.addCode(kind, funcType, funcName, '(', arglist, ')', '{')
 
         # get rid of the lines that belongs to the function header
         contents = contents[iLine:]
@@ -523,6 +527,7 @@ class Decompiler(object):
         self.decompileFuncVars(contents)
 
         # Run through the function body in the Vm Emulator
+        self.vmemu.funcType = funcType
         self.vmemu.run_cmdlist(contents)
         
         # Ending curly bracket for the class
@@ -538,12 +543,12 @@ class Decompiler(object):
     def decompileFuncType(self, contents):
         line = contents[-2]
         if line == 'push constant 0':
-            type = 'void'
+            funcType = 'void'
         elif line == 'push pointer 0': # return this
-            type = self.className
+            funcType = self.className
         else:
-            type = 'int'
-        return type
+            funcType = 'int'
+        return funcType
 
 
     def decompileFuncKind(self, contents):
