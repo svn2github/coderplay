@@ -375,11 +375,14 @@ class CodeWriter(object):
             '0;JMP']
 
     def writeIf(self, label):
-        # compare to 0
+        '''
+        if the top of stack is NOT zero then Jump
+        '''
+        # We compare the topmost stack to 0 by EQ
         self.writePushPop(C_PUSH, 'constant', 0)
         self.writeArithmetic('eq')  
-        # if test==0 we have -1 on stack top, so no jump
-        # thus jump if a 0 on stack top
+        # If the comparison result is -1, i.e. we have ZERO on top stack -> NO JUMP
+        # If the comparison result is 0 --> we have Non-zero on top -> JUMP
         self.writePopStack() # get the stack top to D register
         label = self.functionName + '$' + label
         self.codelist += [
@@ -389,9 +392,10 @@ class CodeWriter(object):
     def writeFunction(self, functionName, numLocals):
         self.functionName = functionName
         self.codelist += ['(' + functionName + ')']
+        # push numLocals 0s into the stack to save space for the local
+        # variables. SP is now correctly pushed beyond the local segment.
         for ii in range(numLocals):
             self.writePushPop(C_PUSH, 'constant', 0)
-            self.writePushPop(C_POP, 'local', ii)
 
     def writeReturn(self):
         self.codelist += [
@@ -544,7 +548,7 @@ if __name__ == '__main__':
             c_type = parser.commandType()
 
             # Save the original vm code as comments
-            #writer.writeComments(parser.cur_command)
+            # writer.writeComments(parser.cur_command)
             
             if c_type == C_ARITHMETIC:
                 writer.writeArithmetic(parser.arg1())

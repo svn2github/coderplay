@@ -13,48 +13,76 @@ class Memory {
         let _st_0[arg_0] = arg_1 ;
         return  ;
     }
-    function int alloc ( int arg_0 ) {
-        var int lcl_0 ;
-        if (arg_0 < 1) {
+    function int alloc ( int size ) {
+        var int base ;
+        if (size < 1) {
             do Sys.error(5) ;
         }
-        let lcl_0 = 2048 ;
-        while (lcl_0[0] < arg_0) {
-            let lcl_0 = lcl_0[1] ;
+        let base = 2048 ;
+        // base[0] is the size of the free block
+        // base[1] is next
+        while (base[0] < size) { // loop to find a large enough block
+            let base = base[1] ;
         }
-        if (lcl_0 + arg_0 > 16379) {
+        // the size cannot exceed the maximum RAM size
+        if (base + size > 16379) {
             do Sys.error(6) ;
         }
-        if (lcl_0[0] > (arg_0 + 2)) {
-            let lcl_0[arg_0 + 2] = lcl_0[0] - arg_0 - 2 ;
-            if (lcl_0[1] = (lcl_0 + 2)) {
-                let lcl_0[arg_0 + 3] = lcl_0 + arg_0 + 4 ;
+
+        // if this free block is larger than requested size
+        // The free block needs to be split into the requested size
+        // and the rest. We need to build info for this rest RAM.
+        if (base[0] > (size + 2)) {
+
+            // base[0] is this free block's size
+            // -2 because the header took 2 cells
+            // base[size + 2] is rest[0] which is the size
+            let base[size + 2] = base[0] - size - 2 ;
+
+            // if the next free block is next to the header
+            if (base[1] = (base + 2)) {
+                // set the rest's next to be next to its header as well 
+                let base[size + 3] = base + size + 4 ;
             }
             else {
-                let lcl_0[arg_0 + 3] = lcl_0[1] ;
+                // otherwise, set the rest's next to this original free
+                // block's next
+                let base[size + 3] = base[1] ;
             }
-            let lcl_0[1] = lcl_0 + arg_0 + 2 ;
+            // point the original free block's next to the rest block
+            // this original free block is going to be the return block
+            let base[1] = base + size + 2 ;
         }
-        let lcl_0[0] = 0 ;
-        return lcl_0 + 2 ;
+        
+        // get rid of the size info
+        let base[0] = 0 ;
+
+        // return the address right after the header
+        return base + 2 ;
     }
-    function void deAlloc ( int arg_0 ) {
-        var int lcl_0 ;
-        var int lcl_1 ;
-        let lcl_0 = arg_0 - 2 ;
-        let lcl_1 = lcl_0[1] ;
-        if (lcl_1[0] = 0) {
-            let lcl_0[0] = lcl_0[1] - lcl_0 - 2 ;
+    function void deAlloc ( int address ) {
+        var int base ;
+        var int next ;
+
+        let base = address - 2 ;
+
+        let next = base[1] ; // the next block, pointing to rest
+
+        // if the next block is not free anymore
+        if (next[0] = 0) {
+            let base[0] = base[1] - base - 2 ; // calculate this block's size
         }
-        else {
-            let lcl_0[0] = lcl_0[1] - lcl_0 + lcl_1[0] ;
-            if (lcl_1[1] = (lcl_1 + 2)) {
-                let lcl_0[1] = lcl_0 + 2 ;
+        else { // merge the two blocks
+            let base[0] = base[1] - base + next[0] ; // calculate the new size
+            // this again deals with the next block being right after the header
+            if (next[1] = (next + 2)) { // right after header
+                let base[1] = base + 2 ;
             }
             else {
-                let lcl_0[1] = lcl_1[1] ;
+                let base[1] = next[1] ;
             }
         }
         return  ;
     }
 }
+

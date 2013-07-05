@@ -8,6 +8,9 @@ to translate the jack OS vm files and Square game vm files correctly (cannot
 run on the supplied CPU emulator.
 '''
 
+class CPUError(Exception):
+    pass
+
 class CmdInfo(object):
     '''
     Information about command at certain addresses
@@ -21,15 +24,17 @@ class CmdInfo(object):
             self.info[address] = []
         self.info[address].append(info)
 
-    def printInfo(self, address):
+    def printInfo(self, address, outs):
         if self.info.has_key(address):
             for s in self.info[address]:
                 print s
+                outs.write(s + '\n')
 
 
 class CPU(object):
 
     def __init__(self):
+        self.outs = open('run.log', 'w')
         self.ROM = [0] * 32768
         self.RAM = [0] * 24577
         self.A = 0
@@ -69,7 +74,7 @@ class CPU(object):
         self.ALUfunc['&'] = operator.and_
         self.ALUfunc['|'] = operator.or_
         self.ALUfunc['-u'] = operator.neg # unary op
-        self.ALUfunc['!u'] = operator.not_ # unary op
+        self.ALUfunc['!u'] = operator.invert # unary op
 
 
     def read_asm(self, asmfile):
@@ -96,7 +101,7 @@ class CPU(object):
                 label = line[1:-1]
                 if self.symbol_table.has_key(label):
                     sys.stderr.write('Duplicate label: ' + label + '\n')
-                    sys.exit(1)
+                    raise CPUError
                 else:
                     self.symbol_table[label] = address
                     self.cmdinfo.addInfo(address, line)
@@ -116,8 +121,9 @@ class CPU(object):
         while self.PC != self.exitAddress:
             cmd = self.ROM[self.PC]
 
-            self.cmdinfo.printInfo(self.PC)
-            sys.stdout.write(str(self.PC) + ':')
+            self.cmdinfo.printInfo(self.PC, self.outs)
+            sys.stdout.write(str(self.PC) + ': ')
+            self.outs.write(str(self.PC) + ': ')
 
             # proceed according to command types
             if cmd[0] == '@': # A Command
@@ -165,7 +171,7 @@ class CPU(object):
 
                 else:
                     sys.stderr.write('Cannot decode arithmetic command: ' + cmd + '\n')
-                    sys.exit(1)
+                    raise CPUError
 
                 # send the result to destination registers
                 if dest: # we ensure the A register is effected the last
@@ -199,7 +205,10 @@ class CPU(object):
 
             #if self.A == 154 and cmd == 'D;JEQ':
             #    raise Exception
-            print cmd, self.A, self.D, self.RAM[0:16]
+            SP = self.RAM[0]
+            print cmd, self.A, self.D, self.RAM[0:16], self.RAM[SP-5:SP]
+            self.outs.write(' '.join([cmd, str(self.A), str(self.D), str(self.RAM[0:16]), 
+                str(self.RAM[SP-5:SP]), '\n']))
             # void = raw_input()
 
 
@@ -211,11 +220,11 @@ class CPU(object):
         elif reg == 'M':
             if self.A < 0:
                 sys.stderr.write('RAM address cannot be negative: ' + str(self.A) + '\n')
-                sys.exit(1)
+                raise CPUError
             return self.RAM[self.A]
         else:
             sys.stderr.write('Unknown register: ' + reg + '\n')
-            sys.exit(1)
+            raise CPUError
 
 
     def setRegisterContent(self, reg, content):
@@ -226,7 +235,7 @@ class CPU(object):
         elif reg == 'M':
             if self.A < 0:
                 sys.stderr.write('RAM address cannot be negative: ' + str(self.A) + '\n')
-                sys.exit(1)
+                raise CPUError
             self.RAM[self.A] = content
         else:
             sys.stderr.write('Unknown register: ' + reg + '\n')
@@ -249,6 +258,8 @@ class CPU(object):
         return value
 
 
+    def close(self):
+        self.outs.close()
 
 
 def usage(prog):
@@ -264,6 +275,9 @@ if __name__ == '__main__':
 
     cpuEmu = CPU()
     cpuEmu.read_asm(asmfile)
-    cpuEmu.run()
+    try:
+        cpuEmu.run()
+    except CPUError as e:
+        cpuEmu.close()
 
 
