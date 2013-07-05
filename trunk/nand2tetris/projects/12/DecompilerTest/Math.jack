@@ -1,0 +1,112 @@
+class Math {
+    static int _st_0 ;
+    static int _st_1 ;
+    function void init (  ) {
+        var int lcl_0 ;
+        let _st_1 = Array.new(16) ;
+        let _st_0 = Array.new(16) ;
+        let _st_0[0] = 1 ;
+        while (lcl_0 < 15) {
+            let lcl_0 = lcl_0 + 1 ;
+            let _st_0[lcl_0] = _st_0[lcl_0 - 1] + _st_0[lcl_0 - 1] ;
+        }
+        return  ;
+    }
+    function int abs ( int arg_0 ) {
+        if (arg_0 < 0) {
+            let arg_0 = -arg_0 ;
+        }
+        return arg_0 ;
+    }
+    function int multiply ( int arg_0, int arg_1 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        var int lcl_2 ;
+        var int lcl_3 ;
+        var int lcl_4 ;
+        let lcl_4 = arg_0 < 0 & (arg_1 > 0) | (arg_0 > 0 & (arg_1 < 0)) ;
+        let arg_0 = Math.abs(arg_0) ;
+        let arg_1 = Math.abs(arg_1) ;
+        if (arg_0 < arg_1) {
+            let lcl_1 = arg_0 ;
+            let arg_0 = arg_1 ;
+            let arg_1 = lcl_1 ;
+        }
+        while (lcl_2 < arg_1) {
+            if (_st_0[lcl_3] & arg_1 > 0) {
+                let lcl_0 = lcl_0 + arg_0 ;
+                let lcl_2 = lcl_2 + _st_0[lcl_3] ;
+            }
+            let arg_0 = arg_0 + arg_0 ;
+            let lcl_3 = lcl_3 + 1 ;
+        }
+        if (lcl_4) {
+            let lcl_0 = -lcl_0 ;
+        }
+        return lcl_0 ;
+    }
+    function int divide ( int arg_0, int arg_1 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        var int lcl_2 ;
+        var int lcl_3 ;
+        if (arg_1 = 0) {
+            do Sys.error(3) ;
+        }
+        let lcl_2 = arg_0 < 0 & (arg_1 > 0) | (arg_0 > 0 & (arg_1 < 0)) ;
+        let _st_1[0] = Math.abs(arg_1) ;
+        let arg_0 = Math.abs(arg_0) ;
+        while (~lcl_3) {
+            let lcl_3 = 32767 - _st_1[lcl_0] < _st_1[lcl_0] ;
+            if (~lcl_3) {
+                let _st_1[lcl_0 + 1] = _st_1[lcl_0] + _st_1[lcl_0] ;
+                let lcl_3 = _st_1[lcl_0 + 1] > arg_0 ;
+                if (~lcl_3) {
+                    let lcl_0 = lcl_0 + 1 ;
+                }
+            }
+        }
+        while (lcl_0 > (-1)) {
+            if (~(_st_1[lcl_0] > arg_0)) {
+                let lcl_1 = lcl_1 + _st_0[lcl_0] ;
+                let arg_0 = arg_0 - _st_1[lcl_0] ;
+            }
+            let lcl_0 = lcl_0 - 1 ;
+        }
+        if (lcl_2) {
+            let lcl_1 = -lcl_1 ;
+        }
+        return lcl_1 ;
+    }
+    function int sqrt ( int arg_0 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        var int lcl_2 ;
+        var int lcl_3 ;
+        if (arg_0 < 0) {
+            do Sys.error(4) ;
+        }
+        let lcl_0 = 7 ;
+        while (lcl_0 > (-1)) {
+            let lcl_1 = lcl_3 + _st_0[lcl_0] ;
+            let lcl_2 = Math.multiply(lcl_1, lcl_1) ;
+            if (~(lcl_2 > arg_0) & (~(lcl_2 < 0))) {
+                let lcl_3 = lcl_1 ;
+            }
+            let lcl_0 = lcl_0 - 1 ;
+        }
+        return lcl_3 ;
+    }
+    function int max ( int arg_0, int arg_1 ) {
+        if (arg_0 > arg_1) {
+            let arg_1 = arg_0 ;
+        }
+        return arg_1 ;
+    }
+    function int min ( int arg_0, int arg_1 ) {
+        if (arg_0 < arg_1) {
+            let arg_1 = arg_0 ;
+        }
+        return arg_1 ;
+    }
+}

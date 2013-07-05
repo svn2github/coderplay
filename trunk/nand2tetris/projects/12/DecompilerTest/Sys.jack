@@ -1,0 +1,37 @@
+class Sys {
+    function void init (  ) {
+        do Memory.init() ;
+        do Math.init() ;
+        do Screen.init() ;
+        do Output.init() ;
+        do Keyboard.init() ;
+        do Main.main() ;
+        do Sys.halt() ;
+        return  ;
+    }
+    function void halt (  ) {
+        while (~0) {
+        }
+        return  ;
+    }
+    function void wait ( int arg_0 ) {
+        var int lcl_0 ;
+        if (arg_0 < 0) {
+            do Sys.error(1) ;
+        }
+        while (arg_0 > 0) {
+            let lcl_0 = 50 ;
+            while (lcl_0 > 0) {
+                let lcl_0 = lcl_0 - 1 ;
+            }
+            let arg_0 = arg_0 - 1 ;
+        }
+        return  ;
+    }
+    function void error ( int arg_0 ) {
+        do Output.printString(String.appendChar(String.appendChar(String.appendChar(String.new(3), 69), 82), 82)) ;
+        do Output.printInt(arg_0) ;
+        do Sys.halt() ;
+        return  ;
+    }
+}

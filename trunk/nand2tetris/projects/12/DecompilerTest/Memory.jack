@@ -1,0 +1,60 @@
+class Memory {
+    static int _st_0 ;
+    function void init (  ) {
+        let _st_0 = 0 ;
+        let _st_0[2048] = 14334 ;
+        let _st_0[2049] = 2050 ;
+        return  ;
+    }
+    function int peek ( int arg_0 ) {
+        return _st_0[arg_0] ;
+    }
+    function void poke ( int arg_0, int arg_1 ) {
+        let _st_0[arg_0] = arg_1 ;
+        return  ;
+    }
+    function int alloc ( int arg_0 ) {
+        var int lcl_0 ;
+        if (arg_0 < 1) {
+            do Sys.error(5) ;
+        }
+        let lcl_0 = 2048 ;
+        while (lcl_0[0] < arg_0) {
+            let lcl_0 = lcl_0[1] ;
+        }
+        if (lcl_0 + arg_0 > 16379) {
+            do Sys.error(6) ;
+        }
+        if (lcl_0[0] > (arg_0 + 2)) {
+            let lcl_0[arg_0 + 2] = lcl_0[0] - arg_0 - 2 ;
+            if (lcl_0[1] = (lcl_0 + 2)) {
+                let lcl_0[arg_0 + 3] = lcl_0 + arg_0 + 4 ;
+            }
+            else {
+                let lcl_0[arg_0 + 3] = lcl_0[1] ;
+            }
+            let lcl_0[1] = lcl_0 + arg_0 + 2 ;
+        }
+        let lcl_0[0] = 0 ;
+        return lcl_0 + 2 ;
+    }
+    function void deAlloc ( int arg_0 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        let lcl_0 = arg_0 - 2 ;
+        let lcl_1 = lcl_0[1] ;
+        if (lcl_1[0] = 0) {
+            let lcl_0[0] = lcl_0[1] - lcl_0 - 2 ;
+        }
+        else {
+            let lcl_0[0] = lcl_0[1] - lcl_0 + lcl_1[0] ;
+            if (lcl_1[1] = (lcl_1 + 2)) {
+                let lcl_0[1] = lcl_0 + 2 ;
+            }
+            else {
+                let lcl_0[1] = lcl_1[1] ;
+            }
+        }
+        return  ;
+    }
+}

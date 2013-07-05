@@ -1,0 +1,131 @@
+class String {
+    field int fld_0 ;
+    field int fld_1 ;
+    field int fld_2 ;
+    constructor String new ( int arg_0 ) {
+        if (arg_0 < 0) {
+            do Sys.error(14) ;
+        }
+        if (arg_0 > 0) {
+            let fld_1 = Array.new(arg_0) ;
+        }
+        let fld_0 = arg_0 ;
+        let fld_2 = 0 ;
+        return this ;
+    }
+    method void dispose (  ) {
+        if (fld_0 > 0) {
+            do Array.dispose(fld_1) ;
+        }
+        do Memory.deAlloc(this) ;
+        return  ;
+    }
+    method int length (  ) {
+        return fld_2 ;
+    }
+    method int charAt ( int arg_1 ) {
+        if (arg_1 < 0 | (arg_1 > fld_2) | (arg_1 = fld_2)) {
+            do Sys.error(15) ;
+        }
+        return fld_1[arg_1] ;
+    }
+    method void setCharAt ( int arg_1, int arg_2 ) {
+        if (arg_1 < 0 | (arg_1 > fld_2) | (arg_1 = fld_2)) {
+            do Sys.error(16) ;
+        }
+        let fld_1[arg_1] = arg_2 ;
+        return  ;
+    }
+    method String appendChar ( int arg_1 ) {
+        if (fld_2 = fld_0) {
+            do Sys.error(17) ;
+        }
+        let fld_1[fld_2] = arg_1 ;
+        let fld_2 = fld_2 + 1 ;
+        return this ;
+    }
+    method void eraseLastChar (  ) {
+        if (fld_2 = 0) {
+            do Sys.error(18) ;
+        }
+        let fld_2 = fld_2 - 1 ;
+        return  ;
+    }
+    method int intValue (  ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        var int lcl_2 ;
+        var int lcl_3 ;
+        var int lcl_4 ;
+        if (fld_2 = 0) {
+            return 0 ;
+        }
+        let lcl_3 = ~0 ;
+        if (fld_1[0] = 45) {
+            let lcl_4 = ~0 ;
+            let lcl_0 = 1 ;
+        }
+        while (lcl_0 < fld_2 & lcl_3) {
+            let lcl_2 = fld_1[lcl_0] - 48 ;
+            let lcl_3 = ~(lcl_2 < 0 | (lcl_2 > 9)) ;
+            if (lcl_3) {
+                let lcl_1 = Math.multiply(lcl_1, 10) + lcl_2 ;
+                let lcl_0 = lcl_0 + 1 ;
+            }
+        }
+        if (lcl_4) {
+            let lcl_1 = -lcl_1 ;
+        }
+        return lcl_1 ;
+    }
+    method void setInt ( int arg_1 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        var int lcl_2 ;
+        var int lcl_3 ;
+        if (fld_0 = 0) {
+            do Sys.error(19) ;
+        }
+        let lcl_2 = Array.new(6) ;
+        if (arg_1 < 0) {
+            let lcl_3 = ~0 ;
+            let arg_1 = -arg_1 ;
+        }
+        let lcl_1 = arg_1 ;
+        while (lcl_1 > 0) {
+            let lcl_1 = Math.divide(arg_1, 10) ;
+            let lcl_2[lcl_0] = 48 + (arg_1 - Math.multiply(lcl_1, 10)) ;
+            let lcl_0 = lcl_0 + 1 ;
+            let arg_1 = lcl_1 ;
+        }
+        if (lcl_3) {
+            let lcl_2[lcl_0] = 45 ;
+            let lcl_0 = lcl_0 + 1 ;
+        }
+        if (fld_0 < lcl_0) {
+            do Sys.error(19) ;
+        }
+        if (lcl_0 = 0) {
+            let fld_1[0] = 48 ;
+            let fld_2 = 1 ;
+        }
+        else {
+            let fld_2 = 0 ;
+            while (fld_2 < lcl_0) {
+                let fld_1[fld_2] = lcl_2[lcl_0 - (fld_2 + 1)] ;
+                let fld_2 = fld_2 + 1 ;
+            }
+        }
+        do Array.dispose(lcl_2) ;
+        return  ;
+    }
+    function int newLine (  ) {
+        return 128 ;
+    }
+    function int backSpace (  ) {
+        return 129 ;
+    }
+    function int doubleQuote (  ) {
+        return 34 ;
+    }
+}

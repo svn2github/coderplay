@@ -1,0 +1,194 @@
+function Test.new 0
+push constant 1
+call Memory.alloc 1
+pop pointer 0
+push constant 9
+pop argument 0
+push static 0
+pop this 0
+push constant 3
+push constant 5
+add
+push constant 7
+add
+pop argument 0
+call Array.new 0
+pop temp 0
+push constant 5
+push constant 7
+add
+push constant 11
+add
+call Test.new 1
+pop temp 0
+push constant 59
+push argument 0
+add
+push argument 0
+call Test.new 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push pointer 0
+push constant 9
+push this 0
+add
+push argument 0
+add
+pop pointer 1
+push that 0
+push this 0
+push static 0
+add
+push constant 5
+push argument 0
+add
+pop pointer 1
+push that 0
+call Test.new 1
+add
+push argument 0
+add
+pop pointer 1
+push that 0
+call Test.do_2_thing 3
+pop temp 0
+label WHILE_EXP0
+push argument 0
+push constant 15
+gt
+not
+if-goto WHILE_END0
+push constant 2
+pop argument 0
+push constant 2
+push constant 9
+add
+push constant 35
+push argument 0
+add
+pop pointer 1
+push that 0
+add
+pop this 0
+goto WHILE_EXP0
+label WHILE_END0
+push argument 0
+push constant 2
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 3
+pop argument 0
+label IF_FALSE0
+push this 0
+push constant 9
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+call Array.new 0
+pop temp 0
+goto IF_END1
+label IF_FALSE1
+push this 0
+pop static 0
+label IF_END1
+push pointer 0
+return
+function Test.do_0_thing 0
+push constant 1
+return
+function Test.do_1_thing 0
+push constant 8
+push argument 0
+add
+push constant 7
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 0
+return
+function Test.do_2_thing 3
+push argument 0
+pop pointer 0
+push local 0
+push local 2
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 1
+pop local 0
+label IF_FALSE0
+label WHILE_EXP0
+push local 1
+push constant 15
+gt
+push constant 3
+or
+not
+if-goto WHILE_END0
+push argument 2
+pop argument 1
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+return
+function Test.do_3_thing 3
+push argument 0
+pop pointer 0
+push local 0
+push local 1
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 99
+push argument 2
+add
+pop pointer 1
+push that 0
+push constant 88
+push local 2
+add
+pop pointer 1
+push that 0
+add
+push argument 1
+add
+push constant 77
+push local 0
+add
+pop pointer 1
+push that 0
+push constant 55
+push local 1
+add
+pop pointer 1
+push that 0
+add
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+goto IF_END0
+label IF_FALSE0
+push pointer 0
+push argument 1
+push argument 2
+call Test.do_2_thing 3
+pop temp 0
+push constant 1
+push pointer 0
+push argument 1
+push argument 2
+call Test.do_2_thing 3
+add
+pop local 1
+label IF_END0
+push constant 0
+return

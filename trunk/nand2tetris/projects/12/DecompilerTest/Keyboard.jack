@@ -1,0 +1,54 @@
+class Keyboard {
+    function void init (  ) {
+        return  ;
+    }
+    function int keyPressed (  ) {
+        return Memory.peek(24576) ;
+    }
+    function int readChar (  ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        do Output.printChar(0) ;
+        while (lcl_1 = 0 | (lcl_0 > 0)) {
+            let lcl_0 = Keyboard.keyPressed() ;
+            if (lcl_0 > 0) {
+                let lcl_1 = lcl_0 ;
+            }
+        }
+        do Output.printChar(String.backSpace()) ;
+        do Output.printChar(lcl_1) ;
+        return lcl_1 ;
+    }
+    function int readLine ( int arg_0 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        var int lcl_2 ;
+        var int lcl_3 ;
+        var int lcl_4 ;
+        let lcl_3 = String.new(80) ;
+        do Output.printString(arg_0) ;
+        let lcl_1 = String.newLine() ;
+        let lcl_2 = String.backSpace() ;
+        while (~lcl_4) {
+            let lcl_0 = Keyboard.readChar() ;
+            let lcl_4 = lcl_0 = lcl_1 ;
+            if (~lcl_4) {
+                if (lcl_0 = lcl_2) {
+                    do String.eraseLastChar(lcl_3) ;
+                }
+                else {
+                    let lcl_3 = String.appendChar(lcl_3, lcl_0) ;
+                }
+            }
+        }
+        return lcl_3 ;
+    }
+    function int readInt ( int arg_0 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        let lcl_0 = Keyboard.readLine(arg_0) ;
+        let lcl_1 = String.intValue(lcl_0) ;
+        do String.dispose(lcl_0) ;
+        return lcl_1 ;
+    }
+}

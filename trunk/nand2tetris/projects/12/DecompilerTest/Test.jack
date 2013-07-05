@@ -1,0 +1,59 @@
+class Test {
+    static int _st_0 ;
+    field int fld_0 ;
+    constructor Test new ( int arg_0 ) {
+        let arg_0 = 9 ;
+        let fld_0 = _st_0 ;
+        let arg_0 = 3 + 5 + 7 ;
+        do Array.new() ;
+        do Test.new(5 + 7 + 11) ;
+        let arg_0[59] = Test.new(arg_0) ;
+        do do_2_thing(arg_0[9 + fld_0], arg_0[fld_0 + _st_0 + Test.new(arg_0[5])]) ;
+        while (arg_0 > 15) {
+            let arg_0 = 2 ;
+            let fld_0 = 2 + 9 + arg_0[35] ;
+        }
+        if (arg_0 = 2) {
+            let arg_0 = 3 ;
+        }
+        if (fld_0 = 9) {
+            do Array.new() ;
+        }
+        else {
+            let _st_0 = fld_0 ;
+        }
+        return this ;
+    }
+    function int do_0_thing (  ) {
+        return 1 ;
+    }
+    function void do_1_thing ( int arg_0 ) {
+        let arg_0[8] = 7 ;
+        return  ;
+    }
+    method int do_2_thing ( int arg_1, int arg_2 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        var int lcl_2 ;
+        if (lcl_0 = lcl_2) {
+            let lcl_0 = lcl_1 ;
+        }
+        while (lcl_1 > 15 | 3) {
+            let arg_1 = arg_2 ;
+        }
+        return lcl_0 ;
+    }
+    method void do_3_thing ( int arg_1, int arg_2 ) {
+        var int lcl_0 ;
+        var int lcl_1 ;
+        var int lcl_2 ;
+        if (lcl_0 < lcl_1) {
+            let arg_1[arg_2[99] + lcl_2[88]] = lcl_0[77] + lcl_1[55] ;
+        }
+        else {
+            do do_2_thing(arg_1, arg_2) ;
+            let lcl_1 = 1 + do_2_thing(arg_1, arg_2) ;
+        }
+        return  ;
+    }
+}
