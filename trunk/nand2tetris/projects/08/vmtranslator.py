@@ -378,16 +378,11 @@ class CodeWriter(object):
         '''
         if the top of stack is NOT zero then Jump
         '''
-        # We compare the topmost stack to 0 by EQ
-        self.writePushPop(C_PUSH, 'constant', 0)
-        self.writeArithmetic('eq')  
-        # If the comparison result is -1, i.e. we have ZERO on top stack -> NO JUMP
-        # If the comparison result is 0 --> we have Non-zero on top -> JUMP
         self.writePopStack() # get the stack top to D register
         label = self.functionName + '$' + label
         self.codelist += [
             '@' + label,
-            'D;JEQ'] 
+            'D;JNE'] 
 
     def writeFunction(self, functionName, numLocals):
         self.functionName = functionName
