@@ -1,3 +1,4 @@
-(define (func))
+(define (func x)
+  (+ x 9 a))
 
-(func)
+(func 10)

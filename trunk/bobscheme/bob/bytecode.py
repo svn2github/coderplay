@@ -93,7 +93,7 @@ class CodeObject(object):
         repr += prefix + '----------\n'
         repr += prefix + 'CodeObject: ' + ('' if self.name is None else self.name) + '\n'
         repr += prefix + 'Args: ' + str(self.args) + '\n'
-        repr += prefix + 'constants: ' + str(self.constants) + '\n'
+        #repr += prefix + 'constants: ' + str(self.constants) + '\n'
         repr += prefix + 'varnames: ' + str(self.varnames) + '\n'
 
         for offset, instr in enumerate(self.code):
