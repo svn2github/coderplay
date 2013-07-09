@@ -27,6 +27,8 @@ OP_XOR      = 21
 OP_NOT      = 22
 OP_NEG      = 23
 
+OP_SLICE    = 24
+
 opcode_dict = {}
 opcode_dict[OP_PUSH] = 'push'
 opcode_dict[OP_POP] = 'pop'
@@ -54,6 +56,8 @@ opcode_dict[OP_XOR] = 'xor'
 opcode_dict[OP_NOT] = 'not'
 opcode_dict[OP_NEG] = 'neg'
 
+opcode_dict[OP_SLICE] = 'slc'
+
 def opcode2str(opcode):
     return opcode_dict[opcode]
 
@@ -65,10 +69,9 @@ M_TEMP          = 'temp'
 
 class Instruction(object):
 
-    def __init__(self, opcode, segment=None, index=None):
+    def __init__(self, opcode, *args)
         self.opcode = opcode
-        self.segment = segment
-        self.index = index
+        self.args = args
 
 
 

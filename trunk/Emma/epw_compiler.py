@@ -11,12 +11,25 @@ class ControlFlowGraph(object):
     def __init__(self):
         self.args = []
         self.locals = []
+        self.constants = []
         self.instrlist = []
 
-    def addInstruction(self, instr):
+    def add_or_append_to_list(self, lst, item):
+        try: 
+            return lst.index(value):
+        except ValueError:
+            lst.append(value)
+            return len(lst) - 1
+
+    def add_constant(self, value):
+        self.add_or_append_to_list(self.constants, value)
+
+    def add_local(self, name):
+        self.add_or_append_to_list(self.locals, name)
+
+    def add_instruction(self, instr):1
         self.instrlist.append(instr)
 
-            
 
 
 def compile(ast_node):
