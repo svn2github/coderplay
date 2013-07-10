@@ -188,7 +188,7 @@ pn_type_dict[PN_FLOAT] = 'FLOAT'
 pn_type_dict[PN_PAREN] = 'PAREN'
 pn_type_dict[PN_IDXLIST] = 'IDXLIST'
 pn_type_dict[PN_NONE] = 'NONE'
-pn_type_dict[PN_ASSIGN] = 'ASSIGN'
+pn_type_dict[PN_ARGLIST] = 'ARGLIST'
 pn_type_dict[PN_KWPARM] = 'KWPARM'
 pn_type_dict[PN_STRING] = 'STRING'
 
@@ -714,7 +714,10 @@ def parse_arglist(tokenlist, isdef=0):
             subparsed = PT_Node(PN_KWPARM)
             subparsed.append(subparsed_1)
             subparsed.append(subparsed_2)
+        else:
+            subparsed = subparsed_1
         parsed.append(subparsed)
+
         # Parse any other following parameters
         while tokenlist.get().tag == EPW_OP_COMMA:
             tokenlist.match(EPW_OP_COMMA)
@@ -729,6 +732,8 @@ def parse_arglist(tokenlist, isdef=0):
                 subparsed = PT_Node(PN_KWPARM)
                 subparsed.append(subparsed_1)
                 subparsed.append(subparsed_2)
+            else:
+                subparsed = subparsed_1
             parsed.append(subparsed)
     tokenlist.match(EPW_OP_R_PAREN)
     return parsed

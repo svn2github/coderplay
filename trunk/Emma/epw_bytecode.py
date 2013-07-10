@@ -69,7 +69,7 @@ M_TEMP          = 'temp'
 
 class Instruction(object):
 
-    def __init__(self, opcode, *args)
+    def __init__(self, opcode, *args):
         self.opcode = opcode
         self.args = args
 

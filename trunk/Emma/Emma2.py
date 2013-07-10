@@ -7,6 +7,7 @@ from epw_lexer import Lexer, LexError, TokenList
 from epw_parser2 import parse_file, parse_prompt, ParseError
 from epw_interpreter import EvalError, BreakControl, ContinueControl, ReturnControl
 from epw_env import get_topenv
+from epw_compiler import ControlFlowGraph, compile
 
 '''
 Emma is a computer language designed moslty for educational purpose.
@@ -140,6 +141,10 @@ class Emma(object):
             lines.reset()
             tokenlist.reset()
             return
+
+        # Compilation
+        compiled = compile(parsed, ControlFlowGraph())
+        print compiled
         
         # Evaluation
         try:
