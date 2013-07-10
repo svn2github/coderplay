@@ -65,6 +65,9 @@ M_CONSTANT      = 'constant'
 M_LOCAL         = 'local'
 M_ARG           = 'argument'
 M_TEMP          = 'temp'
+M_POINTER       = 'pointer'
+M_THIS          = 'this'
+M_THAT          = 'that'
 
 
 class Instruction(object):
