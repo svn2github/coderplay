@@ -144,16 +144,78 @@ def is_number(token):
     return 1 if token.tag in [EPW_INT, EPW_FLOAT] else 0
 
 
-PT_NODE_LIST = 0
-PT_NODE_IF   = 1
+# Parse tree node types
+PN_LIST         = 0 # list of nodes to be executed in turn
+PN_IF           = 1
+PN_WHILE        = 2
+PN_FOR          = 3
+PN_DEF          = 4
+PN_CONTINUE     = 5
+PN_BREAK        = 6
+PN_RETURN       = 7
+PN_BRACKET      = 8
+PN_PRINT        = 9
+PN_VAR          = 10
+PN_ASSIGN       = 11
+PN_BINOP        = 12
+PN_UNARYOP      = 13
+PN_INT          = 14
+PN_FLOAT        = 15
+PN_PAREN        = 16
+PN_IDXLIST      = 17
+PN_NONE         = 18
+PN_ARGLIST      = 19
+PN_KWPARM       = 20
+PN_STRING       = 21
+
+pn_type_dict = {}
+pn_type_dict[PN_LIST] = 'LIST'
+pn_type_dict[PN_IF] = 'IF'
+pn_type_dict[PN_WHILE] = 'WHILE'
+pn_type_dict[PN_FOR] = 'FOR'
+pn_type_dict[PN_DEF] = 'DEF'
+pn_type_dict[PN_CONTINUE] = 'CONTI'
+pn_type_dict[PN_BREAK] = 'BREAK'
+pn_type_dict[PN_RETURN] = 'RETURN'
+pn_type_dict[PN_BRACKET] = 'BRACKET'
+pn_type_dict[PN_PRINT] = 'PRINT'
+pn_type_dict[PN_VAR] = 'VAR'
+pn_type_dict[PN_ASSIGN] = 'ASSIGN'
+pn_type_dict[PN_BINOP] = 'BOP'
+pn_type_dict[PN_UNARYOP] = 'UOP'
+pn_type_dict[PN_INT] = 'INT'
+pn_type_dict[PN_FLOAT] = 'FLOAT'
+pn_type_dict[PN_PAREN] = 'PAREN'
+pn_type_dict[PN_IDXLIST] = 'IDXLIST'
+pn_type_dict[PN_NONE] = 'NONE'
+pn_type_dict[PN_ASSIGN] = 'ASSIGN'
+pn_type_dict[PN_KWPARM] = 'KWPARM'
+pn_type_dict[PN_STRING] = 'STRING'
+
+def pncode2str(code):
+    return pn_type_dict[code]
+
 
 class PT_Node(object):
     ''' A node in the Parse Tree
     '''
 
-    def __init__(self, typ=PT_NODE_LIST):
-        self.typ = typ
-        pass
+    def __init__(self, label=PN_LIST):
+        self.label = label
+        self.lst = []
+
+    def append(self, item):
+        self.lst.append(item)
+
+    def __repr__(self):
+        out = pncode2str(self.label) + '['
+        if len(self.lst) > 0:
+            out += str(self.lst[0])
+        for item in self.lst[1:]:
+            out += ', '
+            out += str(item)
+        out += ']'
+        return out
 
 
 # The prompt input is just a single statement
@@ -166,7 +228,7 @@ def parse_prompt(tokenlist):
 def parse_file(tokenlist):
     'The starting point for parsing a file input'
     # The parsed list holds a tree like structure
-    parsed = []
+    parsed = PT_Node()
     while tokenlist.get(): # this is lookahead token
         subparsed = parse_statement(tokenlist)
         if subparsed: # if it is not None, add to overall parsed list
@@ -189,7 +251,7 @@ def parse_statement(tokenlist):
 
 def parse_stmt_block(tokenlist):
     'Parse the stmt_block, i.e. { ... } '
-    parsed = []
+    parsed = PT_Node()
     tokenlist.match(EPW_OP_L_CURLY)
     # if the corresponding "}" if not encountered
     while tokenlist.get().tag != EPW_OP_R_CURLY:
@@ -212,7 +274,7 @@ def parse_stmt_block(tokenlist):
 
 def parse_stmt_list(tokenlist):
     'A stmt_list is linked using semicolons'
-    parsed = []
+    parsed = PT_Node()
     # Match the first stmt
     if is_compound_keywords(tokenlist.get()):
         subparsed = parse_compound_stmt(tokenlist)
@@ -259,73 +321,83 @@ def parse_compound_stmt(tokenlist):
 
 def parse_if_stmt(tokenlist):
     'Parse the if_stmt'
-    parsed = [EPW_KW_IF]
+    parsed = PT_Node(PN_IF)
     tokenlist.match(EPW_KW_IF)
     # the test
-    ast_node.predicate = parse_r_expression(tokenlist)
+    parsed.append(parse_r_expression(tokenlist))
     # the if part
     if tokenlist.get().tag == EPW_OP_L_CURLY:
-        ast_node.if_body = parse_stmt_block(tokenlist)
+        parsed.append(parse_stmt_block(tokenlist))
     else:
-        ast_node.if_body = parse_simple_stmt(tokenlist)
+        parsed.append(parse_simple_stmt(tokenlist))
     # the optional else part
     if tokenlist.get().tag == EPW_KW_ELSE:
-        ast_node.else_body = parse_else_stmt(tokenlist)
-    return ast_node
+        parsed.append(parse_else_stmt(tokenlist))
+    return parsed
 
 
 def parse_else_stmt(tokenlist):
     'Parse the else_stmt, which can enclose another if_stmt'
     tokenlist.match(EPW_KW_ELSE)
     if tokenlist.get().tag == EPW_OP_L_CURLY:
-        ast_node = parse_stmt_block(tokenlist)
+        parsed = parse_stmt_block(tokenlist)
     elif tokenlist.get().tag == EPW_KW_IF:
-        ast_node = parse_if_stmt(tokenlist)
+        parsed = parse_if_stmt(tokenlist)
     else:
-        ast_node = parse_simple_stmt(tokenlist)
-    return ast_node
+        parsed = parse_simple_stmt(tokenlist)
+    return parsed
 
 
 def parse_while_stmt(tokenlist):
     'Parse the while compound_stmt'
     tokenlist.match(EPW_KW_WHILE)
-    ast_node = Ast_WhileLoop(tokenlist.get(-1).pos)
-    ast_node.predicate = parse_r_expression(tokenlist)
+    parsed = PT_Node(PN_WHILE)
+    parsed.append(parse_r_expression(tokenlist))
     if tokenlist.get().tag == EPW_OP_L_CURLY:
-        ast_node.body = parse_stmt_block(tokenlist)
+        parsed.append(parse_stmt_block(tokenlist))
     else:
-        ast_node.body = parse_simple_stmt(tokenlist)
-    return ast_node
+        parsed.append(parse_simple_stmt(tokenlist))
+    return parsed
 
 def parse_for_stmt(tokenlist):
     'Parse the for loop'
     tokenlist.match(EPW_KW_FOR)
-    ast_node = Ast_ForLoop(tokenlist.get(-1).pos)
-    ast_node.counter = parse_ID(tokenlist)
+    parsed = PT_Node(PN_FOR)
+    # counter
+    parsed.append(parse_ID(tokenlist))
     tokenlist.match(EPW_OP_ASSIGN)
-    ast_node.start = parse_expression(tokenlist)
+    # start
+    parsed.append(parse_expression(tokenlist))
     tokenlist.match(EPW_OP_COMMA)
-    ast_node.end = parse_expression(tokenlist)
+    # end
+    parsed.append(parse_expression(tokenlist))
     # The optional step argument
     if tokenlist.get().tag == EPW_OP_COMMA:
         tokenlist.match(EPW_OP_COMMA)
-        ast_node.step = parse_expression(tokenlist)
+        parsed.append(parse_expression(tokenlist))
+    else:
+        subparsed = PT_Node(PN_INT)
+        subparsed.append(1)
+        parsed.append(subparsed) # default step of 1
     # Parse the body
     if tokenlist.get().tag == EPW_OP_L_CURLY:
-        ast_node.body = parse_stmt_block(tokenlist)
+        parsed.append(parse_stmt_block(tokenlist))
     else:
-        ast_node.body = parse_simple_stmt(tokenlist)
-    return ast_node
+        parsed.append(parse_simple_stmt(tokenlist))
+    return parsed
 
 
 def parse_def_stmt(tokenlist):
     'Parse the function definition'
     tokenlist.match(EPW_KW_DEF)
-    ast_node = Ast_DefFunc(tokenlist.get(-1).pos)
-    ast_node.func = parse_ID(tokenlist)
-    ast_node.parmlist = parse_arglist(tokenlist, isdef=1)
-    ast_node.body = parse_stmt_block(tokenlist)
-    return ast_node
+    parsed = PT_Node(PN_DEF)
+    # function name
+    parsed.append(parse_ID(tokenlist))
+    # parameter list
+    parsed.append(parse_arglist(tokenlist, isdef=1)) 
+    # function body
+    parsed.append(parse_stmt_block(tokenlist))
+    return parsed
 
 
 def parse_empty_stmt(tokenlist):
@@ -341,28 +413,26 @@ def parse_simple_stmt(tokenlist):
     'A simple_stmt is a SINGLE stmt'
     token = tokenlist.get()
     if token.tag == EPW_KW_PRINT:
-        ast_node = parse_print_stmt(tokenlist)
+        parsed = parse_print_stmt(tokenlist)
     elif token.tag == EPW_KW_CONTINUE:
         tokenlist.match(EPW_KW_CONTINUE)
-        ast_node = Ast_Continue(token.pos)
+        parsed = PT_Node(PN_CONTINUE)
     elif token.tag == EPW_KW_BREAK:
         tokenlist.match(EPW_KW_BREAK)
-        ast_node = Ast_Break(token.pos)
+        parsed = PT_Node(PN_BREAK)
     elif token.tag == EPW_KW_RETURN:
         tokenlist.match(EPW_KW_RETURN)
         # This parsing may not be optimal though it may works.
+        parsed = PT_Node(PN_RETURN)
         if tokenlist.get().tag not in [EPW_OP_EOL, EPW_OP_SEMICOLON, EPW_OP_R_PAREN]:
-            next_node = parse_r_expression(tokenlist)
-            ast_node = Ast_Return(token.pos, next_node)
-        else:
-            ast_node = Ast_Return(token.pos)
+            parsed.append(parse_r_expression(tokenlist))
     elif token.tag in [EPW_INT, EPW_FLOAT, EPW_STR]:
-        ast_node = parse_r_expression(tokenlist)
+        parsed = parse_r_expression(tokenlist)
     elif token.tag == EPW_OP_SEMICOLON:
-        ast_node = parse_empty_stmt(tokenlist)
+        parsed = parse_empty_stmt(tokenlist)
     elif is_unaryop(token):
         # a leading +/-/not, it can only be an expression 
-        ast_node = parse_r_expression(tokenlist)
+        parsed = parse_r_expression(tokenlist)
 
     elif token.tag == EPW_ID:
         # Both ID, slice all start with an ID.
@@ -373,7 +443,7 @@ def parse_simple_stmt(tokenlist):
         # a function call with [], f()[]
 
         if tokenlist.get(1).tag == EPW_OP_ASSIGN: # simple case of ID assignment
-            ast_node = parse_assign_stmt(tokenlist)
+            parsed = parse_assign_stmt(tokenlist)
 
         else: # complicate case for possible slice assignment
             rest = tokenlist.get_rest_line()
@@ -384,80 +454,85 @@ def parse_simple_stmt(tokenlist):
                 if mstring[-3] == EPW_OP_R_PAREN:
                     raise ParseError('Cannot Assign to a Function Call', 
                             get_topenv().get('$INPUT_LINES').get_content_around_pos(tokenlist.get().pos))
-                ast_node = parse_ID(tokenlist)
+                parsed = parse_ID(tokenlist)
                 for c in mstring:
                     if c == EPW_OP_L_BRACKET:
-                        ast_node = parse_brackets(tokenlist, ast_node)
+                        parsed = parse_brackets(tokenlist, parsed)
                     elif c == EPW_OP_L_PAREN:
-                        ast_node = parse_parenthesis(tokenlist, ast_node)
-                ast_node = parse_assign_stmt(tokenlist, ast_node)
+                        parsed = parse_parenthesis(tokenlist, parsed)
+                parsed = parse_assign_stmt(tokenlist, parsed)
             else:
-                ast_node = parse_r_expression(tokenlist)
+                parsed = parse_r_expression(tokenlist)
 
     else:
         tokenlist.match('token for a simple_stmt')
-    return ast_node
+    return parsed
 
 
 def parse_print_stmt(tokenlist):
     'Parse a print_stmt. It can be an empty Print.'
     # match the print keyword
     tokenlist.match(EPW_KW_PRINT)
-    ast_node = Ast_Print(tokenlist.get(-1).pos)
+    parsed = PT_Node(PN_PRINT)
     # get the first possible item
     token = tokenlist.get()
     if token.tag in [EPW_OP_EOL, EPW_OP_SEMICOLON]:
-        return ast_node
-    next_node = parse_r_expression(tokenlist)
-    ast_node.append(next_node)
+        return parsed
+    parsed.append(parse_r_expression(tokenlist))
     token = tokenlist.get()
     # any more following expressions
     while tokenlist.get().tag == EPW_OP_COMMA:
         tokenlist.match(EPW_OP_COMMA)
-        next_node = parse_r_expression(tokenlist)
-        ast_node.append(next_node)
-    return ast_node
+        parsed.append(parse_r_expression(tokenlist))
+    return parsed
 
 
 def parse_ID(tokenlist):
     token = tokenlist.match(EPW_ID)
-    ast_node = Ast_Variable(token.pos, token.value)
-    return ast_node
+    parsed = PT_Node(PN_VAR)
+    parsed.append(token.value)
+    return parsed
 
 def parse_assign_stmt(tokenlist, left=None):
     'The left operand of assign_stmt can be either an ID or a Function Call'
+    parsed = PT_Node(PN_ASSIGN)
     # We need to evaluated for the left operand if it is not given.
     # It must be an ID because a function call would have been given
     # in parse_simple_stmt.
     if left:
-        left_operand = left
+        parsed.append(left)
     else:
-        left_operand = parse_ID(tokenlist)
+        parsed.append(parse_ID(tokenlist))
     # The = character
     token = tokenlist.match(EPW_OP_ASSIGN)
     # The right operand
-    next_node = parse_r_expression(tokenlist)
-    ast_node = Ast_Assign(token.pos, left_operand, next_node)
-    return ast_node
+    parsed.append(parse_r_expression(tokenlist))
+    return parsed
 
 
 def parse_r_expression(tokenlist):
-    ast_node = parse_r_term(tokenlist)
+    parsed = parse_r_term(tokenlist)
     while is_r_orop(tokenlist.get()):
+        subparsed = parsed
+        parsed = PT_Node(PN_BINOP)
+        parsed.append(subparsed)
         optoken = tokenlist.get()
         tokenlist.match(optoken.tag)
-        next_node = parse_r_term(tokenlist)
-        ast_node = Ast_BinOp(optoken.pos, optoken.value, ast_node, next_node)
-    return ast_node
+        parsed.append(optoken.value)
+        parsed.append(parse_r_term(tokenlist))
+    return parsed
 
 def parse_r_term(tokenlist):
-    ast_node = parse_r_factor(tokenlist)
+    parsed = parse_r_factor(tokenlist)
     while tokenlist.get().value == EPW_OP_AND:
+        subparsed = parsed
+        parsed = PT_Node(PN_BINOP)
+        parsed.append(subparsed)
         optoken = tokenlist.get()
         tokenlist.match(optoken.tag)
-        next_node = parse_r_factor(tokenlist)
-        ast_node = Ast_BinOp(optoken.pos, optoken.value, ast_node, next_node)
-    return ast_node
+        parsed.append(optoken.value)
+        parsed.append(parse_r_factor(tokenlist))
+    return parsed
 
 def parse_r_factor(tokenlist):
     token = tokenlist.get()
@@ -465,41 +540,53 @@ def parse_r_factor(tokenlist):
     if token.tag == EPW_OP_NOT:
         optoken = token
         tokenlist.match(optoken.tag)
-    ast_node = parse_l_expression(tokenlist)
+    parsed = parse_l_expression(tokenlist)
     if optoken:
-        ast_node = Ast_UnaryOp(optoken.pos, optoken.value, ast_node)
-    return ast_node
+        subparsed  = parsed
+        parsed = PT_Node(PN_UNARYOP)
+        parsed.append(optoken.value)
+        parsed.append(subparsed)
+    return parsed
 
 def parse_l_expression(tokenlist):
-    ast_node = parse_l_factor(tokenlist)
+    parsed = parse_l_factor(tokenlist)
     while is_l_op(tokenlist.get()):
+        subparsed  = parsed
+        parsed = PT_Node(PN_BINOP)
+        parsed.append(subparsed)
         optoken = tokenlist.get()
         tokenlist.match(optoken.tag)
-        next_node = parse_l_factor(tokenlist)
-        ast_node = Ast_BinOp(optoken.pos, optoken.value, ast_node, next_node)
-    return ast_node
+        parsed.append(optoken.value)
+        parsed.append(parse_l_factor(tokenlist))
+    return parsed
 
 def parse_l_factor(tokenlist):
-    ast_node = parse_expression(tokenlist)
-    return ast_node
+    parsed = parse_expression(tokenlist)
+    return parsed
 
 def parse_expression(tokenlist):
-    ast_node = parse_term(tokenlist)
+    parsed = parse_term(tokenlist)
     while is_addop(tokenlist.get()):
+        subparsed  = parsed
+        parsed = PT_Node(PN_BINOP)
+        parsed.append(subparsed)
         optoken = tokenlist.get()
         tokenlist.match(optoken.tag)
-        next_node = parse_term(tokenlist)
-        ast_node = Ast_BinOp(optoken.pos, optoken.value, ast_node, next_node)
-    return ast_node
+        parsed.append(optoken.value)
+        parsed.append(parse_term(tokenlist))
+    return parsed
 
 def parse_term(tokenlist):
-    ast_node = parse_factor(tokenlist)
+    parsed = parse_factor(tokenlist)
     while is_mulop(tokenlist.get()):
+        subparsed  = parsed
+        parsed = PT_Node(PN_BINOP)
+        parsed.append(subparsed)
         optoken = tokenlist.get()
         tokenlist.match(optoken.tag)
-        next_node = parse_factor(tokenlist)
-        ast_node = Ast_BinOp(optoken.pos, optoken.value, ast_node, next_node)
-    return ast_node
+        parsed.append(optoken.value)
+        parsed.append(parse_factor(tokenlist))
+    return parsed
 
 
 def parse_factor(tokenlist):
@@ -515,16 +602,17 @@ def parse_factor(tokenlist):
     token = tokenlist.get()
 
     if is_number(token):
-        ast_node = parse_number(tokenlist)
+        parsed = parse_number(tokenlist)
 
     elif token.tag == EPW_STR:
         tokenlist.match(EPW_STR)
         # strip the leading and ending quotes
-        ast_node = Ast_String(token.pos, token.value[1:-1])
+        parsed = PT_Node(PN_STRING)
+        parsed.append(token.value[1:-1])
 
     elif token.tag == EPW_OP_L_PAREN:
         tokenlist.match(EPW_OP_L_PAREN)
-        ast_node = parse_r_expression(tokenlist)
+        parsed = parse_r_expression(tokenlist)
         tokenlist.match(EPW_OP_R_PAREN)
 
     elif token.tag == EPW_ID:
@@ -534,104 +622,116 @@ def parse_factor(tokenlist):
         matched = regex_func_slice_mix.match(rest)
         if matched:
             mstring = matched.group(0)
-            ast_node = parse_ID(tokenlist)
+            parsed = parse_ID(tokenlist)
             for c in mstring:
                 if c == EPW_OP_L_BRACKET:
-                    ast_node = parse_brackets(tokenlist, ast_node)
+                    parsed = parse_brackets(tokenlist, parsed)
                 elif c == EPW_OP_L_PAREN:
-                    ast_node = parse_parenthesis(tokenlist, ast_node)
+                    parsed = parse_parenthesis(tokenlist, parsed)
         else:
-            ast_node = parse_ID(tokenlist)
+            parsed = parse_ID(tokenlist)
 
     else:
         tokenlist.match('token for a factor')
 
     # package the node with unary operator if exists
     if optoken:
-        ast_node = Ast_UnaryOp(optoken.pos, optoken.value, ast_node)
+        subparsed  = parsed
+        parsed = PT_Node(PN_UNARYOP)
+        parsed.append(optoken.value)
+        parsed.append(subparsed)
 
-    return ast_node
+    return parsed
 
 
 def parse_number(tokenlist):
     token = tokenlist.get()
     if token.tag == EPW_INT:
         tokenlist.match(EPW_INT)
-        ast_node = Ast_Int(token.pos, int(token.value))
+        parsed = PT_Node(PN_INT)
+        parsed.append(int(token.value))
     else:
         tokenlist.match(EPW_FLOAT)
-        ast_node = Ast_Float(token.pos, float(token.value))
-    return ast_node
+        parsed = PT_Node(PN_FLOAT)
+        parsed.append(float(token.value))
+    return parsed
 
 def parse_brackets(tokenlist, prefix):
-    ast_node = Ast_Slice(tokenlist.get().pos)
-    ast_node.collection = prefix
-    ast_node.idxlist = parse_idxlist(tokenlist)
-    return ast_node
+    parsed = PT_Node(PN_BRACKET)
+    parsed.append(prefix) # ID
+    parsed.append(parse_idxlist(tokenlist))
+    return parsed
 
 def parse_parenthesis(tokenlist, prefix):
-    ast_node = Ast_FuncCall(tokenlist.get().pos)
-    ast_node.func = prefix
-    ast_node.arglist = parse_arglist(tokenlist)
-    return ast_node
+    parsed = PT_Node(PN_PAREN)
+    parsed.append(prefix) # function
+    parsed.append(parse_arglist(tokenlist))
+    return parsed
 
 def parse_idxlist(tokenlist):
     'Parse the idxlist for array like variable'
-    ast_node = Ast_IdxList(tokenlist.get().pos)
+    parsed = PT_Node(PN_IDXLIST)
     tokenlist.match(EPW_OP_L_BRACKET)
     # The start of the index
     if tokenlist.get().tag != EPW_OP_COLON:
-        ast_node.start = parse_expression(tokenlist)
+        parsed.append(parse_expression(tokenlist))
+    else:
+        if tokenlist.get().tag != EPW_OP_COLON:
+            raise ParseError('Incorrect index list format',
+                    get_topenv().get('$INPUT_LINES').get_content_around_pos(tokenlist.get().pos))
+        parsed.append(PT_Node(PN_NONE))
     # The optional end of the index
     if tokenlist.get().tag == EPW_OP_COLON:
         tokenlist.match(EPW_OP_COLON)
-        ast_node.nColon += 1
         if tokenlist.get().tag not in [EPW_OP_COLON, EPW_OP_R_BRACKET]:
-            ast_node.end = parse_expression(tokenlist)
+            parsed.append(parse_expression(tokenlist))
+        else:
+            parsed.append(PT_Node(PN_NONE))
     # The optional step of the index
     if tokenlist.get().tag == EPW_OP_COLON:
         tokenlist.match(EPW_OP_COLON)
-        ast_node.nColon += 1
         if tokenlist.get().tag != EPW_OP_R_BRACKET:
-            ast_node.step = parse_expression(tokenlist)
+            parsed.append(parse_expression(tokenlist))
+        else:
+            parsed.append(PT_Node(PN_NONE))
     tokenlist.match(EPW_OP_R_BRACKET)
-    return ast_node
+    return parsed
 
 def parse_arglist(tokenlist, isdef=0):
     'Parse the argument list, i.e. (a, b, c)'
-    ast_node = Ast_ArgList(tokenlist.get().pos)
+    parsed = PT_Node(PN_ARGLIST)
     tokenlist.match(EPW_OP_L_PAREN)
     # Parse first argument if it is not empty
     if tokenlist.get().tag != EPW_OP_R_PAREN:
         if isdef:
-            next_node = parse_ID(tokenlist)
+            subparsed_1 = parse_ID(tokenlist)
         else:
-            next_node = parse_r_expression(tokenlist)
+            subparsed_1 = parse_r_expression(tokenlist)
         # Parse possible keyword type parameter
-        is_kwarg = 0
         if tokenlist.get().tag == EPW_OP_ASSIGN:
             pos = tokenlist.match(EPW_OP_ASSIGN).pos
-            val_node = parse_r_expression(tokenlist)
-            next_node = Ast_KeywordParm(pos, next_node, val_node)
-            is_kwarg = 1
-        ast_node.append(next_node, is_kwarg)
+            subparsed_2 = parse_r_expression(tokenlist)
+            subparsed = PT_Node(PN_KWPARM)
+            subparsed.append(subparsed_1)
+            subparsed.append(subparsed_2)
+        parsed.append(subparsed)
         # Parse any other following parameters
         while tokenlist.get().tag == EPW_OP_COMMA:
             tokenlist.match(EPW_OP_COMMA)
             if isdef:
-                next_node = parse_ID(tokenlist)
+                subparsed_1 = parse_ID(tokenlist)
             else:
-                next_node = parse_r_expression(tokenlist)
+                subparsed_1 = parse_r_expression(tokenlist)
             # Parse possible keyword type parameter
-            is_kwarg = 0
             if tokenlist.get().tag == EPW_OP_ASSIGN:
                 pos = tokenlist.match(EPW_OP_ASSIGN).pos
-                val_node = parse_r_expression(tokenlist)
-                next_node = Ast_KeywordParm(pos, next_node, val_node)
-                is_kwarg = 1
-            ast_node.append(next_node, is_kwarg)
+                subparsed_2 = parse_r_expression(tokenlist)
+                subparsed = PT_Node(PN_KWPARM)
+                subparsed.append(subparsed_1)
+                subparsed.append(subparsed_2)
+            parsed.append(subparsed)
     tokenlist.match(EPW_OP_R_PAREN)
-    return ast_node
+    return parsed
 
 class ParseError(Exception):
     def __repr__(self):

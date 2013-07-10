@@ -116,7 +116,7 @@ regex_func_slice_mix_assign = re.compile(r'ID (\[ [^\]]*\] *|\( [^\)]*\) *)+=')
 
 
 SETTINGS = [
-    ('$DEBUG', 0), 
+    ('$DEBUG', 1), 
     ('$NAME', 'Emma'),
     ('$PROMPT', 'In'),
     ('$PROMPT_CONTINUE', '.'),
