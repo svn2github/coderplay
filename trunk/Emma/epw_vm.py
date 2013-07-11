@@ -12,6 +12,13 @@ class CollectionSlice(object):
         self.idxlist = idxlist
 
 
+class make_instruction(object):
+
+    def __init__(self, line):
+        fields = line.split()
+        self.opcode = fields[0]
+        self.args = fields[1:]
+
 
 class VM(object):
 
@@ -34,7 +41,7 @@ class VM(object):
         self.PC = 0
 
 
-    def safe_get_segment_index(self, segment, index, value):
+    def safe_get_segment_index(self, segment, index):
         if index < len(segment) and index >= 0:
             return segment[index]
         else:
@@ -42,16 +49,21 @@ class VM(object):
 
 
     def get_segment_index(self, segment, index):
-        if segment == M_ARG:
+        if segment == M_CONSTANT:
+            return index
+
+        elif segment == M_ARG:
             return self.safe_get_segment_index(self.argument, index)
+
         elif segment == M_LOCAL:
-            return self.safe_get_segment_index(self.argument, index)
-        elif segment == M_TEMP:
-            return self.safe_get_segment_index(self.temp, index)
+            return self.safe_get_segment_index(self.local, index)
+
         elif segment == M_POINTER:
             return self.safe_get_segment_index(self.pointer, index)
+
         elif segment == M_THIS:
             return self.this[index]
+
         elif segment == M_THAT:
             if isinstance(self.pointer[1], CollectionSlice):
                 collection = self.pointer[1].collection
@@ -76,14 +88,16 @@ class VM(object):
     def set_segment_index(self, segment, index, value):
         if segment == M_ARG:
             self.safe_set_segment_index(self.argument, index, value)
+
         elif segment == M_LOCAL:
             self.safe_set_segment_index(self.local, index, value)
-        elif segment == M_TEMP:
-            self.safe_set_segment_index(self.temp, index, value)
+
         elif segment == M_POINTER:
             self.safe_set_segment_index(self.pointer, index, value)
+
         elif segment == M_THIS:
             self.safe_set_segment_index(self.this, index, value)
+
         elif segment == M_THAT:
             if isinstance(self.pointer[1], CollectionSlice):
                 collection = self.pointer[1].collection
@@ -99,26 +113,28 @@ class VM(object):
     def run(self, instrlist):
 
         while self.PC < len(instrlist):
-            instr = instrlist[self.PC]
+            instr = make_instruction(instrlist[self.PC])
 
-            opcode = instr.opcode
+            opcode = str2opcode(instr.opcode)
 
             if opcode == OP_PUSH:
                 segment, index = instr.args
-                self.stack.append(self.get_segment_index(segment, index))
+                self.stack.append(self.get_segment_index(segment, int(index)))
 
             elif opcode == OP_POP:
                 segment, index = instr.args
                 value = self.stack.pop()
-                self.set_segment_index(segment, index, value)
+                self.set_segment_index(segment, int(index), value)
 
             elif opcode == OP_JUMP:
                 self.PC = instr.args[0]
+                continue
 
             elif opcode == OP_FJUMP:
                 value = self.stack.pop()
                 if not value:
                     self.PC = instr.args[0]
+                    continue
 
             elif opcode == OP_FUNCTION: # function funcName nlocals
                 nlocals = instr.args[1]
@@ -129,7 +145,31 @@ class VM(object):
                 pass
 
             elif opcode == OP_CALL: # call
+                nkws = self.stack.pop()
+                nargs = self.stack.pop()
+
+                funcName = instr.args[0]
+                arglist = []
+                for i in range(nargs):
+                    arglist.append(self.stack.pop())
+                kwlist = []
+                for i in range(nkws):
+                    kwlist.append(self.stack.pop())
+                if funcName == 'print':
+                    for item in arglist:
+                        sys.stdout.write(str(item) + ' ')
+                    sys.stdout.write('\n')
+
+
+            elif opcode == OP_STOP: 
+                break
+
+            print '-----', instrlist[self.PC]
+            print 'stack = ', self.stack
+            print 'local = ', self.local
             
+            self.PC += 1
+
 
 
 

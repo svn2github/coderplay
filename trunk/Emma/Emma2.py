@@ -9,7 +9,9 @@ from epw_parser2 import parse_file, parse_prompt, ParseError
 from epw_interpreter import EvalError, BreakControl, ContinueControl, ReturnControl
 from epw_env import get_topenv
 from epw_compiler import Compiler
+from epw_vm import VM
 from epw_assembler import assemble
+
 
 '''
 Emma is a computer language designed moslty for educational purpose.
@@ -39,6 +41,7 @@ class Emma(object):
     def __init__(self):
         self.lex = Lexer()
         self.compiler = Compiler()
+        self.vm = VM()
         for token_type in specs.token_type_list:
             self.lex.add_token_type(token_type)
         self.topenv = get_topenv()
@@ -155,7 +158,7 @@ class Emma(object):
         
         # Evaluation
         try:
-            pass
+            self.vm.run(assembled)
 
         except EvalError as e:
             sys.stderr.write(repr(e))

@@ -35,7 +35,8 @@ def assemble(linelist):
         elif opstr == 'push' and fields[1] == 'constant':
             if fields[2].startswith('('):
                 label = fields[2]
-                line = 'push constant ' + str(label_dict[label])
+                if label_dict.has_key(label):
+                    line = 'push constant ' + str(label_dict[label])
 
         outlist.append(line)
 

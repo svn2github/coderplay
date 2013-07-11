@@ -29,6 +29,8 @@ OP_NEG      = 23
 
 OP_SLICE    = 24
 
+OP_MAKEKW   = 80
+
 OP_STOP     = 99
 
 opcode_dict = {}
@@ -60,10 +62,19 @@ opcode_dict[OP_NEG] = 'neg'
 
 opcode_dict[OP_SLICE] = 'slc'
 
+opcode_dict[OP_MAKEKW] = 'mkkw'
+
 opcode_dict[OP_STOP] = 'stop'
+
+
+opstr_dict = {v:k for k,v in opcode_dict.items()}
 
 def opcode2str(opcode):
     return opcode_dict[opcode]
+
+def str2opcode(s):
+    return opstr_dict[s]
+
 
 M_CONSTANT      = 'constant'
 M_LOCAL         = 'local'

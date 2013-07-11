@@ -247,7 +247,7 @@ class Compiler(object):
             # get number of variables used in the function
             nVarsScope = self.symtab.nVarsScope
             # insert the function nvars definition line
-            self.insert_instruction(OP_FUNCTION, nVarsScope) 
+            self.insert_instruction(OP_FUNCTION, funcname, nVarsScope) 
             # restore the symbol table of main level
             self.restore_symtab()
 
@@ -268,6 +268,7 @@ class Compiler(object):
                 if item.label != PN_KWPARM:
                     parname = item.lst[0]
                     idx = self.symtab.get_or_set(parname)
+                    self.push_instruction(OP_PUSH, M_CONSTANT, 0)
                     self.push_instruction(OP_POP, M_LOCAL, idx)
                     nparms += 1
             self.push_instruction(OP_PUSH, M_CONSTANT, nparms)
@@ -334,8 +335,10 @@ class Compiler(object):
 
         elif label == PN_PRINT:
             for item in lst:
-                self.compile(item, cfg)
-            self.push_instruction(OP_CALL, 'print', len(lst))
+                self.compile(item)
+            self.push_instruction(OP_PUSH, M_CONSTANT, len(lst)) # nargs
+            self.push_instruction(OP_PUSH, M_CONSTANT, 0) # nkws
+            self.push_instruction(OP_CALL, 'print')
 
         elif label == PN_ASSIGN:
             if lst[0].label == PN_VAR: # simple varialbe
