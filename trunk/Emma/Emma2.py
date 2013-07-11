@@ -150,7 +150,7 @@ class Emma(object):
 
         # Compilation
         compiled = self.compiler.compile(parsed)
-        self.compiler.reset()
+        #self.compiler.reset()
         pprint(compiled, width=18)
 
         assembled = assemble(compiled)
@@ -159,6 +159,7 @@ class Emma(object):
         # Evaluation
         try:
             self.vm.run(assembled)
+            #self.vm.PC = 0
 
         except EvalError as e:
             sys.stderr.write(repr(e))

@@ -49,10 +49,7 @@ class VM(object):
 
 
     def get_segment_index(self, segment, index):
-        if segment == M_CONSTANT:
-            return index
-
-        elif segment == M_ARG:
+        if segment == M_ARG:
             return self.safe_get_segment_index(self.argument, index)
 
         elif segment == M_LOCAL:
@@ -113,13 +110,21 @@ class VM(object):
     def run(self, instrlist):
 
         while self.PC < len(instrlist):
+
             instr = make_instruction(instrlist[self.PC])
 
             opcode = str2opcode(instr.opcode)
 
             if opcode == OP_PUSH:
                 segment, index = instr.args
-                self.stack.append(self.get_segment_index(segment, int(index)))
+                if segment == M_CONSTANT:
+                    if index.startswith('str='):
+                        index = index[4:]
+                    else:
+                        index = int(index)
+                    self.stack.append(index)
+                else:
+                    self.stack.append(self.get_segment_index(segment, int(index)))
 
             elif opcode == OP_POP:
                 segment, index = instr.args
@@ -137,6 +142,16 @@ class VM(object):
                     continue
 
             elif opcode == OP_FUNCTION: # function funcName nlocals
+                # number of passed arguments and kws
+                nkws = self.stack.pop()
+                nargs = self.stack.pop()
+                arglist = []
+                for i in range(nargs):
+                    arglist.append(self.stack.pop())
+                kwlist = []
+                for i in range(nkws):
+                    kwlist.append(self.stack.pop())
+
                 nlocals = instr.args[1]
                 for ii in range(nlocals):
                     self.stack.append(None)
@@ -145,21 +160,17 @@ class VM(object):
                 pass
 
             elif opcode == OP_CALL: # call
-                nkws = self.stack.pop()
-                nargs = self.stack.pop()
-
-                funcName = instr.args[0]
-                arglist = []
-                for i in range(nargs):
-                    arglist.append(self.stack.pop())
-                kwlist = []
-                for i in range(nkws):
-                    kwlist.append(self.stack.pop())
-                if funcName == 'print':
-                    for item in arglist:
-                        sys.stdout.write(str(item) + ' ')
-                    sys.stdout.write('\n')
-
+                func = self.stack.pop()
+                if type(func) == str: # built-in function
+                    funcName = func
+                    if funcName == 'print':
+                        builtin_print(self.stack)
+                    else:
+                        pass
+                else: # user-defined function address
+                    funcAddress = func
+                    print funcAddress
+                    pass
 
             elif opcode == OP_STOP: 
                 break
@@ -171,6 +182,16 @@ class VM(object):
             self.PC += 1
 
 
+def builtin_print(stack):
+    # number of passed arguments and kws
+    nkws = stack.pop()
+    nargs = stack.pop()
+    arglist = []
+    for i in range(nargs):
+        arglist.append(stack.pop())
+    for item in arglist[-1::-1]:
+        sys.stdout.write(str(item) + ' ')
+    sys.stdout.write('\n')
 
 
 

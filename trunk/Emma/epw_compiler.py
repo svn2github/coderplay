@@ -111,7 +111,7 @@ class Compiler(object):
         self.label_group = None
 
     def reset(self):
-        self.symtab = SymbolTable()
+        #self.symtab = SymbolTable()
         self.cfg = ControlFlowGraph()
         self.label_counter = 0
         self.label_group = None
@@ -274,9 +274,13 @@ class Compiler(object):
             self.push_instruction(OP_PUSH, M_CONSTANT, nparms)
             self.push_instruction(OP_PUSH, M_CONSTANT, nkws)
 
-        elif label in [PN_INT, PN_FLOAT, PN_STRING]:
+        elif label in [PN_INT, PN_FLOAT]:
             value = lst[0]
             self.push_instruction(OP_PUSH, M_CONSTANT, value)
+
+        elif label == PN_STRING:
+            value = lst[0]
+            self.push_instruction(OP_PUSH, M_CONSTANT, 'str='+value)
 
         elif label == PN_VAR:
             varname = lst[0]
@@ -284,8 +288,6 @@ class Compiler(object):
             self.push_instruction(OP_PUSH, M_LOCAL, idx)
 
         elif label == PN_PAREN: # function call
-
-            self.compile(lst[0]) # should leave the function on top of stack
 
             # arglist
             nparms = 0
@@ -297,16 +299,16 @@ class Compiler(object):
                     self.push_instruction(OP_PUSH, M_CONSTANT, parname)
                     self.compile(value)
                     self.push_instruction(OP_MAKEKW)
-                    self.push_instruction(OP_POP, M_ARG, nkws)
                     nkws += 1
             for item in lst[1].lst:
                 if item.label != PN_KWPARM:
                     self.compile(item)
-                    self.push_instruction(OP_POP, M_ARG, nparms+nkws)
                     nparms += 1
             
             self.push_instruction(OP_PUSH, M_CONSTANT, nparms)
             self.push_instruction(OP_PUSH, M_CONSTANT, nkws)
+
+            self.compile(lst[0]) # should leave the function on top of stack
             self.push_instruction(OP_CALL)
 
         elif label == PN_CONTINUE:
@@ -338,7 +340,8 @@ class Compiler(object):
                 self.compile(item)
             self.push_instruction(OP_PUSH, M_CONSTANT, len(lst)) # nargs
             self.push_instruction(OP_PUSH, M_CONSTANT, 0) # nkws
-            self.push_instruction(OP_CALL, 'print')
+            self.push_instruction(OP_PUSH, M_CONSTANT, 'str=print')
+            self.push_instruction(OP_CALL)
 
         elif label == PN_ASSIGN:
             if lst[0].label == PN_VAR: # simple varialbe
