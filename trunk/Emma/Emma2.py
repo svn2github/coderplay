@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 import sys
 import random
+from pprint import pprint
 import specs
 from file import Lines
 from epw_lexer import Lexer, LexError, TokenList
 from epw_parser2 import parse_file, parse_prompt, ParseError
 from epw_interpreter import EvalError, BreakControl, ContinueControl, ReturnControl
 from epw_env import get_topenv
-from epw_compiler import ControlFlowGraph, compile
+from epw_compiler import Compiler
+from epw_assembler import assemble
 
 '''
 Emma is a computer language designed moslty for educational purpose.
@@ -36,6 +38,7 @@ class Emma(object):
 
     def __init__(self):
         self.lex = Lexer()
+        self.compiler = Compiler()
         for token_type in specs.token_type_list:
             self.lex.add_token_type(token_type)
         self.topenv = get_topenv()
@@ -143,8 +146,12 @@ class Emma(object):
             return
 
         # Compilation
-        compiled = compile(parsed, ControlFlowGraph())
-        print compiled
+        compiled = self.compiler.compile(parsed)
+        self.compiler.reset()
+        pprint(compiled, width=18)
+
+        assembled = assemble(compiled)
+        pprint(assembled, width=18)
         
         # Evaluation
         try:

@@ -29,6 +29,8 @@ OP_NEG      = 23
 
 OP_SLICE    = 24
 
+OP_STOP     = 99
+
 opcode_dict = {}
 opcode_dict[OP_PUSH] = 'push'
 opcode_dict[OP_POP] = 'pop'
@@ -57,6 +59,8 @@ opcode_dict[OP_NOT] = 'not'
 opcode_dict[OP_NEG] = 'neg'
 
 opcode_dict[OP_SLICE] = 'slc'
+
+opcode_dict[OP_STOP] = 'stop'
 
 def opcode2str(opcode):
     return opcode_dict[opcode]
