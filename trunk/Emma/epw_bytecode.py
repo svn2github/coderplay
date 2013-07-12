@@ -26,10 +26,12 @@ OP_OR       = 20
 OP_XOR      = 21
 OP_NOT      = 22
 OP_NEG      = 23
+OP_PUSHC    = 24
 
-OP_SLICE    = 24
+OP_SLICE    = 25
 
-OP_MAKEKW   = 80
+OP_KWPARM   = 80
+OP_KWARG    = 81
 
 OP_STOP     = 99
 
@@ -59,10 +61,11 @@ opcode_dict[OP_OR] = 'or'
 opcode_dict[OP_XOR] = 'xor'
 opcode_dict[OP_NOT] = 'not'
 opcode_dict[OP_NEG] = 'neg'
-
+opcode_dict[OP_PUSHC] = 'pushc'
 opcode_dict[OP_SLICE] = 'slc'
 
-opcode_dict[OP_MAKEKW] = 'mkkw'
+opcode_dict[OP_KWPARM] = 'kwparm'
+opcode_dict[OP_KWARG] = 'kwarg'
 
 opcode_dict[OP_STOP] = 'stop'
 

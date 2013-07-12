@@ -7,145 +7,71 @@ from epw_parser2 import *
     The line numbers will be generated in subsequent assembler phase.
 '''
 
-class ControlFlowGraph(object):
+class CompiledProc(object):
 
-    def __init__(self):
-        self.instrlist = [Instruction(OP_STOP)]
-        self.inspos_main = 0 # the position to insert a instruction
-        self.pushpos_main = 0
-        self.inspos_func = 1
-        self.pushpos_func = 1
-        self.label_counter = 0
-        self.label_start = None
-        self.label_end = None
-        self.nindent = 0
-
-    def __repr__(self):
-        out = ''
-        for instr in self.instrlist:
-            out += opcode2str(instr.opcode)
-            for arg in instr.args:
-                out += ' ' + str(arg)
-            out += '\n'
-        return out
-
-    def flatten(self):
-        out = []
-        for instr in self.instrlist:
-            line = opcode2str(instr.opcode)
-            for arg in instr.args:
-                line += ' ' + str(arg)
-            out.append(line)
-        return out
-
-    def insert_instruction_main(self, opcode, *args):
-        self.instrlist.insert(self.inspos_main, Instruction(opcode, *args))
-        self.inspos_main += 1
-        self.pushpos_main += 1
-        self.inspos_func += 1
-        self.pushpos_func += 1
-
-    def push_instruction_main(self, opcode, *args):
-        ''' push an instruction at the end of the instruction list
-            This is specifically for any function code. '''
-        self.instrlist.insert(self.pushpos_main, Instruction(opcode, *args))
-        self.pushpos_main += 1
-        self.inspos_func += 1
-        self.pushpos_func += 1
-
-    def insert_instruction_func(self, opcode, *args):
-        self.instrlist.insert(self.inspos_func, Instruction(opcode, *args))
-        self.inspos_func += 1
-        self.pushpos_func += 1
-
-    def push_instruction_func(self, opcode, *args):
-        ''' push an instruction at the end of the instruction list
-            This is specifically for any function code. '''
-        self.instrlist.insert(self.pushpos_func, Instruction(opcode, *args))
-        self.pushpos_func += 1
-
-    def make_label(self, prefix=''):
-        label = self.name + '$' + prefix + str(self.label_counter)
-        self.label_counter += 1
-        return label
-
-class SymbolTable(object):
-
-    def __init__(self, name='$MAIN'):
+    def __init__(self, name='$MAIN$'):
         self.name = name
-        self.scope = {}
-        self.nVarsScope = 0
+        self.parms = []
+        self.kwParms = []
+        self.instrlist = []
         self.parent = None
 
-    def get_nVarsTotal(self):
-        nVarsTotal = self.nVarsScope
-        if self.parent:
-            nVarsTotal += self.parent.get_nVarsTotal()
-        return nVarsTotal
-
-    def lookup_name(self, name):
-        if self.scope.has_key(name):
-            return self.scope[name]
-        elif self.parent:
-            return self.parent.lookup_name(name)
-        else:
-            return -1
-
-    def get_or_set(self, name):
-        idx = self.lookup_name(name)
-        if idx >= 0: # get
-            return idx
-        else: # set
-            idx = self.get_nVarsTotal()
-            self.nVarsScope += 1
-            self.scope[name] = idx
-            return idx
+    def __repr__(self, nindent=0):
+        indent = '    '
+        leading = indent * nindent
+        out = leading + '--------------\n'
+        out += leading + 'CP: ' + self.name + '\n'
+        out += leading + 'parms: ' + str(self.parms) + '\n'
+        out += leading + 'kwParms' + str(self.kwParms) + '\n'
+        for instr in self.instrlist:
+            if instr.opcode == OP_FUNCTION:
+                out += leading + indent + opcode2str(instr.opcode) + '\n'
+                out += instr.args[0].__repr__(nindent+2)
+            else:
+                out += leading + indent + opcode2str(instr.opcode)
+                for arg in instr.args:
+                    out += ' ' + str(arg)
+                out += '\n'
+        out += leading + '--------------\n'
+        return out
 
 
 class Compiler(object):
 
     def __init__(self):
-        self.symtab = SymbolTable()
-        self.cfg = ControlFlowGraph()
+        self.CP = CompiledProc()
         self.label_counter = 0
         self.label_group = None
+        self.tempvar_counter = 0
 
-    def reset(self):
-        #self.symtab = SymbolTable()
-        self.cfg = ControlFlowGraph()
-        self.label_counter = 0
-        self.label_group = None
+    def switchNewCP(self, funcName):
+        newCP = CompiledProc(funcName)
+        newCP.parent = self.CP
+        self.CP = newCP
 
-    def reset_function_instruction(self):
-        self.cfg.inspos_func = len(self.cfg.instrlist)
-        self.cfg.pushpos_func = len(self.cfg.instrlist)
+    def restoreCP(self):
+        self.CP = self.CP.parent
 
-    def insert_instruction(self, opcode, *args):
-        if self.symtab.name == '$MAIN':
-            self.cfg.insert_instruction_main(opcode, *args)
-        else:
-            self.cfg.insert_instruction_func(opcode, *args)
+    def add_parm(self, parmName):
+        self.CP.parms.append(parmName)
 
-    def push_instruction(self, opcode, *args):
-        if self.symtab.name == '$MAIN':
-            self.cfg.push_instruction_main(opcode, *args)
-        else:
-            self.cfg.push_instruction_func(opcode, *args)
+    def add_kwParm(self, kwParmName):
+        self.CP.kwParms.append(kwParmName)
+
+    def add_instruction(self, opcode, *args):
+        self.CP.instrlist.append(Instruction(opcode, *args))
 
     def make_label(self, prefix):
-        prefix = self.symtab.name + '$' + prefix + '-'
+        prefix = self.CP.name + '$' + prefix + '-'
         counter = str(self.label_counter)
         self.label_counter += 1
         self.label_group = prefix+'START'+counter, prefix+'END'+counter, prefix+'FALSE'+counter
         return self.label_group
-    
-    def set_new_symtab(self, newSymtab):
-        newSymtab.parent = self.symtab
-        # switch to the new symbol table for the function definition
-        self.symtab = newSymtab
 
-    def restore_symtab(self):
-        self.symtab = self.symtab.parent
+    def make_temp_varname(self):
+        tempvarname = self.CP.name + 'tmp' + str(self.tempvar_counter)
+        self.tempvar_counter += 1
+        return tempvarname
 
     def compile(self, parsed):
         label = parsed.label
@@ -162,16 +88,16 @@ class Compiler(object):
             predicate, if_body = lst[0:2]
             # evaluate the predicate
             self.compile(predicate)
-            self.push_instruction(OP_FJUMP, label_false)
+            self.add_instruction(OP_FJUMP, label_false)
             self.compile(if_body)
             if len(lst) == 3: # we have an else body
                 else_body = lst[2]
-                self.push_instruction(OP_JUMP, label_end)
-                self.push_instruction(OP_LABEL, label_false)
+                self.add_instruction(OP_JUMP, label_end)
+                self.add_instruction(OP_LABEL, label_false)
                 self.compile(else_body)
-                self.push_instruction(OP_LABEL, label_end)
+                self.add_instruction(OP_LABEL, label_end)
             else:
-                self.push_instruction(OP_LABEL, label_false)
+                self.add_instruction(OP_LABEL, label_false)
 
         elif label == PN_WHILE:
             # get the labels
@@ -179,13 +105,13 @@ class Compiler(object):
             # the while elements
             predicate, while_body = lst
             # predictate
-            self.push_instruction(OP_LABEL, label_start)
+            self.add_instruction(OP_LABEL, label_start)
             self.compile(predicate)
-            self.push_instruction(OP_FJUMP, label_end)
+            self.add_instruction(OP_FJUMP, label_end)
             # loop
             self.compile(while_body)
-            self.push_instruction(OP_JUMP, label_start)
-            self.push_instruction(OP_LABEL, label_end)
+            self.add_instruction(OP_JUMP, label_start)
+            self.add_instruction(OP_LABEL, label_end)
 
         elif label == PN_FOR:
             # get the labels
@@ -194,138 +120,120 @@ class Compiler(object):
             counter, start, end, step, for_body = lst
             # save end to a temp location to avoid multi-evaluation
             self.compile(end) 
-            self.push_instruction(OP_POP, M_TEMP, 0)
+            endvarname = self.make_temp_varname()
+            self.add_instruction(OP_POP, endvarname)
             # save step to a temp location to avoid multi-evaluation
             self.compile(step) 
-            self.push_instruction(OP_POP, M_TEMP, 1)
+            stepvarname = self.make_temp_varname()
+            self.add_instruction(OP_POP, stepvarname)
 
             # assign start to counter
             self.compile(start) # start
-            idx = self.symtab.get_or_set(counter.lst[0])
-            self.push_instruction(OP_POP, M_LOCAL, idx) 
+            counterName = counter.lst[0]
+            self.add_instruction(OP_POP, counterName)
             
             # where the for body starts
-            self.push_instruction(OP_LABEL, label_start)
+            self.add_instruction(OP_LABEL, label_start)
             # compare counter to end
-            self.push_instruction(OP_PUSH, M_LOCAL, idx)
-            self.push_instruction(OP_PUSH, M_TEMP, 0)
-            self.push_instruction(OP_LE)
+            self.add_instruction(OP_PUSH, counterName) 
+            self.add_instruction(OP_PUSH, endvarname)
+            self.add_instruction(OP_LE)
             # if counter is over the end, exit
-            self.push_instruction(OP_FJUMP, label_end)
+            self.add_instruction(OP_FJUMP, label_end)
             self.compile(for_body) # the loop body
             # loop increment
-            self.push_instruction(OP_PUSH, M_LOCAL, idx) 
-            self.push_instruction(OP_PUSH, M_TEMP, 1)
-            self.push_instruction(OP_ADD)
-            self.push_instruction(OP_POP, M_LOCAL, idx)
-            self.push_instruction(OP_JUMP, label_start) # goto start
+            self.add_instruction(OP_PUSH, counterName)
+            self.add_instruction(OP_PUSHC, 1)
+            self.add_instruction(OP_ADD)
+            self.add_instruction(OP_POP, counterName)
+            self.add_instruction(OP_JUMP, label_start) # goto start
             # the exit of the for struct
-            self.push_instruction(OP_LABEL, label_end)
+            self.add_instruction(OP_LABEL, label_end)
 
         elif label == PN_DEF:
             # the function elements
-            funcname, arglist, body = lst
-            funcname = funcname.lst[0]
-            # set the function definition in the current scope
-            label = '(' + funcname + ')'
-            self.push_instruction(OP_PUSH, M_CONSTANT, label)
-            # save the function entry address to the func name var
-            idx = self.symtab.get_or_set(funcname)
-            self.push_instruction(OP_POP, M_LOCAL, idx) 
+            funcName, arglist, body = lst
+            funcName = funcName.lst[0]
+            # starting a new compiled proc
+            self.switchNewCP(funcName)
 
-            # new symbol table for each function defined
-            self.set_new_symtab(SymbolTable(funcname))
-            # initialize the function instruction insert and push position
-            self.reset_function_instruction()
-
-            # The function entry label
-            self.insert_instruction(OP_LABEL, label)
             # the parameter list
             self.compile(arglist)
             # compile the body of the function
             self.compile(body)
             # get number of variables used in the function
-            nVarsScope = self.symtab.nVarsScope
             # insert the function nvars definition line
-            self.insert_instruction(OP_FUNCTION, funcname, nVarsScope) 
-            # restore the symbol table of main level
-            self.restore_symtab()
+
+            # the function's CP
+            funcCP = self.CP
+
+            # restore compiled proc to main
+            self.restoreCP()
+            # let the main proc know that we are having a new func CP
+            self.add_instruction(OP_FUNCTION, funcCP)
 
         elif label == PN_ARGLIST: # the function parameter list definition
-            nkws = 0
-            nparms = 0
-            for item in lst:
-                if item.label == PN_KWPARM:
-                    parname, value = item.lst
-                    parname = parname.lst[0]
-                    idx = self.symtab.get_or_set(parname)
-                    self.push_instruction(OP_PUSH, M_CONSTANT, parname)
-                    self.compile(value)
-                    self.push_instruction(OP_MAKEKW) # make a kw obj on the stack
-                    self.push_instruction(OP_POP, M_LOCAL, idx) # save to local segment
-                    nkws += 1
-            for item in lst:
+            for item in lst: # position parameter
                 if item.label != PN_KWPARM:
-                    parname = item.lst[0]
-                    idx = self.symtab.get_or_set(parname)
-                    self.push_instruction(OP_PUSH, M_CONSTANT, 0)
-                    self.push_instruction(OP_POP, M_LOCAL, idx)
-                    nparms += 1
-            self.push_instruction(OP_PUSH, M_CONSTANT, nparms)
-            self.push_instruction(OP_PUSH, M_CONSTANT, nkws)
+                    parmName = item.lst[0]
+                    self.add_parm(parmName)
 
-        elif label in [PN_INT, PN_FLOAT]:
-            value = lst[0]
-            self.push_instruction(OP_PUSH, M_CONSTANT, value)
+            n = 0
+            for item in lst: # keyword parameter
+                if item.label == PN_KWPARM:
+                    parmName, value = item.lst
+                    parmName = parmName.lst[0]
+                    self.add_kwParm(parmName)
+                    # following code calculates the default value for the keyword
+                    # parameter and tells the VM to load the value into the running
+                    # Enviroment for the kw parm name.
+                    self.compile(value)
+                    self.add_instruction(OP_KWPARM, n)
+                    n += 1
 
-        elif label == PN_STRING:
+        elif label in [PN_INT, PN_FLOAT, PN_STRING]:
             value = lst[0]
-            self.push_instruction(OP_PUSH, M_CONSTANT, 'str='+value)
+            self.add_instruction(OP_PUSHC, value)
 
         elif label == PN_VAR:
             varname = lst[0]
-            idx = self.symtab.get_or_set(varname)
-            self.push_instruction(OP_PUSH, M_LOCAL, idx)
+            self.add_instruction(OP_PUSH, varname)
 
         elif label == PN_PAREN: # function call
 
             # arglist
-            nparms = 0
-            nkws = 0
-            for item in lst[1].lst:
-                if item.label == PN_KWPARM:
-                    parname, value = item.lst
-                    parname = parname.lst[0]
-                    self.push_instruction(OP_PUSH, M_CONSTANT, parname)
-                    self.compile(value)
-                    self.push_instruction(OP_MAKEKW)
-                    nkws += 1
-            for item in lst[1].lst:
+            for item in lst[1].lst: # position arguments
                 if item.label != PN_KWPARM:
                     self.compile(item)
-                    nparms += 1
-            
-            self.push_instruction(OP_PUSH, M_CONSTANT, nparms)
-            self.push_instruction(OP_PUSH, M_CONSTANT, nkws)
+            for item in lst[1].lst: # keyword arguments
+                if item.label == PN_KWPARM:
+                    argName, value = item.lst
+                    argName = argName.lst[0]
+                    self.add_instruction(OP_PUSHC, argName)
+                    self.compile(value)
+                    # make a keyword argument onto stack
+                    self.add_instruction(OP_KWARG) 
 
-            self.compile(lst[0]) # should leave the function on top of stack
-            self.push_instruction(OP_CALL)
+            # Put the function on top of stack
+            self.compile(lst[0]) 
+            self.add_instruction(OP_CALL, len(lst[1].lst))
 
         elif label == PN_CONTINUE:
-            self.push_instruction(OP_JUMP, self.label_group[0])
+            self.add_instruction(OP_JUMP, self.label_group[0])
 
         elif label == PN_BREAK:
-            cfg.add_instruction(OP_JUMP, self.label_group[1])
+            self.add_instruction(OP_JUMP, self.label_group[1])
 
         elif label == PN_RETURN:
             if len(lst) > 0:
                 self.compile(lst[0])
             else:
-                self.push_instruction(OP_PUSH, M_CONSTANT, 0)
-            self.push_instruction(OP_RETURN)
+                self.add_instruction(OP_PUSHC, 0)
+            self.add_instruction(OP_RETURN)
 
-        elif label == PN_BRACKET:
-            self.compile(lst[0]) # this should leave the array on the top of stack
+        elif label == PN_BRACKET: # array slices
+            # push the array like thingy on the top of stack
+            self.compile(lst[0]) 
 
             # PN_IDXLIST
             nIdx = 0
@@ -333,73 +241,64 @@ class Compiler(object):
                 self.compile(item)
                 nIdx += 1
 
-            self.push_instruction(OP_SLICE, nIdx) # create an array slice object
+            # create an array slice object on top of the stack
+            self.add_instruction(OP_SLICE, nIdx) 
 
         elif label == PN_PRINT:
             for item in lst:
                 self.compile(item)
-            self.push_instruction(OP_PUSH, M_CONSTANT, len(lst)) # nargs
-            self.push_instruction(OP_PUSH, M_CONSTANT, 0) # nkws
-            self.push_instruction(OP_PUSH, M_CONSTANT, 'str=print')
-            self.push_instruction(OP_CALL)
+            self.add_instruction(OP_PUSH, 'print')
+            self.add_instruction(OP_CALL, len(lst))
 
         elif label == PN_ASSIGN:
-            if lst[0].label == PN_VAR: # simple varialbe
-                name = lst[0].lst[0]
-                idx = self.symtab.get_or_set(name)
-                self.compile(lst[1])
-                self.push_instruction(OP_POP, M_LOCAL, idx)
-            else:
-                self.compile(lst[0]) # the variable to be assigned
-                self.push_instruction(OP_POP, M_POINTER, 1)
-                self.compile(lst[1]) # the value
-                self.push_instruction(OP_POP, M_THAT, 0)
+            self.compile(lst[0]) # the variable to be assigned
+            self.compile(lst[1]) # the value
+            self.add_instruction(OP_PUSH, 'assgin')
+            self.add_instruction(OP_CALL, 2)
 
         elif label == PN_BINOP:
             lhs, op, rhs = lst
             self.compile(lhs)
             self.compile(rhs)
             if op == '+': 
-                self.push_instruction(OP_ADD)
+                self.add_instruction(OP_ADD)
             elif op == '-':
-                self.push_instruction(OP_SUB)
+                self.add_instruction(OP_SUB)
             elif op == '*':
-                self.push_instruction(OP_MUL)
+                self.add_instruction(OP_MUL)
             elif op == '/':
-                self.push_instruction(OP_DIV)
+                self.add_instruction(OP_DIV)
             elif op == '%':
-                self.push_instruction(OP_MOD)
+                self.add_instruction(OP_MOD)
             elif op == '>':
-                self.push_instruction(OP_GT)
+                self.add_instruction(OP_GT)
             elif op == '>=':
-                self.push_instruction(OP_GE)
+                self.add_instruction(OP_GE)
             elif op == '==':
-                self.push_instruction(OP_EQ)
+                self.add_instruction(OP_EQ)
             elif op == '<=':
-                self.push_instruction(OP_LE)
+                self.add_instruction(OP_LE)
             elif op == '<':
-                self.push_instruction(OP_LT)
+                self.add_instruction(OP_LT)
             elif op == '!=':
-                self.push_instruction(OP_NE)
+                self.add_instruction(OP_NE)
             elif op == 'and':
-                self.push_instruction(OP_AND)
+                self.add_instruction(OP_AND)
             elif op == 'or':
-                self.push_instruction(OP_OR)
+                self.add_instruction(OP_OR)
             elif op == 'xor':
-                self.push_instruction(OP_XOR)
+                self.add_instruction(OP_XOR)
 
         elif label == PN_UNARYOP:
             op, operand = lst
             self.compile(operand)
             if op == '-':
-                self.push_instruction(OP_NEG)
+                self.add_instruction(OP_NEG)
             elif op == 'not':
-                self.push_instruction(OP_NOT)
+                self.add_instruction(OP_NOT)
 
         elif label == PN_NONE:
-            self.push_instruction(OP_PUSH, M_CONSTANT, None)
+            self.add_instruction(OP_PUSHC, None)
 
-
-        return self.cfg.flatten()
-
+        return self.CP
 
