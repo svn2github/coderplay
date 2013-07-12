@@ -11,192 +11,309 @@ class CollectionSlice(object):
         self.collection = collection
         self.idxlist = idxlist
 
+    def getValue(self):
+        if len(self.idxlist) == 1:
+            return self.collection[self.idxlist]
+        else:
+            return self.collection[slice(self.idxlist)]
 
-class make_instruction(object):
 
-    def __init__(self, line):
-        fields = line.split()
-        self.opcode = fields[0]
-        self.args = fields[1:]
+class Undef(object):
+
+    def __init__(self):
+        pass
+
+    def __eq__(self, other):
+        if isinstance(other, Undef):
+            return True
+        else:
+            return False
+
+undef = Undef()
+
+class KwArg(object):
+    
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+class ExecutionFrame(object):
+    def __init__(self, codeobject, pc, env):
+        self.codeobject = codeobject
+        self.pc = pc
+        self.env =env
+
+class Closure(object):
+    def __init__(self, codeobject, env):
+        self.codeobject = codeobject
+        self.env = env
 
 
 class VM(object):
 
     def __init__(self):
-        # The memory segments
-        self.local = [] 
-        self.argument = []
-        self.temp = []
-        self.pointer = []
-        self.this = []
-        self.that = []
-        # The current base of memory segments 
-        self.LCL = 0
-        self.ARG = 0
         # the working stack
         self.stack = []
         # frame stack
         self.frameStack = []
-        # program counter
-        self.PC = 0
+
+        self.frame = ExecutionFrame(codeobject=None, pc=None, 
+                env=self._create_top_env())
 
 
-    def safe_get_segment_index(self, segment, index):
-        if index < len(segment) and index >= 0:
-            return segment[index]
-        else:
-            raise RuntimeError('Out of segment boundary')
+    def run(self, codeobject):
+
+        self.frame.codeobject = codeobject
+        self.frame.pc = 0
 
 
-    def get_segment_index(self, segment, index):
-        if segment == M_ARG:
-            return self.safe_get_segment_index(self.argument, index)
+        while True:
 
-        elif segment == M_LOCAL:
-            return self.safe_get_segment_index(self.local, index)
+            instr = self._get_next_instruction()
 
-        elif segment == M_POINTER:
-            return self.safe_get_segment_index(self.pointer, index)
-
-        elif segment == M_THIS:
-            return self.this[index]
-
-        elif segment == M_THAT:
-            if isinstance(self.pointer[1], CollectionSlice):
-                collection = self.pointer[1].collection
-                idxlist = self.pointer[1].idxlist
-                if len(idxlist) == 1:
-                    return collection[idxlist[0]]
+            if instr is None:
+                if self._is_in_top_env():
+                    break
                 else:
-                    return collection[slice(idxlist)]
-            else:
-                raise RuntimeError('Pointer 1 is not a CollectionSlice object')
+                    raise VMError('Code object ended prematurely.')
 
-
-    def safe_set_segment_index(self, segment, index, value):
-        if index < len(segment) and index >= 0:
-            segment[index] = value
-        elif index == len(segment):
-            segment.append(value)
-        else:
-            raise RuntimeError('Out of segment boundary')
-
-
-    def set_segment_index(self, segment, index, value):
-        if segment == M_ARG:
-            self.safe_set_segment_index(self.argument, index, value)
-
-        elif segment == M_LOCAL:
-            self.safe_set_segment_index(self.local, index, value)
-
-        elif segment == M_POINTER:
-            self.safe_set_segment_index(self.pointer, index, value)
-
-        elif segment == M_THIS:
-            self.safe_set_segment_index(self.this, index, value)
-
-        elif segment == M_THAT:
-            if isinstance(self.pointer[1], CollectionSlice):
-                collection = self.pointer[1].collection
-                idxlist = self.pointer[1].idxlist
-                if len(idxlist) == 1:
-                    collection[idxlist[0]] = value
-                else:
-                    collection[slice(idxlist)] = value
-            else:
-                raise RuntimeError('Pointer 1 is not a CollectionSlice object')
-
-
-    def run(self, instrlist):
-
-        while self.PC < len(instrlist):
-
-            instr = make_instruction(instrlist[self.PC])
-
-            opcode = str2opcode(instr.opcode)
-
+            opcode = instr.opcode
             if opcode == OP_PUSH:
-                segment, index = instr.args
-                if segment == M_CONSTANT:
-                    if index.startswith('str='):
-                        index = index[4:]
-                    else:
-                        index = int(index)
-                    self.stack.append(index)
-                else:
-                    self.stack.append(self.get_segment_index(segment, int(index)))
+                self.stack.append(self.frame.env.getVar(
+                    self.frame.codeobject.varNames[instr.args[0]]))
 
             elif opcode == OP_POP:
-                segment, index = instr.args
                 value = self.stack.pop()
-                self.set_segment_index(segment, int(index), value)
+                self.frame.env.setVar(self.frame.codeobject.varNames[instr.args[0]], value)
+
+            elif opcode == OP_PUSHC:
+                self.stack.append(self.frame.codeobject.constants[instr.args[0]])
 
             elif opcode == OP_JUMP:
-                self.PC = instr.args[0]
-                continue
+                self.frame.pc = instr.args[0]
 
             elif opcode == OP_FJUMP:
+                predicate = self.stack.pop()
+                if not predicate:
+                    self.frame.pc = instr.args[0]
+
+            elif opcode == OP_FUNCTION: 
+                func_codeobject = self.frame.codeobject.constants[instr.args[0]]
+                # closure is codobject and env
+                closure = Closure(func_codeobject, self.frame.env)
+                self.stack.append(closure)
+
+            elif opcode == OP_KWARG:
+                # make the keyword argument and push onto stack
                 value = self.stack.pop()
-                if not value:
-                    self.PC = instr.args[0]
-                    continue
-
-            elif opcode == OP_FUNCTION: # function funcName nlocals
-                # number of passed arguments and kws
-                nkws = self.stack.pop()
-                nargs = self.stack.pop()
-                arglist = []
-                for i in range(nargs):
-                    arglist.append(self.stack.pop())
-                kwlist = []
-                for i in range(nkws):
-                    kwlist.append(self.stack.pop())
-
-                nlocals = instr.args[1]
-                for ii in range(nlocals):
-                    self.stack.append(None)
-
-            elif opcode == OP_RETURN:
-                pass
+                kwArgName = self.codeobject.constants[self.stack.pop()]
+                self.stack.append(KwArg(kwArgName, value))
 
             elif opcode == OP_CALL: # call
-                func = self.stack.pop()
-                if type(func) == str: # built-in function
-                    funcName = func
-                    if funcName == 'print':
-                        builtin_print(self.stack)
-                    else:
-                        pass
-                else: # user-defined function address
-                    funcAddress = func
-                    print funcAddress
-                    pass
+                proc = self.stack.pop()
+                # proc is either builtin or closure
+                arglist = [self.stack.pop() for i in range(instr.args[0])]
+                arglist.reverse()
 
-            elif opcode == OP_STOP: 
-                break
+                if isinstance(proc, BuiltinProc):
+                    result = proc.apply(arglist)
+                    if result:
+                        self.valuestack.push(result)
 
-            print '-----', instrlist[self.PC]
-            print 'stack = ', self.stack
-            print 'local = ', self.local
-            
-            self.PC += 1
+                elif isinstance(proc, Closure): # user-defined function
+                    # trying to plug arguments into parameters
+                    nkwargs = 0
+                    for arg in arglist:
+                        if isinstance(arg, KwArg):
+                            nkwargs += 1
+                    nargs = len(arglist) - nkwargs
+                    argBinding = {}
+                    # initialize every parameter into undefined unless
+                    # provided by the call arguments. 
+                    # Note that the position arguments and keyword arguments
+                    # are separated into two groups with the position arguments
+                    # in the 1st group.
+                    for ii in range(len(proc.codeobject.parms)):
+                        parmName = proc.codeobject.parms[ii]
+                        if ii < nargs:
+                            argBinding[parmName] = arglist[ii]
+                        else:
+                            argBinding[parmName] = undef
+                    # Also initialize every keyword parameter as undef.
+                    # Then plug the supplied values.
+                    for kwParmName in proc.codeobject.kwParms:
+                        argBinding[kwParmName] = undef
+                    for kwarg in arglist[nargs:]:
+                        argBinding[kwarg.name] = kwarg.value
+
+                    # push the frame stack
+                    self.frameStack.append(self.frame)
+
+                    # the env inside the func 
+                    callee_env = VM_Environment(argBinding, proc.env)
+
+                    # change the current frame to the callee's frame
+                    self.frame = ExecutionFrame(
+                            codeobject = proc.codeobject,
+                            pc = 0, 
+                            env = callee_env)
+
+                else:
+                    raise VMError('Invalid object for function call.')
+
+            elif opcode == OP_KWPARM:
+                # this is the operation trying to set the default keyword parameter values
+                kwParmName = self.frame.codeobject.kwParms[instr.args[0]]
+                value = self.stack.pop()
+                # only plug in the default value is none is supplied by the caller
+                if self.frame.env.getVar(kwParmName) == undef:
+                    self.frame.env.setVar(kwParmName, value)
+
+            elif opcode == OP_RETURN:
+                self.frame = self.frameStack.pop()
+
+            elif opcode == OP_SLICE:
+                idxlist = [self.stack.pop() for i in len(instr.args[0])]
+                idxlist.reverse()
+                collection = self.stack.pop()
+                self.stack.push(CollectionSlice(collection, idxlist))
+
+            elif opcode in [OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, OP_GT, OP_GE, 
+                            OP_EQ, OP_LE, OP_LT, OP_NE, OP_AND, OP_OR, OP_XOR]:
+
+                op2 = self.stack.pop()
+                if isinstance(op2, CollectionSlice):
+                    op2 = op2.getValue()
+                    
+                op1 = self.stack.pop()
+                if isinstance(op1, CollectionSlice):
+                    op1 = op1.getValue()
+
+                if opcode == OP_ADD:
+                    self.stack.append(op1 + op2)
+
+                elif opcode == OP_SUB:
+                    self.stack.append(op1 - op2)
+
+                elif opcode == OP_MUL:
+                    self.stack.append(op1 * op2)
+
+                elif opcode == OP_DIV:
+                    self.stack.append(op1 / op2)
+
+                elif opcode == OP_MOD:
+                    self.stack.append(op1 % op2)
+
+                elif opcode == OP_GT:
+                    self.stack.append(1 if op1 > op2 else 0)
+
+                elif opcode == OP_GE:
+                    self.stack.append(1 if op1 >= op2 else 0)
+
+                elif opcode == OP_EQ:
+                    self.stack.append(1 if op1 == op2 else 0)
+
+                elif opcode == OP_LE:
+                    self.stack.append(1 if op1 <= op2 else 0)
+
+                elif opcode == OP_LT:
+                    self.stack.append(1 if op1 < op2 else 0)
+
+                elif opcode == OP_NE:
+                    self.stack.append(1 if op1 != op2 else 0)
+
+                elif opcode == OP_AND:
+                    self.stack.append(1 if op1 and op2 else 0)
+
+                elif opcode == OP_OR:
+                    self.stack.append(1 if op1 or op2 else 0)
+
+                elif opcode == OP_XOR:
+                    self.stack.append(1 if op1 != op2 else 0)
+
+                elif opcode == OP_NOT:
+                    op = self.stack.pop()
+                    self.stack.append(1 if (not op) else 0)
+
+            elif opcode == OP_NEG:
+                op = self.stack.pop()
+                if isinstance(op, CollectionSlice):
+                    op = op.getValue()
+                self.stack.append(-op)
+
+            else:
+                raise self.VMError('Unknown instruction.')
+
+    def _create_top_env(self):
+        top_binding = {}
+        for name, func in builtin_map.items():
+            top_binding[name] = BuiltinProc(name, func)
+        return VM_Environment(top_binding)
+
+    def _is_in_top_env(self):
+        return True if self.frame.env.parent is None else False
+
+    def _get_next_instruction(self):
+        if self.frame.pc >= len(self.frame.codeobject.instrlist):
+            return None
+        else:
+            instr = self.frame.codeobject.instrlist[self.frame.pc]
+            self.frame.pc += 1
+            return instr
 
 
-def builtin_print(stack):
-    # number of passed arguments and kws
-    nkws = stack.pop()
-    nargs = stack.pop()
-    arglist = []
-    for i in range(nargs):
-        arglist.append(stack.pop())
-    for item in arglist[-1::-1]:
-        sys.stdout.write(str(item) + ' ')
+class VM_Environment(object):
+
+    def __init__(self, binding, parent=None):
+        self.binding = binding
+        self.parent = parent
+
+    def getVar(self, varName):
+        if self.binding.has_key(varName):
+            return self.binding[varName]
+        elif self.parent:
+            return self.parent.getVar(varName)
+        else:
+            raise VMError('Undefined variable')
+
+    def setVar(self, varName, value):
+        # variable can only be set at current environment
+        self.binding[varName] = value
+
+class BuiltinProc(object):
+
+    def __init__(self, name, proc):
+        self.name = name
+        self.proc = proc
+
+    def apply(self, args):
+        return self.proc(args)
+
+def builtin_print(args):
+    for arg in args:
+        sys.stdout.write(str(arg) + ' ')
     sys.stdout.write('\n')
 
+def builtin_assign(args):
+    lhs = args[0]
+    rhs = args[1]
+    if isinstance(lhs, CollectionSlice):
+        print 'is CollectionSlice'
+        if len(lhs.idxlist) == 1:
+            lhs.collection[lhs.idxlist] = rhs
+        else:
+            lhs.collection[slice(lhs.idxlist)] = rhs
+    else:
+        asdfa
+        raise VMError('Simple assignment should not call assign builtin.')
 
 
+builtin_map = {
+    'print':    builtin_print,
+    'assign':   builtin_assign,
+}
 
 
-class RuntimeError(Exception):
+class VMError(Exception):
     pass
 

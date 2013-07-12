@@ -74,12 +74,18 @@ class Compiler(object):
         return tempvarname
 
     def compile(self, parsed):
+        self._compile(parsed)
+        CP = self.CP
+        self.CP = CompiledProc()
+        return CP
+
+    def _compile(self, parsed):
         label = parsed.label
         lst = parsed.lst
 
         if label == PN_LIST:
             for item in lst:
-                self.compile(item)
+                self._compile(item)
 
         elif label == PN_IF:
             # get the labels
@@ -87,14 +93,14 @@ class Compiler(object):
             # the IF elements
             predicate, if_body = lst[0:2]
             # evaluate the predicate
-            self.compile(predicate)
+            self._compile(predicate)
             self.add_instruction(OP_FJUMP, label_false)
-            self.compile(if_body)
+            self._compile(if_body)
             if len(lst) == 3: # we have an else body
                 else_body = lst[2]
                 self.add_instruction(OP_JUMP, label_end)
                 self.add_instruction(OP_LABEL, label_false)
-                self.compile(else_body)
+                self._compile(else_body)
                 self.add_instruction(OP_LABEL, label_end)
             else:
                 self.add_instruction(OP_LABEL, label_false)
@@ -106,10 +112,10 @@ class Compiler(object):
             predicate, while_body = lst
             # predictate
             self.add_instruction(OP_LABEL, label_start)
-            self.compile(predicate)
+            self._compile(predicate)
             self.add_instruction(OP_FJUMP, label_end)
             # loop
-            self.compile(while_body)
+            self._compile(while_body)
             self.add_instruction(OP_JUMP, label_start)
             self.add_instruction(OP_LABEL, label_end)
 
@@ -119,16 +125,16 @@ class Compiler(object):
             # get the for elements
             counter, start, end, step, for_body = lst
             # save end to a temp location to avoid multi-evaluation
-            self.compile(end) 
+            self._compile(end) 
             endvarname = self.make_temp_varname()
             self.add_instruction(OP_POP, endvarname)
             # save step to a temp location to avoid multi-evaluation
-            self.compile(step) 
+            self._compile(step) 
             stepvarname = self.make_temp_varname()
             self.add_instruction(OP_POP, stepvarname)
 
             # assign start to counter
-            self.compile(start) # start
+            self._compile(start) # start
             counterName = counter.lst[0]
             self.add_instruction(OP_POP, counterName)
             
@@ -140,7 +146,7 @@ class Compiler(object):
             self.add_instruction(OP_LE)
             # if counter is over the end, exit
             self.add_instruction(OP_FJUMP, label_end)
-            self.compile(for_body) # the loop body
+            self._compile(for_body) # the loop body
             # loop increment
             self.add_instruction(OP_PUSH, counterName)
             self.add_instruction(OP_PUSHC, 1)
@@ -158,9 +164,9 @@ class Compiler(object):
             self.switchNewCP(funcName)
 
             # the parameter list
-            self.compile(arglist)
+            self._compile(arglist)
             # compile the body of the function
-            self.compile(body)
+            self._compile(body)
             # get number of variables used in the function
             # insert the function nvars definition line
 
@@ -171,6 +177,8 @@ class Compiler(object):
             self.restoreCP()
             # let the main proc know that we are having a new func CP
             self.add_instruction(OP_FUNCTION, funcCP)
+            # associate the definition to the varname
+            self.add_instruction(OP_POP, funcName)
 
         elif label == PN_ARGLIST: # the function parameter list definition
             for item in lst: # position parameter
@@ -187,7 +195,7 @@ class Compiler(object):
                     # following code calculates the default value for the keyword
                     # parameter and tells the VM to load the value into the running
                     # Enviroment for the kw parm name.
-                    self.compile(value)
+                    self._compile(value)
                     self.add_instruction(OP_KWPARM, n)
                     n += 1
 
@@ -204,18 +212,18 @@ class Compiler(object):
             # arglist
             for item in lst[1].lst: # position arguments
                 if item.label != PN_KWPARM:
-                    self.compile(item)
+                    self._compile(item)
             for item in lst[1].lst: # keyword arguments
                 if item.label == PN_KWPARM:
                     argName, value = item.lst
                     argName = argName.lst[0]
                     self.add_instruction(OP_PUSHC, argName)
-                    self.compile(value)
+                    self._compile(value)
                     # make a keyword argument onto stack
                     self.add_instruction(OP_KWARG) 
 
             # Put the function on top of stack
-            self.compile(lst[0]) 
+            self._compile(lst[0]) 
             self.add_instruction(OP_CALL, len(lst[1].lst))
 
         elif label == PN_CONTINUE:
@@ -226,19 +234,19 @@ class Compiler(object):
 
         elif label == PN_RETURN:
             if len(lst) > 0:
-                self.compile(lst[0])
+                self._compile(lst[0])
             else:
                 self.add_instruction(OP_PUSHC, 0)
             self.add_instruction(OP_RETURN)
 
         elif label == PN_BRACKET: # array slices
             # push the array like thingy on the top of stack
-            self.compile(lst[0]) 
+            self._compile(lst[0]) 
 
             # PN_IDXLIST
             nIdx = 0
             for item in lst[1].lst:
-                self.compile(item)
+                self._compile(item)
                 nIdx += 1
 
             # create an array slice object on top of the stack
@@ -246,20 +254,24 @@ class Compiler(object):
 
         elif label == PN_PRINT:
             for item in lst:
-                self.compile(item)
+                self._compile(item)
             self.add_instruction(OP_PUSH, 'print')
             self.add_instruction(OP_CALL, len(lst))
 
         elif label == PN_ASSIGN:
-            self.compile(lst[0]) # the variable to be assigned
-            self.compile(lst[1]) # the value
-            self.add_instruction(OP_PUSH, 'assgin')
-            self.add_instruction(OP_CALL, 2)
+            if lst[0].label == PN_VAR: # simple variable
+                self._compile(lst[1]) # value
+                self.add_instruction(OP_POP, lst[0].lst[0])
+            else:
+                self._compile(lst[0]) # the variable to be assigned
+                self._compile(lst[1]) # the value
+                self.add_instruction(OP_PUSH, 'assgin')
+                self.add_instruction(OP_CALL, 2)
 
         elif label == PN_BINOP:
             lhs, op, rhs = lst
-            self.compile(lhs)
-            self.compile(rhs)
+            self._compile(lhs)
+            self._compile(rhs)
             if op == '+': 
                 self.add_instruction(OP_ADD)
             elif op == '-':
@@ -291,7 +303,7 @@ class Compiler(object):
 
         elif label == PN_UNARYOP:
             op, operand = lst
-            self.compile(operand)
+            self._compile(operand)
             if op == '-':
                 self.add_instruction(OP_NEG)
             elif op == 'not':
@@ -299,6 +311,4 @@ class Compiler(object):
 
         elif label == PN_NONE:
             self.add_instruction(OP_PUSHC, None)
-
-        return self.CP
 

@@ -25,9 +25,10 @@ class CodeObject(object):
         out += leading + 'varNames: ' + str(self.varNames) + '\n'
         nlines = 0
         for instr in self.instrlist:
-            lineno = '%-3d' % nlines
+            lineno = '%3d' % nlines + ' '
             if instr.opcode == OP_FUNCTION:
-                out += leading + indent + lineno + opcode2str(instr.opcode) + '\n'
+                out += leading + indent + lineno + opcode2str(instr.opcode) \
+                        + ' ' + str(instr.args[0]) + '\n'
                 out += self.constants[instr.args[0]].__repr__(nindent+2)
             else:
                 out += leading + indent + lineno + opcode2str(instr.opcode)
@@ -37,6 +38,7 @@ class CodeObject(object):
             nlines += 1
         out += leading + '--------------\n'
         return out
+
 
 
 def assemble(cp):

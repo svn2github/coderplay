@@ -9,7 +9,7 @@ from epw_parser2 import parse_file, parse_prompt, ParseError
 from epw_interpreter import EvalError, BreakControl, ContinueControl, ReturnControl
 from epw_env import get_topenv
 from epw_compiler import Compiler
-from epw_vm import VM
+from epw_vm import VM, VMError
 from epw_assembler import assemble
 
 
@@ -155,29 +155,16 @@ class Emma(object):
         # Assembling
         assembled = assemble(compiled)
         print assembled
-
         
         # Evaluation
         try:
-            pass
+            self.vm.run(assembled)
 
-        except EvalError as e:
+        except VMError as e:
             sys.stderr.write(repr(e))
             if self.topenv.get('$DEBUG'): print tokenlist
             lines.reset()
             tokenlist.reset()
-            return
-
-        except BreakControl as e:
-            sys.stderr.write('%%[ControlError] Cannot Break From Top Level\n')
-            return
-
-        except ContinueControl as e:
-            sys.stderr.write('%%[ControlError] Cannot Continue From Top Level\n')
-            return
-
-        except ReturnControl as e:
-            sys.stderr.write('%%[ControlError] Cannot Return From Top Level\n')
             return
 
         # Everything is fine if we reach here
