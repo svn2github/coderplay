@@ -41,7 +41,8 @@ class Compiler(object):
     def __init__(self):
         self.CP = CompiledProc()
         self.label_counter = 0
-        self.label_group = None
+        self.label_continue = []
+        self.label_break = []
         self.tempvar_counter = 0
 
     def switchNewCP(self, funcName):
@@ -65,8 +66,7 @@ class Compiler(object):
         prefix = self.CP.name + '$' + prefix + '-'
         counter = str(self.label_counter)
         self.label_counter += 1
-        self.label_group = prefix+'START'+counter, prefix+'END'+counter, prefix+'FALSE'+counter
-        return self.label_group
+        return prefix+'START'+counter, prefix+'END'+counter, prefix+'FALSE'+counter
 
     def make_temp_varname(self):
         tempvarname = self.CP.name + 'tmp' + str(self.tempvar_counter)
@@ -108,6 +108,9 @@ class Compiler(object):
         elif label == PN_WHILE:
             # get the labels
             label_start, label_end, _ = self.make_label('WHILE')
+            # add to label management
+            self.label_continue.append(label_start)
+            self.label_break.append(label_end)
             # the while elements
             predicate, while_body = lst
             # predictate
@@ -118,10 +121,16 @@ class Compiler(object):
             self._compile(while_body)
             self.add_instruction(OP_JUMP, label_start)
             self.add_instruction(OP_LABEL, label_end)
+            # remove labels from management
+            self.label_continue.pop()
+            self.label_break.pop()
 
         elif label == PN_FOR:
             # get the labels
             label_start, label_end, _ = self.make_label('FOR')
+            # add to label management
+            self.label_continue.append(label_start)
+            self.label_break.append(label_end)
             # get the for elements
             counter, start, end, step, for_body = lst
             # save end to a temp location to avoid multi-evaluation
@@ -135,26 +144,35 @@ class Compiler(object):
 
             # assign start to counter
             self._compile(start) # start
+            self.add_instruction(OP_PUSHC, 1)
+            self.add_instruction(OP_SUB) # pre-decrement the counter
             counterName = counter.lst[0]
             self.add_instruction(OP_POP, counterName)
-            
+
             # where the for body starts
             self.add_instruction(OP_LABEL, label_start)
+
+            # loop increment
+            self.add_instruction(OP_PUSH, counterName)
+            self.add_instruction(OP_PUSHC, 1)
+            self.add_instruction(OP_ADD)
+            self.add_instruction(OP_POP, counterName)
+            
             # compare counter to end
             self.add_instruction(OP_PUSH, counterName) 
             self.add_instruction(OP_PUSH, endvarname)
             self.add_instruction(OP_LE)
             # if counter is over the end, exit
             self.add_instruction(OP_FJUMP, label_end)
-            self._compile(for_body) # the loop body
-            # loop increment
-            self.add_instruction(OP_PUSH, counterName)
-            self.add_instruction(OP_PUSHC, 1)
-            self.add_instruction(OP_ADD)
-            self.add_instruction(OP_POP, counterName)
-            self.add_instruction(OP_JUMP, label_start) # goto start
+            # the loop body
+            self._compile(for_body) 
+            # goto start
+            self.add_instruction(OP_JUMP, label_start) 
             # the exit of the for struct
             self.add_instruction(OP_LABEL, label_end)
+            # remove labels from management
+            self.label_continue.pop()
+            self.label_break.pop()
 
         elif label == PN_DEF:
             # the function elements
@@ -165,16 +183,19 @@ class Compiler(object):
 
             # the parameter list
             self._compile(arglist)
-            # compile the body of the function
+            # recursively compile the body of the function
             self._compile(body)
-            # get number of variables used in the function
-            # insert the function nvars definition line
 
-            # the function's CP
+            # save the function's CP before restore
             funcCP = self.CP
-
             # restore compiled proc to main
             self.restoreCP()
+
+            # any function w/o return will return a 0 by default
+            if len(funcCP.instrlist)==0 or funcCP.instrlist[-1].opcode != OP_RETURN:
+                funcCP.instrlist.append(Instruction(OP_PUSHC, 0))
+                funcCP.instrlist.append(Instruction(OP_RETURN))
+
             # let the main proc know that we are having a new func CP
             self.add_instruction(OP_FUNCTION, funcCP)
             # associate the definition to the varname
@@ -227,10 +248,10 @@ class Compiler(object):
             self.add_instruction(OP_CALL, len(lst[1].lst))
 
         elif label == PN_CONTINUE:
-            self.add_instruction(OP_JUMP, self.label_group[0])
+            self.add_instruction(OP_JUMP, self.label_continue[-1])
 
         elif label == PN_BREAK:
-            self.add_instruction(OP_JUMP, self.label_group[1])
+            self.add_instruction(OP_JUMP, self.label_break[-1])
 
         elif label == PN_RETURN:
             if len(lst) > 0:

@@ -12,12 +12,16 @@ class CollectionSlice(object):
         self.idxlist = idxlist[0]
 
     def getValue(self):
+        if isinstance(self.collection, CollectionSlice):
+            collection = self.collection.getValue()
+        else:
+            collection = self.collection
         if len(self.idxlist) == 1:
-            return self.collection[self.idxlist[0]]
+            return collection[self.idxlist[0]]
         elif len(self.idxlist) == 2:
-            return self.collection[slice(self.idxlist[0], self.idxlist[1])]
+            return collection[slice(self.idxlist[0], self.idxlist[1])]
         elif len(self.idxlist) == 3:
-            return self.collection[slice(self.idxlist[0], self.idxlist[1], self.idxlist[2])]
+            return collection[slice(self.idxlist[0], self.idxlist[1], self.idxlist[2])]
 
 
 class Undef(object):
@@ -77,7 +81,8 @@ class VM(object):
                 if self._is_in_top_env():
                     break
                 else:
-                    raise VMError('Code object ended prematurely.')
+                    raise VMError('Code object ended prematurely: ',
+                            self.frame.codeobject)
 
             opcode = instr.opcode
             if opcode == OP_PUSH:
@@ -108,11 +113,13 @@ class VM(object):
             elif opcode == OP_KWARG:
                 # make the keyword argument and push onto stack
                 value = self.stack.pop()
-                kwArgName = self.codeobject.constants[self.stack.pop()]
+                kwArgName = self.stack.pop()
                 self.stack.append(KwArg(kwArgName, value))
 
             elif opcode == OP_CALL: # call
                 proc = self.stack.pop()
+                if isinstance(proc, CollectionSlice):
+                    proc = proc.getValue()
                 # proc is either builtin or closure
                 arglist = [self.stack.pop() for i in range(instr.args[0])]
                 arglist.reverse()
@@ -161,7 +168,8 @@ class VM(object):
                             env = callee_env)
 
                 else:
-                    raise VMError('Invalid object for function call.')
+                    raise VMError('Invalid object for function call: ', 
+                            proc)
 
             elif opcode == OP_KWPARM:
                 # this is the operation trying to set the default keyword parameter values
@@ -244,7 +252,15 @@ class VM(object):
                 self.stack.append(-op)
 
             else:
-                raise self.VMError('Unknown instruction.')
+                raise self.VMError('Unknown instruction', 
+                        opcode2str(instr.opcode))
+
+        if len(self.stack) > 0:
+            value = self.stack.pop()
+            if isinstance(value, CollectionSlice):
+                value = value.getValue()
+            builtin_print(('Ret:', value))
+            self.stack = []
 
     def _create_top_env(self):
         top_binding = {}
@@ -276,7 +292,8 @@ class VM_Environment(object):
         elif self.parent:
             return self.parent.getVar(varName)
         else:
-            raise VMError('Undefined variable')
+            raise VMError('Undefined variable: ',
+                    varName)
 
     def setVar(self, varName, value):
         # variable can only be set at current environment
@@ -308,14 +325,18 @@ def builtin_assign(args):
     lhs = args[0]
     rhs = args[1]
     if isinstance(lhs, CollectionSlice):
+        if isinstance(lhs.collection, CollectionSlice):
+            collection = lhs.collection.getValue()
+        else:
+            collection = lhs.collection
         if len(lhs.idxlist) == 1:
-            lhs.collection[lhs.idxlist[0]] = rhs
+            collection[lhs.idxlist[0]] = rhs
         elif len(lhs.idxlist) == 2:
-            lhs.collection[slice(lhs.idxlist[0], lhs.idxlist[1])] = rhs
+            collection[slice(lhs.idxlist[0], lhs.idxlist[1])] = rhs
         elif len(lhs.idxlist) == 3:
-            lhs.collection[slice(lhs.idxlist[0], lhs.idxlist[1], lhs.idxlist[2])] = rhs
+            collection[slice(lhs.idxlist[0], lhs.idxlist[1], lhs.idxlist[2])] = rhs
     else:
-        raise VMError('Simple assignment should not call assign builtin.')
+        raise VMError('Simple assignment should not call assign builtin.', '')
 
 
 builtin_map = {
@@ -326,5 +347,6 @@ builtin_map = {
 
 
 class VMError(Exception):
-    pass
+    def __repr__(self):
+        return '%%[VMError] %s\n%s' % self.args
 

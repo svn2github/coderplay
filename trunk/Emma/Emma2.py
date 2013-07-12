@@ -155,6 +155,8 @@ class Emma(object):
         # Assembling
         assembled = assemble(compiled)
         #print assembled
+
+        #raise Exception
         
         # Evaluation
         try:
