@@ -9,13 +9,15 @@ class CollectionSlice(object):
 
     def __init__(self, collection, *idxlist):
         self.collection = collection
-        self.idxlist = idxlist
+        self.idxlist = idxlist[0]
 
     def getValue(self):
         if len(self.idxlist) == 1:
-            return self.collection[self.idxlist]
-        else:
-            return self.collection[slice(self.idxlist)]
+            return self.collection[self.idxlist[0]]
+        elif len(self.idxlist) == 2:
+            return self.collection[slice(self.idxlist[0], self.idxlist[1])]
+        elif len(self.idxlist) == 3:
+            return self.collection[slice(self.idxlist[0], self.idxlist[1], self.idxlist[2])]
 
 
 class Undef(object):
@@ -117,8 +119,8 @@ class VM(object):
 
                 if isinstance(proc, BuiltinProc):
                     result = proc.apply(arglist)
-                    if result:
-                        self.valuestack.push(result)
+                    if result is not None:
+                        self.stack.append(result)
 
                 elif isinstance(proc, Closure): # user-defined function
                     # trying to plug arguments into parameters
@@ -173,10 +175,10 @@ class VM(object):
                 self.frame = self.frameStack.pop()
 
             elif opcode == OP_SLICE:
-                idxlist = [self.stack.pop() for i in len(instr.args[0])]
+                idxlist = [self.stack.pop() for i in range(instr.args[0])]
                 idxlist.reverse()
                 collection = self.stack.pop()
-                self.stack.push(CollectionSlice(collection, idxlist))
+                self.stack.append(CollectionSlice(collection, idxlist))
 
             elif opcode in [OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, OP_GT, OP_GE, 
                             OP_EQ, OP_LE, OP_LT, OP_NE, OP_AND, OP_OR, OP_XOR]:
@@ -289,8 +291,16 @@ class BuiltinProc(object):
     def apply(self, args):
         return self.proc(args)
 
+def builtin_list(args):
+    if len(args) == 0:
+        return []
+    else:
+        return [0]*args[0]
+
 def builtin_print(args):
     for arg in args:
+        if isinstance(arg, CollectionSlice):
+            arg = arg.getValue()
         sys.stdout.write(str(arg) + ' ')
     sys.stdout.write('\n')
 
@@ -298,17 +308,18 @@ def builtin_assign(args):
     lhs = args[0]
     rhs = args[1]
     if isinstance(lhs, CollectionSlice):
-        print 'is CollectionSlice'
         if len(lhs.idxlist) == 1:
-            lhs.collection[lhs.idxlist] = rhs
-        else:
-            lhs.collection[slice(lhs.idxlist)] = rhs
+            lhs.collection[lhs.idxlist[0]] = rhs
+        elif len(lhs.idxlist) == 2:
+            lhs.collection[slice(lhs.idxlist[0], lhs.idxlist[1])] = rhs
+        elif len(lhs.idxlist) == 3:
+            lhs.collection[slice(lhs.idxlist[0], lhs.idxlist[1], lhs.idxlist[2])] = rhs
     else:
-        asdfa
         raise VMError('Simple assignment should not call assign builtin.')
 
 
 builtin_map = {
+    'list':     builtin_list,
     'print':    builtin_print,
     'assign':   builtin_assign,
 }

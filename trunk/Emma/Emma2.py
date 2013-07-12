@@ -150,11 +150,11 @@ class Emma(object):
 
         # Compilation
         compiled = self.compiler.compile(parsed)
-        print compiled
+        #print compiled
 
         # Assembling
         assembled = assemble(compiled)
-        print assembled
+        #print assembled
         
         # Evaluation
         try:

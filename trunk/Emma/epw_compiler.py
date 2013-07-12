@@ -265,7 +265,7 @@ class Compiler(object):
             else:
                 self._compile(lst[0]) # the variable to be assigned
                 self._compile(lst[1]) # the value
-                self.add_instruction(OP_PUSH, 'assgin')
+                self.add_instruction(OP_PUSH, 'assign')
                 self.add_instruction(OP_CALL, 2)
 
         elif label == PN_BINOP:
