@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{syntax}
 \author{Yang Wang}
 \title{The Emma Language Reference}
 \begin{document}
@@ -40,6 +41,19 @@ two lines separated by newline character. Second,
 
 \section{Synatic analysis}
 \subsection{grammar}
+
+\setlength{\grammarparsep}{10pt plus 1pt minus 1pt} % increase separation between rules
+\setlength{\grammarindent}{12em} % increase separation between LHS/RHS 
+\begin{grammar}
+
+
+<program> ::= (statement)*
+
+<statement> ::= <CR> 
+\alt (stmt_list <CR>)
+
+
+\end{grammar}
 
 \section{Intermediate representation}
 
