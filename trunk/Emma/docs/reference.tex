@@ -1,0 +1,50 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\author{Yang Wang}
+\title{The Emma Language Reference}
+\begin{document}
+
+\section{Introduction}
+This reference manual describes the Emma language and serve as an alternative 
+format of the language specification.
+
+The Emma language is an self-education and experimental project. 
+The main purpose is for the author to study the theory and practice related
+to compiler design and implementation. 
+The final product is a high level programming language similar to Python in
+spirit, but also incorporate features from other languages such as
+IDL (Interactive Data Language), C. 
+
+\subsection{Implementation}
+The language will be prototyped in Python and implemented in C. 
+
+\section{Lexical analysis}
+\subsection{Line structure}
+
+
+\subsubsection{Physical lines}
+A physical line is terminated by a newline character. 
+
+\subsubsection{Logical lines}
+A logical line can be terminated by either a newline character or a semicolon.
+Termination by a semicolon is final. The semicolon is supposed to be used
+in a single physical line to separate statements. It also provides a means
+to enter a long script in an interactive session.
+
+Termination by a newline character can be suppressed in two ways.
+First, an explicit line continuation symbol, ``\textbackslash", concatenates
+two lines separated by newline character. Second, 
+
+\section{Synatic analysis}
+\subsection{grammar}
+
+\section{Intermediate representation}
+
+\section{Virtual machine}
+
+\section{Standard library}
+
+\end{document}
