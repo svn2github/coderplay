@@ -7,16 +7,26 @@
 \usepackage{listings} % source code writer %
 \usepackage{color}
 
+% ----------------------------------------------------------
+% Source code syntax highlight
+\lstdefinelanguage{Emma}
+{morekeywords={print,if,else,while,def,return,for,continue,break,and,or,not,class},
+sensitive=false,
+morecomment=[l]{\#},
+morestring=[b]",
+morestring=[b]',
+} 
+
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 
 \lstset{frame=tb,
-  language=Java,
+  language=Emma,
   aboveskip=3mm,
   belowskip=3mm,
   showstringspaces=false,
-  columns=flexible,
+  columns=fixed,
   basicstyle={\small\ttfamily},
   numbers=none,
   numberstyle=\tiny\color{gray},
@@ -27,94 +37,128 @@
   breakatwhitespace=true
   tabsize=3
 }
-
-\lstdefinelanguage{Emma}
-{morekeywords={print,if,else,while,def,return,for},
-sensitive=false,
-morecomment=[l]{\#},
-morestring=[b]",
-} 
-
-\lstdefinelanguage{rock}
-{morekeywords={one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,o,clock,rock,around,the,tonight},
-sensitive=false,
-morecomment=[l]{//},
-morecomment=[s]{/*}{*/},
-morestring=[b]",
-}
+% End of syntax highlight
+% ----------------------------------------------------------
 
 \author{Yang Wang}
 \title{The Emma Language Reference}
 \begin{document}
 
 \section{Introduction}
-This reference manual describes the Emma language and serve as an alternative 
-format of the language specification.
+This reference manual describes the Emma language and also serves as an  
+language specification and development guidance.
 
 The Emma language is an self-education and experimental project. 
 The main purpose is for the author to study the theory and practice related
 to compiler design and implementation. 
-The final product is a high level programming language similar to Python in
-spirit, but also incorporate features from other languages such as
+The final product is envisioned to be a high level programming language similar
+to Python in spirit, but also incorporate features from other languages such as
 IDL (Interactive Data Language), C, Java. 
+
+The basic target of the language is to be Turning complete and the ultimate
+target is to be self-hosting, i.e.\ be able to compile itself.
+The current development scope of the language is listed as follows:
+
+\begin{itemize}
+\item Functions (with recursive calls)
+\item Array support
+\item Basic I/O support
+\item Object oriented programming support by Class definitions
+\item Error handling and interactive debugging similar to IDL
+\end{itemize}
+
 
 \subsection{Implementation}
 The language will be prototyped in Python and implemented in C. 
+An interactive environment will be provided as well as a batch
+run mode. Any programs written in the language will be compiled
+to a bytecode format to boost the execution speed. This means
+that a runtime of the Emma language is always required to run
+the bytecode, since it will not be compiled down to the native machine
+code.
+
+\pagebreak
 
 \section{Lexical analysis}
 \subsection{Line structure}
-
+An Emma program is consisted of lines of texts. The line structure is
+hence one of the basic component of a source program.
 
 \subsubsection{Physical lines}
-A physical line is terminated by a newline character. 
+A physical line is terminated by an end-of-line sequence (EOL). The
+sequence is different on different platforms. Unix and alike use ASCII LF
+(linefeed), while Windows uses ASCII sequence of CR LF (carriage return followed
+by a linefeed). All of these sequences are treated equally as a single 
+EOL symbol.
 
 \subsubsection{Logical lines}
 A logical line can be a single physical line, multiple physical lines, or
 part of a single physical line.
 
-A logical line is terminated by either a newline character or a semicolon.
-Termination of a logical line by a newline character is the most 
-straightforward choice to end a logical line and this makes the physical 
+A logical line is terminated by either a EOL or a semicolon.
+Termination of a logical line by a EOL is the most 
+straightforward choice to end a logical line and this makes a physical 
 line to be also a logical line.
 
-Termination by a semicolon is final. The semicolon is supposed to be used
-in a single physical line to separate statements. This allows a single 
-physical line to contain multiple logical lines. It also provides means
-to enter a long script in an interactive session.
+A semicolon is supposed to be used in a single physical line to separate 
+statements. This allows a single physical line to contain multiple logical
+lines, which is useful to enter a long script in an interactive session.
 
-Termination by a newline character can be suppressed explicitly by a line 
-continuation symbol, ``\textbackslash". This makes it possible to have a 
-logical line span across multiple physical lines. 
+While termination by a semicolon is final, termination by a EOL can be 
+suppressed explicitly by a line continuation symbol, ``\textbackslash".
+This makes it possible to have a logical line span across multiple 
+physical lines. 
 
-For simple statements, they can never cross the boundary of a logical line,
-i.e., one logical line is also one statement. 
-For compound statements, where newline and semicolon are allowed by the 
-syntax (e.g. in between statements in a '{}' pair), they may be consisted 
-of multiple logical lines. Note even for a compound statement, if it is
-outside of the '{}' pair, line termination is still not allowed. These
-rules are better clarified with an example of the ``if-else'' compound 
-statement. 
+Simple statements can never cross the boundaries of a logical line.
+For compound statements, the language syntax allows both EOL and semicolon
+to be in between statements in a ``\{\}'' pair. Therefore compound statements
+may be consisted of multiple logical lines. Note that even for a compound 
+statement, line termination is still not allowed outside of the 
+``\{\}'' pair. 
+These rules are better clarified with the following example of a ``if-else''
+compound statement. 
 
 \begin{lstlisting}
-# A compound if-else statement
+# A compound if-else statement span across multiple physical lines
 if (x == 1) {
-    y = 1
+    y = 1;
 } else {
     y = 0
 }
 \end{lstlisting}
 
-\begin{lstlisting}
-// Hello.java
-import javax.swing.JApplet;
-import java.awt.Graphics;
+Note that both EOL and semicolon can appear inside the ``\{\}'' pairs. 
+But lines cannot be terminated outside of the ``\{\}'' pairs. That is
+why the ``\{'' has to be in the same line with ``\lstinline$if (x == 1)$''.
+Similarly, ``\lstinline$else$'' is in the same line with both the leading
+``\}'' and the ending ``\{''.
 
-public class Hello extends JApplet {
-    public void paintComponent(Graphics g) {
-        g.drawString("Hello, world!", 65, 95);
-    }    
-}
+\subsubsection{Line joining}
+The backslash character, ``\\'', can be used to join two lines separated by EOL.
+This allows a logical line to span across multiple physical lines as follows:
+\begin{lstlisting}
+# Line joining by "\" character
+x = a + b \
+      + c \
+      + d
 \end{lstlisting}
+
+\subsubsection{Comment}
+The hash character, ``\#'', starts a single line comment that runs to the end
+of a physical line. There is currently no plan to support multi-line
+comment symbols.
+
+\subsubsection{Empty line and whitespace}
+Any empty line and whitespace are not part of the Emma language. They are
+effectively ignored.
+
+\subsection{Keywords}
+Keywords are reserved and listed as follows:
+\begin{lstlisting}
+print if else while for continue break def return class
+\end{lstlisting}
+
+\pagebreak
 
 
 \section{Syntactic analysis}
@@ -122,16 +166,88 @@ public class Hello extends JApplet {
 
 \setlength{\grammarparsep}{10pt plus 1pt minus 1pt} % increase separation between rules
 \setlength{\grammarindent}{12em} % increase separation between LHS/RHS 
+
 \begin{grammar}
+<program> ::= <statement>*
 
+<statement> ::= "EOL"
+	\alt <stmt_list> "EOL"
 
-<program> ::= (statement)*
+<stmt_list> ::= (<simple_stmt> \alt <compound_stmt>) (<empty_stmt> (<simple_stmt> \alt <compound_stmt>))* [<empty_stmt>]
 
-<statement> ::= <CR> 
-\alt (stmt_list <CR>)
+<stmt_block> ::= `\{' (<statement>)* <stmt_list> "EOL"* `\}' 
+                    \alt `\{' "EOL"* `\}'
 
+<simple_stmt> ::= r_expression
+	\alt <assign_stmt>                    
+	\alt <print_stmt>
+	\alt `continue'
+	\alt `break'
+	\alt `return' r_expression
+	\alt <empty_stmt>
+	
+<empty_stmt> ::= `;'$^{+}$
+
+<compound_stmt> ::= <if_stmt>
+	\alt <while_stmt>
+	\alt <for_stmt>
+	\alt <def_stmt>
+	
+<if_stmt> ::= `if' r_expression (<simple_stmt> \alt stmt_block) [<else_stmt>]
+
+<else_stmt> ::= `else' (<if_stmt> \alt <simple_stmt> \alt <stmt_block>)
+              
+<while_stmt> ::= `while' <r_expression> (<simple_stmt> \alt <stmt_block>)
+
+<for_stmt> ::= `for' "IDENT" `=' <expression>, expression [`,' expression] (<simple_stmt> \alt <stmt_block>)
+
+<def_stmt> ::= `def' <func> <stmt_block>
+
+<print_stmt> ::= `print' [r_expression (`,' <r_expression>)*]
+
+<assign_stmt> ::= ("IDENT" | <slice>) `=' <r_expression>
+
+<func> ::= "IDENT" (<arglist> | <idxlist>)* <arglist>
+
+<arglist> ::= `(' [<r_expression> (`,' <r_expression>)*] `)'
+
+<slice> ::= "IDENT" (<arglist> | <idxlist>)* <idxlist>
+
+<idxlist> ::= `[' [<expression>] (`:' [<expression>])\{0,2\} `]'
+
+<r_expression> ::= <r_term> (<r_orop> <r_term>)*
+
+<r_term> ::= <r_factor> (<r_andop> <r_factor>)*
+
+<r_factor> ::= [<r_unary_op>] <l_expression>
+
+<l_expression> ::= <l_factor> (<l_op> <l_factor>)*
+
+<l_factor> ::= <expression>
+
+<expression> ::= <term> (<addop> <term>)*
+
+<term> ::= <factor> (<mulop> <factor>)*
+
+<factor> ::= [<unary_op>] "NUMBER"
+	\alt "STRING"
+	\alt "IDENT"
+	\alt <func>
+	\alt <slice>
+	\alt `(' <r_expression> `)'
+	
+<r_orop> ::= `or' | `xor'
+
+<r_andop> ::= `and'
+
+<l_op> ::= `>' | `<' | `>=' | `<=' | `==' | `!='
+
+<addop> ::= `+' | `-'
+
+<mulop> ::= `*' | `/'
 
 \end{grammar}
+
 
 \section{Intermediate representation}
 
