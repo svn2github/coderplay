@@ -3,7 +3,46 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
-\usepackage{syntax}
+\usepackage{syntax} % Grammar writer %
+\usepackage{listings} % source code writer %
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+
+\lstdefinelanguage{Emma}
+{morekeywords={print,if,else,while,def,return,for},
+sensitive=false,
+morecomment=[l]{\#},
+morestring=[b]",
+} 
+
+\lstdefinelanguage{rock}
+{morekeywords={one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,o,clock,rock,around,the,tonight},
+sensitive=false,
+morecomment=[l]{//},
+morecomment=[s]{/*}{*/},
+morestring=[b]",
+}
+
 \author{Yang Wang}
 \title{The Emma Language Reference}
 \begin{document}
@@ -17,7 +56,7 @@ The main purpose is for the author to study the theory and practice related
 to compiler design and implementation. 
 The final product is a high level programming language similar to Python in
 spirit, but also incorporate features from other languages such as
-IDL (Interactive Data Language), C. 
+IDL (Interactive Data Language), C, Java. 
 
 \subsection{Implementation}
 The language will be prototyped in Python and implemented in C. 
@@ -30,16 +69,55 @@ The language will be prototyped in Python and implemented in C.
 A physical line is terminated by a newline character. 
 
 \subsubsection{Logical lines}
-A logical line can be terminated by either a newline character or a semicolon.
+A logical line can be a single physical line, multiple physical lines, or
+part of a single physical line.
+
+A logical line is terminated by either a newline character or a semicolon.
+Termination of a logical line by a newline character is the most 
+straightforward choice to end a logical line and this makes the physical 
+line to be also a logical line.
+
 Termination by a semicolon is final. The semicolon is supposed to be used
-in a single physical line to separate statements. It also provides a means
+in a single physical line to separate statements. This allows a single 
+physical line to contain multiple logical lines. It also provides means
 to enter a long script in an interactive session.
 
-Termination by a newline character can be suppressed in two ways.
-First, an explicit line continuation symbol, ``\textbackslash", concatenates
-two lines separated by newline character. Second, 
+Termination by a newline character can be suppressed explicitly by a line 
+continuation symbol, ``\textbackslash". This makes it possible to have a 
+logical line span across multiple physical lines. 
 
-\section{Synatic analysis}
+For simple statements, they can never cross the boundary of a logical line,
+i.e., one logical line is also one statement. 
+For compound statements, where newline and semicolon are allowed by the 
+syntax (e.g. in between statements in a '{}' pair), they may be consisted 
+of multiple logical lines. Note even for a compound statement, if it is
+outside of the '{}' pair, line termination is still not allowed. These
+rules are better clarified with an example of the ``if-else'' compound 
+statement. 
+
+\begin{lstlisting}
+# A compound if-else statement
+if (x == 1) {
+    y = 1
+} else {
+    y = 0
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+// Hello.java
+import javax.swing.JApplet;
+import java.awt.Graphics;
+
+public class Hello extends JApplet {
+    public void paintComponent(Graphics g) {
+        g.drawString("Hello, world!", 65, 95);
+    }    
+}
+\end{lstlisting}
+
+
+\section{Syntactic analysis}
 \subsection{grammar}
 
 \setlength{\grammarparsep}{10pt plus 1pt minus 1pt} % increase separation between rules
