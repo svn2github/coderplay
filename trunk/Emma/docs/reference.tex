@@ -49,13 +49,13 @@ This reference manual describes the Emma language and also serves as an
 language specification and development guidance.
 
 The Emma language is an self-education and experimental project. 
-The main purpose is for the author to study the theory and practice related
+The main purpose is for the author to study the theory and best practice related
 to compiler design and implementation. 
 The final product is envisioned to be a high level programming language similar
 to Python in spirit, but also incorporate features from other languages such as
 IDL (Interactive Data Language), C, Java. 
 
-The basic target of the language is to be Turning complete and the ultimate
+The basic target of the language is to be Turning complete. The ultimate
 target is to be self-hosting, i.e.\ be able to compile itself.
 The current development scope of the language is listed as follows:
 
@@ -72,8 +72,8 @@ The current development scope of the language is listed as follows:
 The language will be prototyped in Python and implemented in C. 
 An interactive environment will be provided as well as a batch
 run mode. Any programs written in the language will be compiled
-to a bytecode format to boost the execution speed. This means
-that a runtime of the Emma language is always required to run
+to bytecode to boost the execution speed. This means
+that a runtime environment of the Emma language is always required to run
 the bytecode, since it will not be compiled down to the native machine
 code.
 
@@ -134,7 +134,8 @@ Similarly, ``\lstinline$else$'' is in the same line with both the leading
 ``\}'' and the ending ``\{''.
 
 \subsubsection{Line joining}
-The backslash character, ``\\'', can be used to join two lines separated by EOL.
+The backslash character, ``\textbackslash'', can be used to join two lines 
+separated by EOL.
 This allows a logical line to span across multiple physical lines as follows:
 \begin{lstlisting}
 # Line joining by "\" character
