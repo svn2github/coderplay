@@ -45,10 +45,10 @@ morestring=[b]',
 \begin{document}
 
 \section{Introduction}
-This reference manual describes the Emma language and also serves as an  
+This reference manual describes the Emma language and also serves as a  
 language specification and development guidance.
 
-The Emma language is an self-education and experimental project. 
+The Emma language is a self-education and experimental project. 
 The main purpose is for the author to study the theory and best practice related
 to compiler design and implementation. 
 The final product is envisioned to be a high level programming language similar
@@ -97,7 +97,7 @@ part of a single physical line.
 
 A logical line is terminated by either a EOL or a semicolon.
 Termination of a logical line by a EOL is the most 
-straightforward choice to end a logical line and this makes a physical 
+straightforward choice. This makes a physical 
 line to be also a logical line.
 
 A semicolon is supposed to be used in a single physical line to separate 
@@ -169,91 +169,134 @@ print if else while for continue break def return class
 \setlength{\grammarindent}{12em} % increase separation between LHS/RHS 
 
 \begin{grammar}
+
+
+<stmt> ::= <simple_stmt> | compound_stmt | $\varepsilon$
+
+<stmt_list> ::= <stmt> (`;' stmt)*
+
+<stmt_block> ::= `{' <stmt_list> ("EOL" <stmt_list>)* ["EOL"]`}'
+
+<stmt_line> ::= <stmt_list> "EOL"
+
+
 <program> ::= <statement>*
 
 <statement> ::= "EOL"
 	\alt <stmt_list> "EOL"
 
-<stmt_list> ::= (<simple_stmt> \alt <compound_stmt>) (<empty_stmt> (<simple_stmt> \alt <compound_stmt>))* [<empty_stmt>]
+<compound_stmt> ::= <if_stmt>
+	\alt <while_stmt>
+	\alt <for_stmt>
+	\alt <funcdef>
+    \alt <classdef>
+	
+<stmt_list> ::= (<simple_stmt> | <compound_stmt>) (<empty_stmt> (<simple_stmt> | <compound_stmt>))* [<empty_stmt>]
 
-<stmt_block> ::= `\{' (<statement>)* <stmt_list> "EOL"* `\}' 
-                    \alt `\{' "EOL"* `\}'
+<stmt_block> ::= `{' (<statement>)* <stmt_list> "EOL"* `}' 
+                    \alt `{' "EOL"* `}'
 
-<simple_stmt> ::= r_expression
+<if_stmt> ::= `if' <expression> (<simple_stmt> | <stmt_block>) [<else_stmt>]
+
+<else_stmt> ::= `else' (<if_stmt> \alt <simple_stmt> | <stmt_block>)
+              
+<while_stmt> ::= `while' <expression> (<simple_stmt> | <stmt_block>)
+
+<for_stmt> ::= `for' "IDENT" `=' <expression>, <expression> [`,' <expression>] (<simple_stmt> | <stmt_block>)
+
+<kwparms> ::= <kvpair> (`,' <kvpair>)*
+
+<posparms> ::= "IDENT", (`,' "IDENT")*
+
+<parmlist> ::= (<posparms> | <kwparms>)* [`,' `*' "IDENT"] [`,' `**' "IDENT"]
+
+<funcdef> ::= `def' "IDENT" `(' [<parmlist>] `)' <stmt_block>
+
+<classdef> ::= `class' "IDENT" `(' "IDENT" `)' <stmt_block>
+
+<simple_stmt> ::= <expression>
 	\alt <assign_stmt>                    
 	\alt <print_stmt>
 	\alt `continue'
 	\alt `break'
-	\alt `return' r_expression
+	\alt `return' <expression>
 	\alt <empty_stmt>
 	
 <empty_stmt> ::= `;'$^{+}$
 
-<compound_stmt> ::= <if_stmt>
-	\alt <while_stmt>
-	\alt <for_stmt>
-	\alt <def_stmt>
-	
-<if_stmt> ::= `if' r_expression (<simple_stmt> \alt stmt_block) [<else_stmt>]
+<print_stmt> ::= `print' [expression (`,' <expression>)*]
 
-<else_stmt> ::= `else' (<if_stmt> \alt <simple_stmt> \alt <stmt_block>)
-              
-<while_stmt> ::= `while' <r_expression> (<simple_stmt> \alt <stmt_block>)
+<target> ::= "IDENT" | <classfield> | <slice>
 
-<for_stmt> ::= `for' "IDENT" `=' <expression>, expression [`,' expression] (<simple_stmt> \alt <stmt_block>)
+<assign_stmt> ::= <target> `=' <expression>
 
-<def_stmt> ::= `def' <func> <stmt_block>
+<expression> ::= <r_expr>
 
-<print_stmt> ::= `print' [r_expression (`,' <r_expression>)*]
-
-<assign_stmt> ::= ("IDENT" | <slice>) `=' <r_expression>
-
-<func> ::= "IDENT" (<arglist> | <idxlist>)* <arglist>
-
-<arglist> ::= `(' [<r_expression> (`,' <r_expression>)*] `)'
-
-<slice> ::= "IDENT" (<arglist> | <idxlist>)* <idxlist>
-
-<idxlist> ::= `[' [<expression>] (`:' [<expression>])\{0,2\} `]'
-
-<r_expression> ::= <r_term> (<r_orop> <r_term>)*
+<r_expr> ::= <r_term> (<r_orop> <r_term>)*
 
 <r_term> ::= <r_factor> (<r_andop> <r_factor>)*
 
-<r_factor> ::= [<r_unary_op>] <l_expression>
+<r_factor> ::= [`not'] <l_expression>
 
-<l_expression> ::= <l_factor> (<l_op> <l_factor>)*
+<l_expr> ::= <a_expr> (<l_op> <a_expr>)*
 
-<l_factor> ::= <expression>
+<a_expr> ::= <a_term> (<addop> <a_term>)*
 
-<expression> ::= <term> (<addop> <term>)*
+<a_term> ::= <u_expr> (<mulop> <u_expr>)*
 
-<term> ::= <factor> (<mulop> <factor>)*
+<u_expr> ::= [<unary_op>] <power>
 
-<factor> ::= [<unary_op>] "NUMBER"
-	\alt "STRING"
-	\alt "IDENT"
-	\alt <func>
-	\alt <slice>
-	\alt `(' <r_expression> `)'
-	
-<r_orop> ::= `or' | `xor'
+<power> ::= <factor> [`**' <u_expr>]
 
-<r_andop> ::= `and'
+<literal> ::= "STRING" | "NUMBER"
 
-<l_op> ::= `>' | `<' | `>=' | `<=' | `==' | `!='
+<factor> ::= <primary> | <literal> | `(' <expression> `)'
 
-<addop> ::= `+' | `-'
+<kvpair> ::= "IDENT" `=' <expression>
 
-<mulop> ::= `*' | `/'
+<kwargs> ::= <kvpair> (`,' <kvpair>)*
+
+<posargs> ::= <expression> (`,' <expression>)*
+
+<arglist> ::= (<posargs> | <kwargs>)*
+
+<call> ::= <primary> `(' [<arglist>] `)'
+
+<idxlist> ::= <singleidx> (`,' <expression>)*
+
+<long_idxrange> ::= <short_idxrange> `:' [<expression>]
+
+<short_idxrange> ::= <singleidx> `:' [<expression>] 
+
+<single_idx> ::= <expression>
+
+<slice> ::= <primary> `[' single_idx \alt short_idxrange \alt long_idxrange \alt idxlist `]'
+
+<classfield> ::= <primary>`.'"IDENT"
+
+<primary> ::= "IDENT" | <classfield> | <slice> | <call>
+
 
 \end{grammar}
 
+% <r_orop> ::= `or' | `xor'
+% <r_andop> ::= `and'
+% <l_op> ::= `>' | `<' | `>=' | `<=' | `==' | `!='
+% <addop> ::= `+' | `-'
+% <mulop> ::= `*' | `/' | `%'
+
+
+\pagebreak
 
 \section{Intermediate representation}
 
+\pagebreak
+
 \section{Virtual machine}
 
+\pagebreak
+
 \section{Standard library}
+
 
 \end{document}
