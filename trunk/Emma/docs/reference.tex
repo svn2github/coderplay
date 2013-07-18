@@ -95,17 +95,21 @@ EOL symbol.
 A logical line can be a single physical line, multiple physical lines, or
 part of a single physical line.
 
-A logical line is terminated by either a EOL or a semicolon.
-Termination of a logical line by a EOL is the most 
-straightforward choice. This makes a physical 
-line to be also a logical line.
+A logical line is terminated by either a EOL or a semicolon if the last
+statement is a simple one. A compound statement always has a ``\}'' at 
+the end, which can also serve as a logical line termination.
 
-A semicolon is supposed to be used in a single physical line to separate 
+Termination of a logical line by a EOL is the most straightforward choice. 
+This makes a physical line to be also a logical line.
+
+A semicolon is supposed to be used in the middle of a physical line to separate 
 statements. This allows a single physical line to contain multiple logical
 lines, which is useful to enter a long script in an interactive session.
 
 While termination by a semicolon is final, termination by a EOL can be 
 suppressed explicitly by a line continuation symbol, ``\textbackslash".
+The line continuation symbol, ``\textbackslash", joins two lines
+by removing the EOL symbol between them.
 This makes it possible to have a logical line span across multiple 
 physical lines. 
 
@@ -115,23 +119,26 @@ to be in between statements in a ``\{\}'' pair. Therefore compound statements
 may be consisted of multiple logical lines. Note that even for a compound 
 statement, line termination is still not allowed outside of the 
 ``\{\}'' pair. 
-These rules are better clarified with the following example of a ``if-else''
-compound statement. 
+
+These rules are better clarified with the following example:
 
 \begin{lstlisting}
-# A compound if-else statement span across multiple lines
+# Line termination rules
 if (x == 1) {
     y = 1;
 } else {
     y = 0
-}
+} a = 5; b = 6
 \end{lstlisting}
 
 Note that both EOL and semicolon can appear inside the ``\{\}'' pairs. 
 But lines cannot be terminated outside of the ``\{\}'' pairs. That is
 why the ``\{'' has to be in the same line with ``\lstinline$if (x == 1)$''.
 Similarly, ``\lstinline$else$'' is in the same line with both the leading
-``\}'' and the ending ``\{''.
+``\}'' and the ending ``\{''. Also note that ``\lstinline$a = 5$'' does
+not need a semicolon before it because the previous compound statement
+is properly terminated by a ``\}''. In contrast, a semicolon is needed
+after it for the following ``\lstinline$b = 6$''.
 
 \subsubsection{Line joining}
 The backslash character, ``\textbackslash'', can be used to join two lines 
@@ -157,7 +164,10 @@ effectively ignored.
 Keywords are reserved and listed as follows:
 \begin{lstlisting}
 print if else while for continue break def return class
+and or xor null 
 \end{lstlisting}
+
+\subsection{Tokens}
 
 \pagebreak
 
@@ -170,20 +180,27 @@ print if else while for continue break def return class
 
 \begin{grammar}
 
-
-<stmt> ::= <simple_stmt> | compound_stmt | $\varepsilon$
-
-<stmt_list> ::= <stmt> (`;' stmt)*
-
-<stmt_block> ::= `{' <stmt_list> ("EOL" <stmt_list>)* ["EOL"]`}'
-
-<stmt_line> ::= <stmt_list> "EOL"
-
+% We could let lexer to do more work on merge consecutive ';' as a single ';'
 
 <program> ::= <statement>*
 
-<statement> ::= "EOL"
-	\alt <stmt_list> "EOL"
+<statement> ::= "EOL" 
+    \alt <stmt_list> "EOL"
+
+<stmt_list> ::= [`;'] <simple_stmt_list> | <compound_stmt_list>
+
+<simple_stmt_list> ::= <simple_stmt> [ `;' <list_rest> ]
+
+<compound_stmt_list> ::= <compound_stmt> [ <list_rest> ]
+
+<list_rest> ::= <smiple_stmt_list> 
+    \alt <compound_stmt_list>
+
+<stmt> ::= <simple_stmt> 
+    \alt <compound_stmt> 
+    \alt <stmt_block>
+
+<stmt_block> ::= `{' <statement>* [<stmt_list>] "EOL"* `}'
 
 <compound_stmt> ::= <if_stmt>
 	\alt <while_stmt>
@@ -191,24 +208,19 @@ print if else while for continue break def return class
 	\alt <funcdef>
     \alt <classdef>
 	
-<stmt_list> ::= (<simple_stmt> | <compound_stmt>) (<empty_stmt> (<simple_stmt> | <compound_stmt>))* [<empty_stmt>]
-
-<stmt_block> ::= `{' (<statement>)* <stmt_list> "EOL"* `}' 
-                    \alt `{' "EOL"* `}'
-
-<if_stmt> ::= `if' <expression> (<simple_stmt> | <stmt_block>) [<else_stmt>]
-
-<else_stmt> ::= `else' (<if_stmt> \alt <simple_stmt> | <stmt_block>)
+<if_stmt> ::= `if' <expression> <stmt> [`else' <stmt>]
               
-<while_stmt> ::= `while' <expression> (<simple_stmt> | <stmt_block>)
+<while_stmt> ::= `while' <expression> <stmt>
 
-<for_stmt> ::= `for' "IDENT" `=' <expression>, <expression> [`,' <expression>] (<simple_stmt> | <stmt_block>)
+<for_stmt> ::= `for' "IDENT" `=' <expression>, <expression> [`,' <expression>] <stmt>
 
-<kwparms> ::= <kvpair> (`,' <kvpair>)*
+<oparm_list> ::= <oparm> (`,' <oparm>)*
 
-<posparms> ::= "IDENT", (`,' "IDENT")*
+<oparm> ::= <kvpair> | "IDENT"
 
-<parmlist> ::= (<posparms> | <kwparms>)* [`,' `*' "IDENT"] [`,' `**' "IDENT"]
+<parmlist> ::= <oparm_list> [`,' `*' "IDENT"] [`,' `**' "IDENT"]
+    \alt `*' "IDENT" [`,' `**' "IDENT"]
+    \alt `**' "IDENT"
 
 <funcdef> ::= `def' "IDENT" `(' [<parmlist>] `)' <stmt_block>
 
@@ -220,13 +232,10 @@ print if else while for continue break def return class
 	\alt `continue'
 	\alt `break'
 	\alt `return' <expression>
-	\alt <empty_stmt>
 	
-<empty_stmt> ::= `;'$^{+}$
-
 <print_stmt> ::= `print' [expression (`,' <expression>)*]
 
-<target> ::= "IDENT" | <classfield> | <slice>
+<target> ::= "IDENT" | <dotname> | <slice>
 
 <assign_stmt> ::= <target> `=' <expression>
 
@@ -248,17 +257,15 @@ print if else while for continue break def return class
 
 <power> ::= <factor> [`**' <u_expr>]
 
-<literal> ::= "STRING" | "NUMBER"
+<literal> ::= "STRING" | "NUMBER" | "NULL"
 
 <factor> ::= <primary> | <literal> | `(' <expression> `)'
 
 <kvpair> ::= "IDENT" `=' <expression>
 
-<kwargs> ::= <kvpair> (`,' <kvpair>)*
+<oarg> ::= <kvpair> | <expression>
 
-<posargs> ::= <expression> (`,' <expression>)*
-
-<arglist> ::= (<posargs> | <kwargs>)*
+<arglist> ::= <oarg> (`,' <oarg>)*
 
 <call> ::= <primary> `(' [<arglist>] `)'
 
@@ -272,9 +279,9 @@ print if else while for continue break def return class
 
 <slice> ::= <primary> `[' single_idx \alt short_idxrange \alt long_idxrange \alt idxlist `]'
 
-<classfield> ::= <primary>`.'"IDENT"
+<dotname> ::= <primary> (`.' "IDENT")+
 
-<primary> ::= "IDENT" | <classfield> | <slice> | <call>
+<primary> ::= "IDENT" | <dotname> | <slice> | <call>
 
 
 \end{grammar}
