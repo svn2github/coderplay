@@ -56,7 +56,8 @@ The main purpose is for the author to study the theory and best practice related
 to compiler design and implementation. 
 The final product is envisioned to be a high level programming language similar
 to Python in spirit, but also incorporate features from other languages such as
-IDL (Interactive Data Language), C, Java. 
+IDL (Interactive Data Language), C, Java. The style of this reference is also
+influenced by the Python reference.
 
 The basic target of the language is to be Turning complete. The ultimate
 target is to be self-hosting, i.e.\ be able to compile itself.
@@ -66,8 +67,10 @@ The current development scope of the language is listed as follows:
 \item Functions (with recursive calls)
 \item Array support
 \item Basic I/O support
-\item Object oriented programming support by Class definitions
+\item Object oriented programming support by class definitions
+\item Interaction among source files with import
 \item Error handling and interactive debugging similar to IDL
+\item Interface to use external C libraries
 \end{itemize}
 
 
@@ -77,8 +80,7 @@ An interactive environment will be provided as well as a batch
 run mode. Any programs written in the language will be compiled
 to bytecode to boost the execution speed. This means
 that a runtime environment of the Emma language is always required to run
-the bytecode, since it will not be compiled down to the native machine
-code.
+the bytecode, since there will no compilation to native machine code.
 
 \pagebreak
 
@@ -100,19 +102,17 @@ part of a single physical line.
 
 A logical line is terminated by either a EOL or a semicolon if the last
 statement is a simple one. A compound statement always has a ``\}'' at 
-the end, which can also serve as a logical line termination.
+the end, which also works as a logical line termination.
 
 Termination of a logical line by a EOL is the most straightforward choice. 
 This makes a physical line to be also a logical line.
 
-A semicolon is supposed to be used in the middle of a physical line to separate 
+A semicolon is supposed to be used in middle of a physical line to separate 
 statements. This allows a single physical line to contain multiple logical
 lines, which is useful to enter a long script in an interactive session.
 
-While termination by a semicolon is final, termination by a EOL can be 
-suppressed explicitly by a line continuation symbol, ``\textbackslash".
-The line continuation symbol, ``\textbackslash", joins two lines
-by removing the EOL symbol between them.
+The line continuation symbol, ``\textbackslash", joins two physical lines
+by effectively ignoring the EOL symbol between them.
 This makes it possible to have a logical line span across multiple 
 physical lines. 
 
@@ -137,15 +137,17 @@ if (x == 1) {
 Note that both EOL and semicolon can appear inside the ``\{\}'' pairs. 
 But lines cannot be terminated outside of the ``\{\}'' pairs. That is
 why the ``\{'' has to be in the same line with ``\lstinline$if (x == 1)$''.
-Similarly, ``\lstinline$else$'' is in the same line with both the leading
-``\}'' and the ending ``\{''. Also note that ``\lstinline$a = 5$'' does
+For the same reason, ``\lstinline$else$'' is in the same line with both 
+the leading
+``\}'' and the ending ``\{''. Also note that the ``\lstinline$a = 5$'' 
+statement does
 not need a semicolon before it because the previous compound statement
 is properly terminated by a ``\}''. In contrast, a semicolon is needed
-after it for the following ``\lstinline$b = 6$''.
+after it for the following ``\lstinline$b = 6$'' statement.
 
 \subsubsection{Line joining}
-The backslash character, ``\textbackslash'', can be used to join two lines 
-separated by EOL.
+The backslash character, ``\textbackslash'', can be used to join two 
+physical lines.
 This allows a logical line to span across multiple physical lines as follows:
 \begin{lstlisting}
 # Line joining by "\" character
@@ -155,7 +157,7 @@ x = a + b \
 \end{lstlisting}
 
 \subsubsection{Comment}
-The hash character, ``\#'', starts a single line comment that runs to the end
+The hash character, ``\#'', starts a single line comment runs to the end
 of a physical line. There is currently no plan to support multi-line
 comment symbols.
 
@@ -164,7 +166,9 @@ Any empty line and whitespace are not part of the Emma language. They are
 effectively ignored.
 
 \subsection{Keywords and identifiers}
-Keywords are reserved and listed as follows\footnote{Keyword operators are shown in sepia color while normal keywords are shown in blue. It is completely cosmetic with no impact on the language.}:
+Keywords are reserved and listed as follows\footnote{Keyword operators 
+are shown in sepia color while normal keywords are shown in blue. It is 
+completely cosmetic with no impact on the language.}:
 \begin{lstlisting}
 print if else while for continue break def return null class 
 and or xor 
@@ -188,7 +192,7 @@ both \lstinline$2 + 2$ and \lstinline$3 + 3$ are used by an assignment and
 a print statement, respectively. User can directly assign value to the special
 identifier. In doing so, any value it holds previously is overwritten.
 
-\subsection{Number}
+\subsection{Numbers}
 Numbers come in only two types, integer and floating point numbers.
 Both numbers can be arbitrary large as long as the computer memory
 can hold them. Only decimal numbers are supported. Floating point
@@ -205,7 +209,6 @@ of language structs. They are show as follows:
 Note that the unprintable EOL symbol is not shown in the above list,
 though it is also an operator. 
 
-
 \subsection{Tokens}
 Tokens are recognized and returned by a lexer. A token can be a keyword,
 an identifier, a number or an operator. The token definitions are listed
@@ -215,7 +218,7 @@ as follows:
 IDENT       ::= (Letter| Underscore) 
                     (Letter | Digit | Underscore)*
 
-STRING      ::= "" | ''
+STRING      ::= "Any_Ascii_Sequence" | 'Any_Ascii_Sequence'
 
 KEYWORD     ::= print | if | else | for | while | continue 
               | break | def | class | and | or | xor | not
@@ -234,15 +237,22 @@ are only here to aid reading and clarity.
 Space and tab are both WHITE and ignored. Operators and other characters
 are returned as tokens named by their lexme.
 
+\subsection{Lexer}
+
 \pagebreak
 
 
 \section{Syntax analysis}
-\subsection{grammar}
-The grammar is of LL(1) class to facilitate a hand written predictive recursive
-descendant parser. A LL(1) grammar has following requirements:
+A parser does the syntax analysis of source code and produce a parse tree
+as its output. The parser calls the lexer for a stream of tokens and 
+analyze them with a grammar.
 
-The BNF forms of the grammar are shown as follows:
+\subsection{grammar}
+The grammar is of the LL(1) class, which can be parsed by a hand written 
+predictive recursive descendant parser. 
+A LL(1) grammar has following requirements:
+
+The BNF notations of the grammar are shown as follows:
 
 \setlength{\grammarparsep}{10pt plus 1pt minus 1pt} % increase separation between rules
 \setlength{\grammarindent}{12em} % increase separation between LHS/RHS 
@@ -280,7 +290,9 @@ The BNF forms of the grammar are shown as follows:
               
 <while_stmt> ::= `while' <expression> <stmt>
 
-<for_stmt> ::= `for' "IDENT" `=' <expression>, <expression> [`,' <expression>] <stmt>
+<for_stmt> ::= `for' "IDENT" `=' <for_expr> <stmt>
+
+<for_expr> ::= <expression> `,' <expression> [`,' <expression>]
 
 <oparm_list> ::= <oparm> (`,' <oparm>)*
 
@@ -345,12 +357,17 @@ The BNF forms of the grammar are shown as follows:
 
 <single_idx> ::= <expression>
 
-<slice> ::= <primary> `[' single_idx \alt short_idxrange \alt long_idxrange \alt idxlist `]'
+<subscription> ::= single_idx 
+	\alt short_idxrange 
+	\alt long_idxrange 
+	\alt idxlist
 
-<dotname> ::= <primary> (`.' "IDENT")+
+<slice> ::= <primary> `[' <subscription> `]'
+
+<dotname> ::= <primary> (`.' "IDENT")$^{+}$
 
 <primary> ::= "IDENT" | <dotname> | <slice> | <call>
-
+% We need to eliminate left recursion for <primary> when parsing
 
 \end{grammar}
 
