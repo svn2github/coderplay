@@ -5,12 +5,12 @@
 \usepackage{amssymb}
 \usepackage{syntax} % Grammar writer %
 \usepackage{listings} % source code writer %
-\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
 
 % ----------------------------------------------------------
 % Source code syntax highlight
 \lstdefinelanguage{Emma}
-{morekeywords={print,if,else,while,def,return,for,continue,break,and,or,not,class},
+{morekeywords={print,if,else,while,def,return,for,continue,break,class,null},
 sensitive=false,
 morecomment=[l]{\#},
 morestring=[b]",
@@ -23,6 +23,8 @@ morestring=[b]',
 
 \lstset{frame=tb,
   language=Emma,
+  emph={and,xor,or,not},
+  emphstyle=\color{Sepia},
   aboveskip=3mm,
   belowskip=3mm,
   showstringspaces=false,
@@ -34,7 +36,7 @@ morestring=[b]',
   commentstyle=\color{dkgreen},
   stringstyle=\color{mauve},
   breaklines=true,
-  breakatwhitespace=true
+  breakatwhitespace=true,
   tabsize=3
 }
 % End of syntax highlight
@@ -43,6 +45,7 @@ morestring=[b]',
 \author{Yang Wang}
 \title{The Emma Language Reference}
 \begin{document}
+%\maketitle
 
 \section{Introduction}
 This reference manual describes the Emma language and also serves as a  
@@ -160,24 +163,89 @@ comment symbols.
 Any empty line and whitespace are not part of the Emma language. They are
 effectively ignored.
 
-\subsection{Keywords}
+\subsection{Keywords and identifiers}
 Keywords are reserved and listed as follows:
 \begin{lstlisting}
-print if else while for continue break def return class
-and or xor null 
+print if else while for continue break def return null class 
+and or xor 
 \end{lstlisting}
 
+An identifier is a character sequence starts with a letter or an underscore 
+and followed by zero or more letters, numbers or underscore and it cannot
+be any of the reserved keywords.
+
+\subsubsection{Speical identifier}
+A special identifier, ``_'' (without the quotes), always points
+to the value of last unused expression.
+\begin{lstlisting}
+# Speical identifier
+1 + 1
+a = 2 + 2
+print 3 + 3
+\end{lstlisting}
+At the end of the above code snippet, the value of ``_'' is 2. This is because 
+both \lstinline$2 + 2$ and \lstinline$3 + 3$ are used by an assignment and
+a print statement, respectively. User can directly assign value to the special
+identifier. In doing so, any value it holds previously is overwritten.
+
+\subsection{Number}
+Numbers come in only two types, integer and floating point numbers.
+Both numbers can be arbitrary large as long as the computer memory
+can hold them. Only decimal numbers are supported. Floating point
+number can be written in scientific notation form, e.g. 1.0e+20.
+
+\subsection{Operators}
+Certain keywords are also operators, such as \lstinline$and$, 
+\lstinline$or$, \lstinline$xor$, \lstinline$not$. Other operators
+includes mathematical operators and symbols for aiding formation
+of language structs. They are show as follows:
+\begin{lstlisting}
++ - * / % ** ( ) { } [ ] ;
+\end{lstlisting}
+Note that the unprintable EOL symbol is not shown in the above list,
+though it is also an operator. 
+
+
 \subsection{Tokens}
+Tokens are recognized and returned by a lexer. A token can be a keyword,
+an identifier, a number or an operator. The token definitions are listed
+as follows:
+
+\begin{verbatim}
+IDENT       ::= (Letter| Underscore) 
+                    (Letter | Digit | Underscore)*
+
+STRING      ::= "" | ''
+
+KEYWORD     ::= print | if | else | for | while | continue 
+              | break | def | class | and | or | xor | not
+              
+NUMBER      ::= [+ | -] Pos_Number
+
+Pos_Number  ::= [0-9]+ 
+              | [0-9]* . [0-9]+ [Expo] 
+              | [0-9]+ . [0-9]* [Expo]
+
+Expo        ::= e [+ | -] [0-9]+
+\end{verbatim}
+
+Note that only full capitalized words are tokens. Camel case words
+are only here to aid reading and clarity. 
+Space and tab are both WHITE and ignored. Operators and other characters
+are returned as tokens named by their lexme.
 
 \pagebreak
 
 
 \section{Syntax analysis}
 \subsection{grammar}
+The grammar is of LL(1) class to facilitate a hand written predictive recursive
+descendant parser. A LL(1) grammar has following requirements:
+
+The BNF forms of the grammar are shown as follows:
 
 \setlength{\grammarparsep}{10pt plus 1pt minus 1pt} % increase separation between rules
 \setlength{\grammarindent}{12em} % increase separation between LHS/RHS 
-
 \begin{grammar}
 
 % We could let lexer to do more work on merge consecutive ';' as a single ';'
