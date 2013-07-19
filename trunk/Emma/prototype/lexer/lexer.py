@@ -89,7 +89,6 @@ class String(Token):
         return repr(self.tag)
 
 
-
 class WordsTable(object):
     '''A hashtable of word type tokens seen in the source program. 
     The word type tokens are only those of identifier and keywords. 

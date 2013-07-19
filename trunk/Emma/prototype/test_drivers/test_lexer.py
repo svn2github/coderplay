@@ -8,7 +8,9 @@ ins.close()
 outstr_1 = ''
 outstr_2 = ''
 
-lastTokenTag = -1
+# set last token to EOL so we can skip the first EOL if it is
+# from the end of a comment
+lastTokenTag = '\n'
 while True:
     token = lex.getToken(lastTokenTag)
     if token is None:
