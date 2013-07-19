@@ -211,8 +211,8 @@ class Lexer(object):
             if self.peek == ';':
                 while self.peek == ';':
                     self.getc()
-                # only if last token is NOT a semiclon
-                if lastTokenTag != ';':
+                # only if last token is NOT a semiclon and NOT a EOL
+                if lastTokenTag != ';' and lastTokenTag != '\n':
                     return Token(';')
                 else:
                     continue

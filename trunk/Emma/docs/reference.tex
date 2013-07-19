@@ -304,13 +304,13 @@ read.}
 <program> ::= <statement>*
 
 <statement> ::= "EOL" 
-    \alt <stmt_list> "EOL"
+    \alt <stmt_list> [`;'] "EOL"
 
-<stmt_list> ::= [`;'] <simple_stmt_list> | <compound_stmt_list>
+<stmt_list> ::= <simple_stmt_list> | <compound_stmt_list>
 
 <simple_stmt_list> ::= <simple_stmt> [ `;' <list_rest> ]
 
-<compound_stmt_list> ::= <compound_stmt> [ <list_rest> ]
+<compound_stmt_list> ::= <compound_stmt> [`;'] [ <list_rest> ]
 
 <list_rest> ::= <smiple_stmt_list> 
     \alt <compound_stmt_list>
