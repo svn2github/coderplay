@@ -82,6 +82,31 @@ to bytecode to boost the execution speed. This means
 that a runtime environment of the Emma language is always required to run
 the bytecode, since there will no compilation to native machine code.
 
+\subsection{Data model}
+In principle, there is only one data type, i.e.\ object. This is also
+similar to Python. Therefore it is really the class of an object that we
+are interested. For convenience, we will use the term ``data type"
+when talking about the class. But be aware that it is really 
+the class that we are talking about.
+
+The basic data types include integer, float, string, and null. 
+Two aggregate data types, list and hash, are also provided via builtin
+functions. Both of them are heterogeneous, that is they can have
+different data types, including themselves, as their elements. 
+Note that the key of a hash can only be one of the basic data types.
+There is no dedicate boolean type. 
+An empty list, empty hash, empty string, 
+number 0 and a null are all evaluated to 0 on condition test. 
+Anything else is evaluated to 1.
+
+New class can be defined from scratch or as a subclass of existing
+class. Multi-inheritance is not allowed. However, classes can 
+have abitrary long inheritance chains.
+
+
+
+\pagebreak
+
 \pagebreak
 
 \section{Lexical analysis}
@@ -398,10 +423,6 @@ read.}
 \end{grammar}
 
 \subsection{Parser}
-
-\pagebreak
-
-\section{Data model}
 
 \pagebreak
 
