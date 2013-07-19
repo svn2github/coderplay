@@ -74,6 +74,21 @@ class Float(Token):
     def tagStr(self):
         return repr(self.tag)
 
+class String(Token):
+    '''A string literal token. The tag number is defined in tag module
+    and the other field is the actual string'''
+
+    def __init__(self, s):
+        super(String, self).__init__(Tag.STRING)
+        self.s = s
+
+    def __repr__(self):
+        return str(self.s)
+
+    def tagStr(self):
+        return repr(self.tag)
+
+
 
 class WordsTable(object):
     '''A hashtable of word type tokens seen in the source program. 
@@ -260,6 +275,22 @@ class Lexer(object):
                     # It is a dot symbol by itself
                     return Token('.')
 
+            # Check if we are having a string literal
+            if self.peek == '"' or self.peek == "'":
+                if self.peek == '"': 
+                    end = '"'
+                else:
+                    end = "'"
+                lastPeek = '\\' # escape the first quote so the while loop works
+                s = ''
+                while not (self.peek == end and lastPeek != '\\'):
+                    s += self.peek 
+                    lastPeek = self.peek
+                    self.getc()
+                s += self.peek # add the ending quote
+                self.getc() # read pass through the quote
+                return String(s)
+
             # Check if we are having a identifier/keywords
             if self.peek.isalpha() or self.peek == '_':
                 lexeme = ''
@@ -274,17 +305,11 @@ class Lexer(object):
                     self.words_table.put(lexeme, w)
                 return w
 
-            # Check if we are having a string literal
-            if self.peek == '"':
-                pass
-            if self.peek == "'":
-                pass
-
-            # Any character is not recognized will be treated as a single
-            # character token.
+            # Any character still not recognized is treated as a token of
+            # single character.
             token = Token(self.peek)
-            # Set peek to ' ', so the next call to getToken can read further
-            self.peek = ' ' # important
+            # NB: Set peek to ' ', so the next call to getToken can read further
+            self.peek = ' '
             return token
 
     def processFraction(self, intVal):
