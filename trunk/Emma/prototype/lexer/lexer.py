@@ -10,7 +10,13 @@ class Token(object):
         self.tag = tag
 
     def __repr__(self):
-        return 'T:' + repr(self.tag)
+        return str(self.tag)
+
+    def tagStr(self):
+        if self.tag == '\n':
+            return str(self.tag)
+        else:
+            return repr(self.tag)
 
 
 class Word(Token):
@@ -25,7 +31,10 @@ class Word(Token):
         self.lexeme = lexeme
 
     def __repr__(self):
-        return 'W' + str(self.tag) + ':' + self.lexeme
+        return self.lexeme
+
+    def tagStr(self):
+        return repr(self.tag)
 
 
 # Multiple character word tokens that are not identifiers or keywords
@@ -45,7 +54,10 @@ class Integer(Token):
         self.value = value
 
     def __repr__(self):
-        return 'I:' + str(self.value)
+        return str(self.value)
+
+    def tagStr(self):
+        return repr(self.tag)
 
 
 class Float(Token):
@@ -57,7 +69,10 @@ class Float(Token):
         self.value = value
 
     def __repr__(self):
-        return 'F:' + str(self.value)
+        return str(self.value)
+
+    def tagStr(self):
+        return repr(self.tag)
 
 
 class WordsTable(object):
@@ -90,6 +105,15 @@ class WordsTable(object):
         index and the token as its value.'''
         self.table[token.lexeme] = token
 
+    def get(self, key):
+        if self.table.has_key(key):
+            return self.table[key]
+        else:
+            return None
+
+    def put(self, key, w):
+        self.table[key] = w
+
 
 class Lexer(object):
     '''A lexer reads input from a source program and return tokens based on
@@ -100,113 +124,211 @@ class Lexer(object):
         self.sbuffer = sbuffer
         self.pos = 0
         self.line = 0
-        # The lastPeek is used to treat consecutive EOL as a single EOL
-        # and consecutive semicolon as a single semicolon
-        self.lastPeek = ''
+        self.peek = ' ' # important to set as ' '
 
     def getc(self):
         '''Simulate the getc function by getting a single character from the
         string buffer at current position. Also advance the position by 1'''
         if self.pos >= 0 and self.pos < len(self.sbuffer):
-            peek = self.sbuffer[self.pos]
+            self.peek = self.sbuffer[self.pos]
             self.pos += 1
         else:
-            peek = ''
-        return peek
+            self.peek = ''
 
-    def ungetc(self):
-        '''Simulate the ungetc function that put a character back to the
-        input stream. This is done by decrease the position counter by 1.
-        This is useful when we need to tell tokens start with the same
-        character, e.g. < and <=. If the following character after < does
-        not match =, we will put the character back to the stream for 
-        future processing.'''
-        self.pos -= 1
+    def matchc(self, c):
+        '''Match the given char against the next char. If match, set peek to
+        ' ' and return True. We set peek to ' ', so the next call to getToken
+        can read the next char by skipping whites.'''
+        self.getc()
+        if self.peek != c:
+            return False
+        self.peek = ' ' # this is important
+        return True
 
-    def getToken(self):
+    def getToken(self, lastTokenTag):
         '''Scan the string buffer and generate a token based on the input
-        and lexical rules'''
+        and lexical rules. 
+        Thee lastTokenTag is used to treat consecutive EOL as a single EOL
+        and consecutive semicolon as a single semicolon. It is important
+        that this argument is provided.
+        NOTE there is no need to put a character back to the input stream.
+        There are only two possibilities at the end of getToken call.
+        1. An extra char is read, e.g. while processing identifier. This
+           extra char will be processed next time the function is called.
+        2. No extra char is read. In this case, we set peek = ' '. So the
+           next call to getToken will effectively skip white and get the
+           next non-white char.'''
 
-        # Loop till a token is found or end of file reached
+        # While loop is for treating consecutive EOL and semicolons
         while True:
 
-            # get a character from buffer
-            peek = self.getc()
+            # Loop till a non-white character is found
+            while self.peek == ' ' or self.peek == '\t':
+                self.getc()
 
             # if we are at the end of input, return None
-            if peek == '': return None
+            if self.peek == '': return None
 
-            # Ignore white spaces
-            if peek == ' ' or peek == '\t': continue
-
+            # Note the order for processing comment and EOL is important
+            # because process EOL also take care of the EOL at the end
+            # of a comment.
             # Ignore comments to the end of line
-            if peek == '#':
-                while peek != '\n':
+            if self.peek == '#':
+                while self.peek != '\n':
                     self.getc()
-                self.line += 1
-                continue
 
-            # Count the number of input lines based on EOL
-            if peek == '\n': 
-                self.line += 1
-                # Treat consecutive EOL as a single EOL
-                if self.lastPeek == '\n':
-                    continue
-                else:
+            # Treat following consecutive EOL as a single EOL. This is twofold. 
+            # First, any following consecutive EOL is skipped (but not this EOL).
+            # Second, if the last token is also an EOL, this EOL is ignored too.
+            #         the while/continue is used for this.
+            if self.peek == '\n': 
+                while self.peek == '\n':
+                    # Count the number of input lines based on EOL
+                    self.line += 1
+                    self.getc()
+                # Only if last token is NOT a EOL
+                if lastTokenTag != '\n':
                     return Token('\n')
-
-            # Treat consecutive semicolon as one
-            if peek == ';':
-                if self.lastPeek == ';':
-                    continue
                 else:
+                    continue
+
+            # Treat consecutive semicolon as a single one
+            # See above EOL treatment for detailed explanation
+            if self.peek == ';':
+                while self.peek == ';':
+                    self.getc()
+                # only if last token is NOT a semiclon
+                if lastTokenTag != ';':
                     return Token(';')
+                else:
+                    continue
 
             # Check if we are having a multi-character symbol
-            # Note that if the second character does not match, the character
-            # needs to be put back to the buffer by ungetc.
-            if peek == '>':
-                if self.getc() == '=':
+            if self.peek == '>':
+                if self.matchc('='):
                     return W_ge
                 else:
-                    self.ungetc()
-                    return Token(peek)
-            elif peek == '=':
-                if self.getc() == '=':
+                    return Token('>')
+            elif self.peek == '=':
+                if self.matchc('='):
                     return W_eq
                 else:
-                    self.ungetc()
-                    return Token(peek)
-            elif peek == '<':
-                if self.getc() == '=':
+                    return Token('=')
+            elif self.peek == '<':
+                if self.matchc('='):
                     return W_le
                 else:
-                    self.ungetc()
-                    return Token(peek)
-            elif peek == '!':
-                if self.getc() == '=':
+                    return Token('<')
+            elif self.peek == '!':
+                if self.matchc('='):
                     return W_ne
                 else:
-                    self.ungetc()
-                    return Token(peek)
-            elif peek == '*':
-                if self.getc() == '*':
+                    return Token('!')
+            elif self.peek == '*':
+                if self.matchc('*'):
                     return W_dstar
                 else:
-                    self.ungetc()
-                    return Token(peek)
+                    return Token('*')
 
             # Check if we are having a number 
-            if peek.isdigit():
-                pass
+            if self.peek.isdigit():
+                # First try a integer number
+                val = 0
+                while self.peek.isdigit():
+                    val = 10*val + int(self.peek)
+                    self.getc()
+
+                # Make sure it is an integer by checking any characters 
+                # that make it a float number
+                if self.peek != '.' and self.peek != 'e' and self.peek != 'E':
+                    return Integer(val)
+
+                else: # otherwise we have a float number
+                    # read pass the decimal before process the fraction part
+                    if self.peek == '.': self.getc()
+                    # Process fraction and generate the float token
+                    return self.processFraction(val)
+
+            # Check float numbers start with a dot, i.e. no integer part
+            if self.peek == '.':
+                # It can be a float only when a digit is following the dot.
+                # Note it cannot be 'e' or 'E' because of no integer part
+                self.getc()
+                if self.peek.isdigit():
+                    return self.processFraction(0)
+                else:
+                    # It is a dot symbol by itself
+                    return Token('.')
 
             # Check if we are having a identifier/keywords
-            if peek.isalpha() or peek == '_':
+            if self.peek.isalpha() or self.peek == '_':
+                lexeme = ''
+                while self.peek.isalnum() or self.peek == '_':
+                    lexeme += self.peek
+                    self.getc()
+                # Check if we have this word in the table already
+                # This ensure the keyword is correctly recognized
+                w = self.words_table.get(lexeme)
+                if w is None:
+                    w = Word(lexeme, Tag.IDENT)
+                    self.words_table.put(lexeme, w)
+                return w
+
+            # Check if we are having a string literal
+            if self.peek == '"':
+                pass
+            if self.peek == "'":
                 pass
 
-            
-            # update the lastPeek for next call
-            self.lastPeek = peek
+            # Any character is not recognized will be treated as a single
+            # character token.
+            token = Token(self.peek)
+            # Set peek to ' ', so the next call to getToken can read further
+            self.peek = ' ' # important
+            return token
 
+    def processFraction(self, intVal):
+        '''Process the fraction part of a float number, i.e. digits immediately
+        after the demical'''
+
+        # If a fraction part is found e.g. 42.0
+        if self.peek.isdigit():
+            val = intVal
+            d = 10.0 
+            # loop for the float number
+            while self.peek.isdigit():
+                val += int(self.peek)/d
+                d *= 10.0
+                self.getc()
+            # If a scientific notation is found e.g. 42.0E10
+            if self.peek != 'e' and self.peek != 'E':
+                return Float(val)
+            expVal = self.processExponetial()
+            val = val * 10.0**expVal
+            return Float(val)
+
+        # scientific notation, e.g 4e20, 4.e20
+        elif self.peek == 'e' or self.peek == 'E': 
+            expVal = self.processExponetial()
+            val = intVal * 10.0**expVal
+            return Float(val)
+
+        else: # this is only for numbers like 42.
+            return Float(intVal*1.0)
+
+    def processExponetial(self):
+        '''Process the exponential part (scientific notation) of a float 
+        number, e.g. e+10, E-10'''
+        val = 0
+        self.getc() # read pass e or E
+        sign = 1
+        if self.peek == '-' or self.peek == '+':
+            if self.peek == '-': 
+                sign = -1
+            self.getc()
+        while self.peek.isdigit():
+            val = 10*val + int(self.peek)
+            self.getc()
+        return val*sign
 
 
