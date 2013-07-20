@@ -1,7 +1,7 @@
 import sys
 from lexer.lexer import Lexer
 
-ins = open('../tests/lexer_test/1.em')
+ins = open('../tests/lexer_test/test1.em')
 lex = Lexer(ins.read())
 ins.close()
 
