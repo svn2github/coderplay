@@ -17,18 +17,20 @@ CLASS       = 266
 AND         = 267
 OR          = 268
 NOT         = 269
+IMPORT      = 270
+PACKAGE     = 271
 # Operators longer than just 1 character
 # Single character operators just use its own Ascii code
-DSTAR       = 270
-LE          = 271
-EQ          = 272
-GE          = 273
-NE          = 274
+DSTAR       = 280
+LE          = 281
+EQ          = 282
+GE          = 283
+NE          = 284
 
 # Literals
-INTEGER     = 275
-FLOAT       = 276
-STRING      = 277
+INTEGER     = 290
+FLOAT       = 291
+STRING      = 292
 
 #
 IDENT       = 300

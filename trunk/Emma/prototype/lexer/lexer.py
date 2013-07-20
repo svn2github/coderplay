@@ -112,6 +112,8 @@ class WordsTable(object):
         self.reserve(Word('and', Tag.AND))
         self.reserve(Word('or', Tag.OR))
         self.reserve(Word('not', Tag.NOT))
+        self.reserve(Word('import', Tag.IMPORT))
+        self.reserve(Word('package', Tag.PACKAGE))
 
     def reserve(self, token):
         '''Create a entry in the symbol table indexed by a Word token's lexeme.

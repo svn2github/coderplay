@@ -11,6 +11,7 @@
 % Source code syntax highlight
 \lstdefinelanguage{Emma}
 {morekeywords={print,if,else,while,def,return,for,continue,break,class,null},
+morekeywords={import,package},
 sensitive=false,
 morecomment=[l]{\#},
 morestring=[b]",
@@ -24,7 +25,7 @@ morestring=[b]',
 \lstset{frame=tb,
   language=Emma,
   emph={and,xor,or,not},
-  emphstyle=\color{Sepia},
+  emphstyle=\color{dkgreen},
   aboveskip=3mm,
   belowskip=3mm,
   showstringspaces=false,
@@ -32,8 +33,8 @@ morestring=[b]',
   basicstyle={\small\ttfamily},
   numbers=none,
   numberstyle=\tiny\color{gray},
-  keywordstyle=\color{blue},
-  commentstyle=\color{dkgreen},
+  keywordstyle=\color{Sepia},
+  commentstyle=\color{blue},
   stringstyle=\color{mauve},
   breaklines=true,
   breakatwhitespace=true,
@@ -47,6 +48,7 @@ morestring=[b]',
 \title{The Emma Language Reference}
 \begin{document}
 \maketitle
+\tableofcontents
 
 \section{Introduction}
 This reference manual describes the Emma language and also serves as a  
@@ -79,13 +81,31 @@ The current development scope of the language is listed as follows:
 The language will be prototyped in Python and implemented in C. 
 An interactive environment will be provided as well as a batch
 run mode. Any programs written in the language will be compiled
-to bytecode to boost the execution speed. This means
-that a runtime environment of the Emma language is always required to run
-the bytecode, since there will no compilation to native machine code.
+to bytecode for execution speed boost. This means
+that a runtime environment of the language is always required to run
+programs, since there will be no compilation to native machine code.
+
+\subsection{Terminology}
+\begin{description}
+\item[System] The Emma language runtime environment and its standard library.
+\end{description}
+
+\subsection{Philosophy}
+These are the principles for the design, implementation and usage of the language.
+\begin{enumerate}
+\item No redundant functionalities
+\item Be straightforward
+\end{enumerate}
+
+\pagebreak
+
+\section{Language Model}
 
 \subsection{Data model}
-In principle, there is only one data type, i.e.\ object. This is also
-similar to Python. Therefore it is really the class of an object that we
+\subsubsection{Types}
+In principle, there is only one data type, i.e.\ object.
+Everything is of the object type. 
+Therefore it is really the class of an object that we
 are interested. For convenience, we will use the term ``data type"
 when talking about the class. But be aware that it is really 
 the class that we are talking about.
@@ -96,17 +116,144 @@ functions. Both of them are heterogeneous, that is they can have
 different data types, including themselves, as their elements. 
 Note that the key of a hash can only be one of the basic data types.
 There is no dedicate boolean type. 
-An empty list, empty hash, empty string, 
-number 0 and a null are all evaluated to 0 on condition test. 
-Anything else is evaluated to 1.
+An empty list, empty hash, empty string, number 0 and a null are all 
+evaluated to zero on condition test. Anything else is evaluated to one.
 
-New class can be defined from scratch or as a subclass of existing
-class. Multi-inheritance is not allowed. However, classes can 
-have abitrary long inheritance chains.
+\subsubsection{User defined class}
+User defined class can be created from scratch or as a subclass of existing
+class. Note that the primitive Object class is used as the top level
+superclass even if none is specified. 
+Multi-inheritance is not allowed. However, classes can have arbitrary long 
+inheritance chains.
 
+Having Object as the top level class provides many useful utilities.
+Similar to Python, it has a set of methods, including comparison,
+string conversion, boolean test, etc. These default methods can all
+be overridden by subclasses. 
 
+\subsection{File organization}
 
-\pagebreak
+\subsubsection{Module and package}
+A file is a module while a directory containing modules is a package. 
+The module name is the file name without the extension.
+The package name is just the name of a directory.
+Modules and packages have structure hierarchy just like
+files and directories. 
+We shall use file and module interchangeably in the rest of the reference.
+
+It is recommended to use ``.em'' as the file extension for source file names.
+Other extensions can be used. However, \lstinline$import$ and 
+\lstinline$package$ assume the ``.em'' extension and hence 
+do not work properly for other extensions.
+In addition, file and directory names should follow the same naming convention
+as variables for \lstinline$import$ and \lstinline$package$ to work.
+
+\subsubsection{The import keyword}
+The interoperability among different modules are supported by the 
+\lstinline$import$ and \lstinline$package$ mechanisms. 
+A module can gain access other module's functionalities by \lstinline$import$
+the other module. Following pseudo-code describes the general usage of the
+keyword.
+
+\begin{verbatim}
+import [ <pkg> . ] <module> [ . <name> ]
+\end{verbatim}
+
+Note square brackets indicate that the item in between them is optional.
+\verb$<pkg>$ is the package (directory) path of the module (file).
+It is allowed to have arbitrary long package path.
+\verb$<module>$ is the module name, i.e. the source file name without
+the file extension.
+\verb$<name>$ is a name, which is either a variable, function or class,
+defined in the module file. The asterisk symbol can be used as a wildcard
+name to indicate all names in the module are to be imported. 
+
+An \lstinline$import$ statement makes names in a module visible to user code.
+When a name is given in the \lstinline$import$ statement, 
+it can be referenced without qualifying with its module. 
+Otherwise, the full qualified name, e.g. \verb$module.name$ has to been used.
+Note the package path is not needed while referencing a name regardless
+of the name presence in the \lstinline$import$ statement.
+
+Following code snippets show a few examples how import works.
+
+\begin{lstlisting}[caption=import statement example]
+import foo.bar
+import foo.bar.baz
+bar.qux()
+baz()
+\end{lstlisting}
+
+In above code fragment, \lstinline$foo$ is a package and 
+\lstinline$bar$ is a module. 
+The first import has the format of \verb$pkg.module$ and does not have
+a name. 
+This is why the usage of \lstinline$qux$ function in \lstinline$bar$ 
+has to be qualified as \lstinline$bar.qux()$.
+
+The second import has the format of \verb$pkg.module.name$. 
+Hence the name \lstinline$baz$ can be used without module qualification.
+
+\begin{lstlisting}[caption=import statement with the wildcard character]
+import foo.bar.*
+qux()
+baz()
+\end{lstlisting}
+
+The above import shows the usage of the wildcard character. 
+After the import, all names in module bar can be directly used by
+user code without qualification.
+
+\subsubsection{The package keyword}
+There is one missing piece in the import mechanism described in previous
+section.
+That is how file search works to locate the requested module.
+The \lstinline$package$ keyword can be used to affect the search behavior.
+
+The system uses an internal variable to keep a list of paths for file
+searching. By default, the paths include the builtin library directory and
+the current working directory. More paths can be added to the search
+paths interactively or via configuration file. The current working directory
+is always the first entry in the list of paths while the builtin library 
+is the last in the list.
+
+A module is searched in the list of paths beginning from the current
+working directory. The first match is used and other matches (if any)
+are ignored.
+
+A \lstinline$package$ keyword indicates the file is part of
+a package, which is some directory one or more level up in the file system
+hierarchy. 
+Any subsequent import related to this package is to be searched
+only in the directory. This is how the \lstinline$package$ keyword
+changes the behavior of module searching. 
+Following is an example showing code fragment of a file named 
+\lstinline$mymodule.em$.
+
+\begin{lstlisting}[caption=Example of the package keyword]
+package foo
+import foo.bar
+import foo.bar.qux
+import baz
+\end{lstlisting}
+
+The first line declares the file is part of a package \lstinline$foo$.
+The package must be a directory one or more level up to the file.
+Assume the file's full path name is something like 
+\verb$...foo/sub/mymodule.em$. The package is obviously the 
+\verb$foo$ directory in the full path name. 
+The following two import are related to the package. 
+The search will then be conducted in the directory \verb$foo$.
+The last import is not related to the package. 
+Hence the normal search process will take place by starting with
+the current working directory.
+
+The effect of the \lstinline$package$ keyword is, as its name indicates,
+useful for package developers.
+When a module in the package imports another module in the same
+package, it can simply declare the package and start import such as
+\lstinline$import $\verb$package.module$ and it will work no matter where
+the package itself is located.
 
 \pagebreak
 
@@ -115,14 +262,14 @@ have abitrary long inheritance chains.
 An Emma program is consisted of lines of texts. The line structure is
 hence one of the basic component of a source program.
 
-\subsubsection{Physical lines}
+\subsubsection{Physical line}
 A physical line is terminated by an end-of-line sequence (EOL). The
 sequence is different on different platforms. Unix and alike use ASCII LF
 (linefeed), while Windows uses ASCII sequence of CR LF (carriage return followed
 by a linefeed). All of these sequences are treated equally as a single 
 EOL symbol.
 
-\subsubsection{Logical lines}
+\subsubsection{Logical line}
 A logical line can be a single physical line, multiple physical lines, or
 part of a single physical line.
 
@@ -191,13 +338,14 @@ comment symbols.
 Both space and tab are whitespace. They are used to separate other 
 language unit, but are otherwise ignored. Blank lines are ignored.
 
-\subsection{Keywords and identifiers}
+\subsection{Keyword and identifier}
 Keywords are reserved and listed as follows\footnote{Keyword operators 
-are shown in sepia color while normal keywords are shown in blue. It is 
+are shown in green color while normal keywords are shown in sepia. It is 
 completely cosmetic with no impact on the language.}:
 \begin{lstlisting}
-print if else while for continue break def return null class 
-and or xor 
+print   if    else   while   for      continue  break  def 
+return  null  class  import  package
+and     or    xor 
 \end{lstlisting}
 
 An identifier is a character sequence starts with a letter or an underscore 
@@ -218,13 +366,13 @@ both \lstinline$2 + 2$ and \lstinline$3 + 3$ are used by an assignment and
 a print statement, respectively. User can directly assign a value to the special
 identifier. In doing so, any value it held previously is overwritten.
 
-\subsection{Numbers}
+\subsection{Number}
 Numbers only come in two types, integer and floating point numbers.
 Both numbers can be arbitrary large as long as the computer memory
 can hold them. Only decimal numbers are supported. Floating point
 number can be written in scientific notation form, e.g. 1.0e+20.
 
-\subsection{Operators}
+\subsection{Operator}
 Certain keywords are also operators, such as \lstinline$and$, 
 \lstinline$or$, \lstinline$xor$, \lstinline$not$. Other operators
 includes mathematical operators and symbols for aiding formation
@@ -235,7 +383,7 @@ of language structs. They are show as follows:
 Note that the unprintable EOL symbol is not shown in the above list,
 though it is also an operator. 
 
-\subsection{Tokens}
+\subsection{Token}
 Tokens are recognized and returned by a lexer. A token can be a keyword,
 an identifier, a number or an operator. The token definitions are listed
 as follows:

@@ -1,6 +1,8 @@
 # Lexer test 
 # NOTE test
 # Skip comments
+package lexer_test
+import lexer_test.test1
 x_var = 42 ;; ; ; # Skip trailing comment and consecutive ;
 # Skip consecutive EOL
 
