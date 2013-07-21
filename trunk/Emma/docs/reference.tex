@@ -88,6 +88,7 @@ programs, since there will be no compilation to native machine code.
 \subsection{Terminology}
 \begin{description}
 \item[System] The Emma language runtime environment and its standard library.
+\item[Entity] A single program unit such as variable, function, class.
 \end{description}
 
 \subsection{Philosophy}
@@ -100,36 +101,6 @@ These are the principles for the design, implementation and usage of the languag
 \pagebreak
 
 \section{Language Model}
-
-\subsection{Data model}
-\subsubsection{Types}
-In principle, there is only one data type, i.e.\ object.
-Everything is of the object type. 
-Therefore it is really the class of an object that we
-are interested. For convenience, we will use the term ``data type"
-when talking about the class. But be aware that it is really 
-the class that we are talking about.
-
-The basic data types include integer, float, string, and null. 
-Two aggregate data types, list and hash, are also provided via builtin
-functions. Both of them are heterogeneous, that is they can have
-different data types, including themselves, as their elements. 
-Note that the key of a hash can only be one of the basic data types.
-There is no dedicate boolean type. 
-An empty list, empty hash, empty string, number 0 and a null are all 
-evaluated to zero on condition test. Anything else is evaluated to one.
-
-\subsubsection{User defined class}
-User defined class can be created from scratch or as a subclass of existing
-class. Note that the primitive Object class is used as the top level
-superclass even if none is specified. 
-Multi-inheritance is not allowed. However, classes can have arbitrary long 
-inheritance chains.
-
-Having Object as the top level class provides many useful utilities.
-Similar to Python, it has a set of methods, including comparison,
-string conversion, boolean test, etc. These default methods can all
-be overridden by subclasses. 
 
 \subsection{File organization}
 
@@ -254,6 +225,85 @@ When a module in the package imports another module in the same
 package, it can simply declare the package and start import such as
 \lstinline$import $\verb$package.module$ and it will work no matter where
 the package itself is located.
+
+\subsection{Data model}
+\subsubsection{Types}
+In principle, there is only one data type, i.e.\ object.
+Everything is of the object type, including literals and functions.
+Therefore it is really the class of an object that we
+are interested. For convenience, we will use the term ``data type"
+when talking about the class. But be aware that it is really 
+the class that we are talking about.
+
+The basic data types include integer, float, string, and null. 
+Two aggregate data types, list and hash, are also provided via builtin
+functions. Both of them are heterogeneous, that is they can have
+different data types, including themselves, as their elements. 
+Note that the key of a hash can only be one of the basic data types.
+There is no dedicate boolean type. 
+An empty list, empty hash, empty string, number 0 and a null are all 
+evaluated to zero on condition test. Anything else is evaluated to one.
+
+\subsubsection{User defined class}
+User defined class can be created from scratch or as a subclass of existing
+class. Note that the primitive Object class is used as the top level
+superclass even if none is specified. 
+Multi-inheritance is not allowed. However, classes can have arbitrary long 
+inheritance chains.
+
+Having Object as the top level class provides many useful utilities.
+Similar to Python, it has a set of methods, including comparison,
+string conversion, boolean test, etc. These default methods can all
+be overridden by subclasses. 
+
+\subsection{Name, binding and environment}
+We already knew everything is an object in the Emma language. 
+Names are associated with objects so that they can be uniquely identified.
+A name is simply an identifier in the source code. 
+The association created between a name and an object is called binding.
+When a variable is created, it is essentially done by
+creating a binding between the variable name and its content.
+
+Information about bindings are kept in environment, which works
+like an hash indexed by names.
+For an example, a module has an environment that keeps all bindings of 
+the module.
+
+\subsubsection{Environment and scope}
+New environments are created for every module, function and class.
+These environments are nested and the top level environment is the one
+associated with the top level module, i.e.\ the module being directly
+invoked by users. 
+
+The environment also defines the scope and how names are searched during
+running time. 
+The top level environment defines the global scope. 
+At a time, there is only one environment, called the current scope,
+at the bottom level of the environment chain.
+
+The names are first searched in the current scope.
+If it is not found, it is then searched in the scope that is one
+level higher than the current scope. 
+The process continues until the name is found or errors out if no match.
+New variables will be created in the current scope unless explicitly 
+requested to be created in other scopes.
+
+\subsubsection{Internals of object and its binding}
+Under the hood, there are only two categories of objects that names
+are bound with. 
+One is closure and the other is simple object.
+
+A closure is a combination of code object and the environment where
+the code object is defined.
+A code object is an internal representation of source code of either a 
+module, a function or a class.
+Note that the code object has the ability to contain other names, which
+again may associate with either closure or simple object.
+
+Simple objects represent integer, float, string variables and any literals.
+Basically anything that cannot contain other names.
+
+
 
 \pagebreak
 
