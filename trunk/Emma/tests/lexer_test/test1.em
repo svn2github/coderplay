@@ -40,3 +40,11 @@ def func(x, y) {
 } ; x = 42 # a semiclon can appear after the }
 
 x = list()
+
+try {
+    x[0] = 42
+} catch (Exception e) {
+    # do some error handling
+} finally {
+    # do some housekeeping
+}

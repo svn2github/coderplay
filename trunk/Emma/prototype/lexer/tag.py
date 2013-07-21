@@ -19,6 +19,10 @@ OR          = 268
 NOT         = 269
 IMPORT      = 270
 PACKAGE     = 271
+TRY         = 272
+RAISE       = 273
+CATCH       = 274
+FINALLY     = 275
 # Operators longer than just 1 character
 # Single character operators just use its own Ascii code
 DSTAR       = 280
