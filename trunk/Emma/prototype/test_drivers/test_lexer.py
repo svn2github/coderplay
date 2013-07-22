@@ -13,6 +13,9 @@ outstr_2 = ''
 lastTokenTag = '\n'
 while True:
     token = lex.getToken(lastTokenTag)
+    # the line and col number of the token
+    line = lex.line
+    col = lex.col
     if token is None:
         break
     lastTokenTag = token.tag

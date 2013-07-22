@@ -137,6 +137,13 @@ class WordsTable(object):
         self.table[key] = w
 
 
+class LexError(Exception):
+    '''Lexer error'''
+
+    def __repr__(self):
+        return 'LexError: %s' % self.args
+
+
 class Lexer(object):
     '''A lexer reads input from a source program and return tokens based on
     the input character stream.'''
@@ -144,9 +151,13 @@ class Lexer(object):
     def __init__(self, sbuffer):
         self.words_table = WordsTable()
         self.sbuffer = sbuffer
-        self.pos = 0
-        self.line = 0
+        self.pos = 0 # the read head position in the input stream
+        self.line = 0 # the line number
+        self.col = 0 # the colum number
         self.peek = ' ' # important to set as ' '
+        self.nulcb = 0 # number of unbalanced left curly bracket
+        self.nclass = 0 # number of class definition going on
+        self.ndef = 0 # number of function definition going on
 
     def getc(self):
         '''Simulate the getc function by getting a single character from the
@@ -154,6 +165,7 @@ class Lexer(object):
         if self.pos >= 0 and self.pos < len(self.sbuffer):
             self.peek = self.sbuffer[self.pos]
             self.pos += 1
+            self.col += 1
         else:
             self.peek = ''
 
@@ -207,6 +219,9 @@ class Lexer(object):
                 while self.peek == '\n':
                     # Count the number of input lines based on EOL
                     self.line += 1
+                    # reset colum number for the new line
+                    self.col = 0
+                    # read pass the EOL
                     self.getc()
                 # Only if last token is NOT a EOL
                 if lastTokenTag != '\n':
@@ -310,13 +325,24 @@ class Lexer(object):
                 if w is None:
                     w = Word(lexeme, Tag.IDENT)
                     self.words_table.put(lexeme, w)
+                # count the number of class and function definitions
+                if w.tag == Tag.CLASS:
+                    self.nclass += 1
+                elif w.tag == Tag.DEF:
+                    self.ndef += 1
+                # we can now return this word token  
                 return w
 
             # Any character still not recognized is treated as a token of
             # single character.
             token = Token(self.peek)
+
+            # check curly bracket balance
+            self.balance()
+
             # NB: Set peek to ' ', so the next call to getToken can read further
             self.peek = ' '
+
             return token
 
     def processFraction(self, intVal):
@@ -362,5 +388,32 @@ class Lexer(object):
             val = 10*val + int(self.peek)
             self.getc()
         return val*sign
+
+    def balance(self):
+        '''Check the balance of curly brackets. Also check if any class or
+        function definitions have ended by them. Make sure no nested class
+        or function definitions are allowed.'''
+
+        # Record number of unbalanced left curly bracket
+        if self.peek == '{':
+            self.nulcb += 1
+
+        elif self.peek == '}': # balanced by an right curly bracket
+            self.nulcb -= 1
+            # Count the number of class and function definitions
+            if self.nclass == 1 and self.nulcb == 0:
+                self.nclass = 0
+            elif self.ndef == 1 and self.nulcb == 0:
+                self.ndef = 0
+            elif self.nclass == 1 and self.ndef == 1 and self.nulcb == 1:
+                self.ndef = 0
+
+            # Something is wrong if we have negative number of unbalanced 
+            # left curly bracket
+            if self.nulcb < 0:
+                self.error('Redundant right curly bracket')
+
+    def error(self, msg):
+        raise LexError(msg)
 
 
