@@ -11,7 +11,7 @@
 % Source code syntax highlight
 \lstdefinelanguage{Emma}
 {morekeywords={print,if,else,while,def,return,for,continue,break,class,null},
-morekeywords={import,package,try,raise,catch,finally,elif},
+morekeywords={import,package,try,raise,catch,finally,elif,read},
 sensitive=false,
 morecomment=[l]{\#},
 morestring=[b]",
@@ -73,6 +73,7 @@ The current development scope of the language is listed as follows:
 \item Object oriented programming support by class definitions
 \item Interaction among source files with import
 \item Error handling and interactive debugging similar to IDL
+\item short circuit logic
 \item Interface to use external C libraries
 \end{itemize}
 
@@ -175,6 +176,10 @@ The above import shows the usage of the wildcard character.
 After the import, all names in module bar can be directly used by
 user code without qualification.
 
+Circular import cannot be resolved. 
+It will be detected when during run time and error is to be reported
+to help manual fix.
+
 \subsubsection{The package keyword}
 There is one missing piece in the import mechanism described in previous
 section.
@@ -229,7 +234,7 @@ the package itself is located.
 \subsection{Data model}
 \subsubsection{Types}
 In principle, there is only one data type, i.e.\ object.
-Everything is of the object type, including literals and functions.
+Everything is of the object type, including function and class.
 Therefore it is really the class of an object that we
 are interested. For convenience, we will use the term ``data type"
 when talking about the class. But be aware that it is really 
@@ -242,19 +247,36 @@ different data types, including themselves, as their elements.
 Note that the key of a hash can only be one of the basic data types.
 There is no dedicate boolean type. 
 An empty list, empty hash, empty string, number 0 and a null are all 
-evaluated to zero on condition test. Anything else is evaluated to one.
+evaluated to zero on condition test. 
+Anything else by default is evaluated to one.
 
-\subsubsection{User defined class}
-User defined class can be created from scratch or as a subclass of existing
-class. Note that the primitive Object class is used as the top level
-superclass even if none is specified. 
-Multi-inheritance is not allowed. However, classes can have arbitrary long 
-inheritance chains.
+Function and class can only be defined in module level code.
+This means no nested function or class definitions are allowed.
+Nested definitions will be identified by the Lexer and error is 
+to be reported (detailed later in Lexer section).
 
-Having Object as the top level class provides many useful utilities.
-Similar to Python, it has a set of methods, including comparison,
-string conversion, boolean test, etc. These default methods can all
-be overridden by subclasses. 
+\subsubsection{Class}
+
+\paragraph{Basic class}
+All classes are derived from a basic class, named Object. 
+This class provides default methods that enable many useful behaviors, 
+such as comparison, string conversion, boolean value, etc.
+The default methods can all be overridden by subclasses.
+A full list of default methods are shown as follows:
+\begin{description}
+\item[__init__] 
+\item[__compare__] compare to another object
+\item[__str__] return a string representation of the object
+\item[__bool__] return 0 or 1 as the boolean value of the object
+\end{description}
+
+\paragraph{User defined class}
+User defined class is created by subclassing existing class. 
+Note that the basic Object class is used as the superclass when none is 
+specified. 
+Multi-inheritance is not allowed.
+However, classes can have arbitrary long inheritance chains.
+
 
 \subsection{Name, binding and environment}
 We already knew everything is an object in the Emma language. 
@@ -303,6 +325,17 @@ again may associate with either closure or simple object.
 Simple objects represent integer, float, string variables and any literals.
 Basically anything that cannot contain other names.
 
+\subsection{Error handling}
+Error handling is done with four keywords, \lstinline$try$, \lstinline$raise$
+\lstinline$catch$, and \lstinline$finally$.
+In general, a risky code is ran by placing it in the \lstinline$try$ block.
+At least one \lstinline$catch$ block follows the \lstinline$try$ block 
+to deal with possible exceptions. A \lstinline$finally$ block at the end
+to do some housekeepings.
+
+If an error is not catched by any of the \lstinline$catch$ blocks.
+The program execution is stopped with error report and full call
+stack information to help debug.
 
 
 \pagebreak
@@ -395,7 +428,7 @@ completely cosmetic with no impact on the language.}:
 \begin{lstlisting}
 print    if      elif  else   while   for      break  def   
 continue return  null  class  import  package  try    raise
-catch    finally and   or     xor 
+catch    finally read  and   or     xor 
 \end{lstlisting}
 
 An identifier is a character sequence starts with a letter or an underscore 
@@ -561,7 +594,11 @@ read.}
 	\alt `break'
 	\alt `return' <expression>
 	
-<print_stmt> ::= `print' [expression (`,' <expression>)*]
+<print_stmt> ::= `print' [`>' "IDENT"] [<expression_list>] [`\%' "STRING"]
+
+<read_stmt> ::= `read' [`<' "IDENT"] <expression_list> [`\%' "STRING"]
+
+<expression_list> ::= <expression> (`,' <expression>)*
 
 <target> ::= "IDENT" | <dotname> | <slice>
 

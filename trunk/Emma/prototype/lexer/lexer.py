@@ -99,6 +99,7 @@ class WordsTable(object):
         '''Create the hashtable and also reserve the keywords'''
         self.table = {}
         self.reserve(Word('print', Tag.PRINT))
+        self.reserve(Word('read', Tag.READ))
         self.reserve(Word('if', Tag.IF))
         self.reserve(Word('elif', Tag.ELIF))
         self.reserve(Word('else', Tag.ELSE))

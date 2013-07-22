@@ -4,26 +4,27 @@ Tags for tokens (starts from 256 to avoid conflict against ASCII code)
 
 # Keywords
 PRINT       = 256
-IF          = 257
-ELIF        = 258
-ELSE        = 259
-WHILE       = 260
-FOR         = 261
-CONTINUE    = 262
-BREAK       = 263
-DEF         = 264
-RETURN      = 265
-NULL        = 266
-CLASS       = 267
-AND         = 268
-OR          = 269
-NOT         = 270
-IMPORT      = 271
-PACKAGE     = 272
-TRY         = 273
-RAISE       = 274
-CATCH       = 275
-FINALLY     = 276
+READ        = 257
+IF          = 258
+ELIF        = 259
+ELSE        = 260
+WHILE       = 261
+FOR         = 262
+CONTINUE    = 263
+BREAK       = 264
+DEF         = 265
+RETURN      = 266
+NULL        = 267
+CLASS       = 268
+AND         = 269
+OR          = 270
+NOT         = 271
+IMPORT      = 272
+PACKAGE     = 273
+TRY         = 274
+RAISE       = 275
+CATCH       = 276
+FINALLY     = 277
 # Operators longer than just 1 character
 # Single character operators just use its own Ascii code
 DSTAR       = 280
