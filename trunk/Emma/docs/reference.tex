@@ -11,7 +11,7 @@
 % Source code syntax highlight
 \lstdefinelanguage{Emma}
 {morekeywords={print,if,else,while,def,return,for,continue,break,class,null},
-morekeywords={import,package,try,raise,catch,finally},
+morekeywords={import,package,try,raise,catch,finally,elif},
 sensitive=false,
 morecomment=[l]{\#},
 morestring=[b]",
@@ -393,9 +393,9 @@ Keywords are reserved and listed as follows\footnote{Keyword operators
 are shown in green color while normal keywords are shown in sepia. It is 
 completely cosmetic with no impact on the language.}:
 \begin{lstlisting}
-print    if    else   while   for      break  def   continue
-return   null  class  import  package  try    raise catch
-finally  and   or     xor 
+print    if      elif  else   while   for      break  def   
+continue return  null  class  import  package  try    raise
+catch    finally and   or     xor 
 \end{lstlisting}
 
 An identifier is a character sequence starts with a letter or an underscore 
@@ -514,7 +514,6 @@ read.}
     \alt <compound_stmt_list>
 
 <stmt> ::= <simple_stmt> 
-    \alt <compound_stmt> 
     \alt <stmt_block>
 
 <stmt_block> ::= `{' <statement>* [<stmt_list>] "EOL"* `}'
@@ -529,7 +528,7 @@ read.}
 % we may NOT want a compound stmt following something like 'if 1'
 % so we might have to split, say, if_stmt into 	if_simple_stmt 
 % and if_compound_stmt
-<if_stmt> ::= `if' <expression> <stmt> [`else' <stmt>]
+<if_stmt> ::= `if' <expression> <stmt> [`elif' <stmt>] [`else' <stmt>]
               
 <while_stmt> ::= `while' <expression> <stmt>
 
@@ -549,7 +548,7 @@ read.}
 
 <classdef> ::= `class' "IDENT" `(' "IDENT" `)' <stmt>
 
-<try_stmt> ::= `try' <stmt> (<catch>)* [<finally>]
+<try_stmt> ::= `try' <stmt> (<catch>)$^{+}$ [<finally>]
 
 <catch> ::= `catch' `(' "IDENT" "IDENT" `)' <stmt>
 

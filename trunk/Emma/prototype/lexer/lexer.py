@@ -100,6 +100,7 @@ class WordsTable(object):
         self.table = {}
         self.reserve(Word('print', Tag.PRINT))
         self.reserve(Word('if', Tag.IF))
+        self.reserve(Word('elif', Tag.ELIF))
         self.reserve(Word('else', Tag.ELSE))
         self.reserve(Word('while', Tag.WHILE))
         self.reserve(Word('for', Tag.FOR))
