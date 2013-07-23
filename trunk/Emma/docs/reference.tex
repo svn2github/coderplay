@@ -666,7 +666,7 @@ read.}
 
 <slice> ::= <primary> `[' <subscription> `]'
 
-<dotname> ::= <primary> (`.' "IDENT")$^{+}$
+<dotname> ::= <primary> [`.' "IDENT"]
 
 <primary> ::= "IDENT" | <dotname> | <slice> | <call>
 
