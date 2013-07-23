@@ -33,6 +33,10 @@ if (x == 42 and y == 4.2) {
 
 class A() {
     self.field = 42
+    def method1() {
+    }
+    def method2() {
+    }
 }
 
 def func(x, y) {

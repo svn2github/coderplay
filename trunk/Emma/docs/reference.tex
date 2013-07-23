@@ -73,7 +73,8 @@ The current development scope of the language is listed as follows:
 \item Object oriented programming support by class definitions
 \item Interaction among source files with import
 \item Error handling and interactive debugging similar to IDL
-\item short circuit logic
+\item Short circuit logic
+\item Garbage collection
 \item Interface to use external C libraries
 \end{itemize}
 
@@ -276,6 +277,10 @@ Note that the basic Object class is used as the superclass when none is
 specified. 
 Multi-inheritance is not allowed.
 However, classes can have arbitrary long inheritance chains.
+
+I need to finalize the design of class. Python like class where fields
+can be attached to the class at will or Java like class where fields
+need to be declared first??
 
 
 \subsection{Name, binding and environment}

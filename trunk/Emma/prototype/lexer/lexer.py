@@ -1,3 +1,4 @@
+import sys
 import tag as Tag
 
 class Token(object):
@@ -140,7 +141,7 @@ class WordsTable(object):
 class LexError(Exception):
     '''Lexer error'''
 
-    def __repr__(self):
+    def __str__(self):
         return 'LexError: %s' % self.args
 
 
@@ -328,8 +329,12 @@ class Lexer(object):
                 # count the number of class and function definitions
                 if w.tag == Tag.CLASS:
                     self.nclass += 1
+                    if self.nclass > 1 or self.ndef > 0:
+                        self.error('Nested class definition not allowed')
                 elif w.tag == Tag.DEF:
                     self.ndef += 1
+                    if self.ndef > 1:                        
+                        self.error('Nested function definition not allowed')
                 # we can now return this word token  
                 return w
 
@@ -414,6 +419,23 @@ class Lexer(object):
                 self.error('Redundant right curly bracket')
 
     def error(self, msg):
+
+        # Get text of the line where the error occurs
+        text = ''
+        # All text till the begining of the line
+        pos = self.pos-1
+        while self.sbuffer[pos] != '\n':
+            text = self.sbuffer[pos] + text
+            pos -= 1
+        # All text till the end of the line
+        pos = self.pos
+        while pos < len(self.sbuffer) and self.sbuffer[pos] != '\n':
+            text += self.sbuffer[pos]
+            pos += 1
+        # output the message and report error
+        header = 'Near line: %d col %d\n' % (self.line+1, self.col)
+        sys.stderr.write(header)
+        sys.stderr.write(text+'\n\n')
         raise LexError(msg)
 
 
