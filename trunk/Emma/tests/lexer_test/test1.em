@@ -3,11 +3,11 @@
 # Skip comments
 package lexer_test
 import lexer_test.test1
-x_var = 42 ;; ; ; # Skip trailing comment and consecutive ;
+x_var = 42 ;; ; ; # Skip trailing comment and consecutive semicolons 
 # Skip consecutive EOL
 
 _x_var > 42.
-; _0_x >= 42 # leading ; will be ignored
+; _0_x >= 42 # leading semicolon is ignored
 _x_0 == 0.42
 _ <= .42
 __ < 4.2e20
@@ -32,10 +32,13 @@ if (x == 42 and y == 4.2) {
 } a = 4.2; b = 0.42 # a semicolon is not required after }
 
 class A() {
-    self.field = 42
-    def method1() {
+    static_field = 42
+
+    def static_method() {
+        print A.static_field
     }
-    def method2() {
+    def method(self) {
+        self.field = 0.42
     }
 }
 

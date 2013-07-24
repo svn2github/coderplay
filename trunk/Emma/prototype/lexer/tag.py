@@ -25,7 +25,9 @@ TRY         = 274
 RAISE       = 275
 CATCH       = 276
 FINALLY     = 277
-# Operators longer than just 1 character
+SELF        = 278
+
+# Composite operators longer than 1 character
 # Single character operators just use its own Ascii code
 DSTAR       = 280
 LE          = 281
