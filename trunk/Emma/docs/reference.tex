@@ -11,7 +11,7 @@
 % Source code syntax highlight
 \lstdefinelanguage{Emma}
 {morekeywords={print,if,else,while,def,return,for,continue,break,class,null},
-morekeywords={import,package,try,raise,catch,finally,elif,read},
+morekeywords={import,package,try,raise,catch,finally,elif,read,self},
 sensitive=false,
 morecomment=[l]{\#},
 morestring=[b]",
@@ -278,10 +278,19 @@ specified.
 Multi-inheritance is not allowed.
 However, classes can have arbitrary long inheritance chains.
 
-I need to finalize the design of class. Python like class where fields
-can be attached to the class at will or Java like class where fields
-need to be declared first??
-
+Class works like a namespace and variables can be added to it without
+declaration. 
+The object of a class is a different namespace, which saves the object's
+own copy of variables.
+The mechanism of class and objects are similar to those of Python.
+But there is an important difference, that is \lstinline$self$ is a 
+reserved word.
+In a class level, variables not qualified by \lstinline$self$ are treated
+as static variables. In addition, methods do not use \lstinline$self$
+as its first argument is also treated as static method.
+Static variables and methods must be qualified by their class when used
+outside of the direct class scope, including inside method scopes or 
+completely outside of the class scope.
 
 \subsection{Name, binding and environment}
 We already knew everything is an object in the Emma language. 
