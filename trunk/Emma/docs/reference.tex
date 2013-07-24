@@ -608,9 +608,9 @@ read.}
 	\alt `break'
 	\alt `return' <expression>
 	
-<print_stmt> ::= `print' [`>' "IDENT"] [<expression_list>] [`\%' "STRING"]
+<print_stmt> ::= `print' [`>' <str_factor>] [<expression_list>]
 
-<read_stmt> ::= `read' [`<' "IDENT"] <expression_list> [`\%' "STRING"]
+<read_stmt> ::= `read' [`<' <str_factor>] <expression_list>
 
 <expression_list> ::= <expression> (`,' <expression>)*
 
@@ -649,6 +649,8 @@ read.}
 <power> ::= <factor> [`**' <u_expr>]
 
 <literal> ::= "STRING" | "NUMBER" | "NULL"
+
+<str_factor> :: = <primary> | "STRING"
 
 <factor> ::= <primary> | <literal> | `(' <expression> `)'
 
