@@ -3,12 +3,9 @@ import os
 import filecmp
 import lexer.tag as Tag
 from lexer.lexer import Lexer, LexError
+import utils.utils as utils
 
-script = os.path.realpath(__file__)
-fields = script.split(os.path.sep)[0:-3]
-fields.append('tests')
-fields.append('lexer_test')
-testdir = os.path.sep.join(fields)
+testdir = utils.dirpath('lexer_test', root=utils.testdir)
 filelist = [file for file in os.listdir(testdir) if file.endswith('.em')]
 
 # Pass a "cmp" command line argument to make the script generate the compare files

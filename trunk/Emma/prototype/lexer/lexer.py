@@ -110,7 +110,7 @@ class WordsTable(object):
         self.reserve(Word('break', Tag.BREAK))
         self.reserve(Word('def', Tag.DEF))
         self.reserve(Word('return', Tag.RETURN))
-        self.reserve(Word('null', Tag.NULL))
+        self.reserve(Word('null', Tag.NUL))
         self.reserve(Word('class', Tag.CLASS))
         self.reserve(Word('and', Tag.AND))
         self.reserve(Word('or', Tag.OR))

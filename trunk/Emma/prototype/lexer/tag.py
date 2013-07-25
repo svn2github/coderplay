@@ -1,3 +1,5 @@
+from utils.utils import filepath, srcdir
+
 '''
 Tags for tokens (starts from 256 to avoid conflict against ASCII code)
 '''
@@ -14,7 +16,7 @@ CONTINUE    = 263
 BREAK       = 264
 DEF         = 265
 RETURN      = 266
-NULL        = 267
+NUL         = 267
 CLASS       = 268
 AND         = 269
 OR          = 270
@@ -46,7 +48,7 @@ IDENT       = 300
 # Following code to get the name of a tag is only for debug purpose
 __tagDict = {}
 for k, v in locals().items():
-    if k.startswith('__'): continue
+    if not isinstance(v, int): continue
     __tagDict[v] = k
 
 def tag2str(tag):
@@ -54,4 +56,24 @@ def tag2str(tag):
         return __tagDict[tag]
     else:
         return chr(tag)
+
+def gen_c_code():
+    '''Generate necessary C code from related content in this file.
+    '''
+    
+    outs = open(filepath('token.h',root=srcdir), 'w')
+
+    outs.write('#ifndef TOKEN_H\n')
+    outs.write('#define TOKEN_H\n\n')
+
+    keys = __tagDict.keys()
+    keys.sort()
+
+    for key in keys:
+        line = '#define %-15s %d\n' % (__tagDict[key], key)
+        outs.write(line)
+
+    outs.write('\n#endif\n')
+
+    outs.close()
 

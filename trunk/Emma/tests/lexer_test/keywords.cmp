@@ -33,7 +33,7 @@ BREAK
 DEF ( ) { } 
 RETURN 
 CLASS ( ) { } 
-NULL 
+NUL 
 IMPORT 
 PACKAGE 
 TRY 
