@@ -1,6 +1,12 @@
 import sys
+import os.path as path
 import lexer.tag as Tag
 from lexer.lexer import Lexer, LexError
+
+script = path.realpath(__file__)
+fields = script.splilt(path.sep)[0:-3]
+fields = fields.append('tests')
+testdir = path.join(*fields)
 
 ins = open('../tests/lexer_test/test1.em')
 lex = Lexer(ins.read())
