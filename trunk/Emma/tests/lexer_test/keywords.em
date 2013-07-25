@@ -6,9 +6,9 @@ while
 for
 continue
 break
-def
+def () {}
 return
-class
+class () {}
 null
 import
 package

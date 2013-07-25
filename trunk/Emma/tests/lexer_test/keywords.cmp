@@ -1,0 +1,49 @@
+if 
+elif 
+else 
+while 
+for 
+continue 
+break 
+def ( ) { } 
+return 
+class ( ) { } 
+null 
+import 
+package 
+try 
+raise 
+catch 
+finally 
+self 
+read 
+print 
+and 
+or 
+not 
+xor 
+
+IF 
+ELIF 
+ELSE 
+WHILE 
+FOR 
+CONTINUE 
+BREAK 
+DEF ( ) { } 
+RETURN 
+CLASS ( ) { } 
+NULL 
+IMPORT 
+PACKAGE 
+TRY 
+RAISE 
+CATCH 
+FINALLY 
+SELF 
+READ 
+PRINT 
+AND 
+OR 
+NOT 
+IDENT 

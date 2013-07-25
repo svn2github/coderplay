@@ -1,0 +1,11 @@
+_x1 = - x2 + x3 - x4 * x5 / x6 % x7 
+x1 = ( x2 + x3 ) ** x4 
+x1 = not x2 < x3 and x3 > x4 or x4 <= x5 xor x5 >= x6 and x6 == x7 and x7 != x8 
+func ( x , y ) ; 
+array ( x ) 
+
+IDENT = - IDENT + IDENT - IDENT * IDENT / IDENT % IDENT 
+IDENT = ( IDENT + IDENT ) DSTAR IDENT 
+IDENT = NOT IDENT < IDENT AND IDENT > IDENT OR IDENT LE IDENT IDENT IDENT GE IDENT AND IDENT EQ IDENT AND IDENT NE IDENT 
+IDENT ( IDENT , IDENT ) ; 
+IDENT ( IDENT ) 

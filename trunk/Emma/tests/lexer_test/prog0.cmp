@@ -1,0 +1,53 @@
+def f ( n ) { 
+if n == 0 return 0 else if n == 1 return 1 else return f ( n - 1 ) + f ( n - 2 ) 
+} 
+def f ( n ) { 
+if n == 0 { 
+return 0 ; 
+} elif n == 1 { 
+return 1 
+} else return f ( n - 1 ) + f ( n - 2 ) 
+} 
+def f ( n ) { 
+x = list ( n + 1 ) 
+for i = 0 , n , 1 { 
+if i == 0 x [ i ] = 0 elif i == 1 x [ i ] = 1 else { 
+x [ i ] = x [ i - 1 ] + x [ i - 2 ] ; 
+} 
+} 
+return x [ n ] 
+} 
+class Fibo ( ) { 
+def f ( n ) { 
+if n == 0 return 0 ; 
+if n == 1 return 1 ; 
+return Fibo . f ( n - 1 ) + Fibo . f ( n - 2 ) 
+} 
+} 
+
+DEF IDENT ( IDENT ) { 
+IF IDENT EQ INTEGER RETURN INTEGER ELSE IF IDENT EQ INTEGER RETURN INTEGER ELSE RETURN IDENT ( IDENT - INTEGER ) + IDENT ( IDENT - INTEGER ) 
+} 
+DEF IDENT ( IDENT ) { 
+IF IDENT EQ INTEGER { 
+RETURN INTEGER ; 
+} ELIF IDENT EQ INTEGER { 
+RETURN INTEGER 
+} ELSE RETURN IDENT ( IDENT - INTEGER ) + IDENT ( IDENT - INTEGER ) 
+} 
+DEF IDENT ( IDENT ) { 
+IDENT = IDENT ( IDENT + INTEGER ) 
+FOR IDENT = INTEGER , IDENT , INTEGER { 
+IF IDENT EQ INTEGER IDENT [ IDENT ] = INTEGER ELIF IDENT EQ INTEGER IDENT [ IDENT ] = INTEGER ELSE { 
+IDENT [ IDENT ] = IDENT [ IDENT - INTEGER ] + IDENT [ IDENT - INTEGER ] ; 
+} 
+} 
+RETURN IDENT [ IDENT ] 
+} 
+CLASS IDENT ( ) { 
+DEF IDENT ( IDENT ) { 
+IF IDENT EQ INTEGER RETURN INTEGER ; 
+IF IDENT EQ INTEGER RETURN INTEGER ; 
+RETURN IDENT . IDENT ( IDENT - INTEGER ) + IDENT . IDENT ( IDENT - INTEGER ) 
+} 
+} 

@@ -1,59 +1,84 @@
 import sys
-import os.path as path
+import os
+import filecmp
 import lexer.tag as Tag
 from lexer.lexer import Lexer, LexError
 
-script = path.realpath(__file__)
-fields = script.splilt(path.sep)[0:-3]
-fields = fields.append('tests')
-testdir = path.join(*fields)
+script = os.path.realpath(__file__)
+fields = script.split(os.path.sep)[0:-3]
+fields.append('tests')
+fields.append('lexer_test')
+testdir = os.path.sep.join(fields)
+filelist = [file for file in os.listdir(testdir) if file.endswith('.em')]
 
-ins = open('../tests/lexer_test/test1.em')
-lex = Lexer(ins.read())
-ins.close()
+# Pass a "cmp" command line argument to make the script generate the compare files
+suffix = '.cmp' if len(sys.argv)>1 and sys.argv[1] == 'cmp' else '.out'
 
-outstr_1 = ''
-outstr_2 = ''
+for file in filelist:
 
-# set last token to EOL so we can skip the first EOL if it is
-# from the end of a comment
-lastTokenTag = '\n'
+    infile = testdir + os.path.sep + file
+    outfile = infile[0:-3] + suffix
+    ins = open(infile)
+    lex = Lexer(ins.read())
+    ins.close()
 
-while True:
+    outs = open(outfile, 'w')
 
-    try:
-        token = lex.getToken(lastTokenTag)
-    except LexError as e:
-        print e
-        sys.exit(0)
+    #print 'Test:', file
 
-    # the line and col number of the token
-    line = lex.line
-    col = lex.col
+    outstr_1 = ''
+    outstr_2 = ''
 
-    # If no more token, it is finished
-    if token is None:
-        break
+    # set last token to EOL so we can skip the first EOL if it is
+    # from the end of a comment
+    lastTokenTag = '\n'
 
-    # Keep track of the last token
-    lastTokenTag = token.tag
+    while True:
 
-    # Two outputs
-    out = str(token)
-    outstr_1 += out
-    if out != '\n':
-        outstr_1 += ' '
+        try:
+            token = lex.getToken(lastTokenTag)
+        except LexError as e:
+            print e
+            sys.exit(0)
 
-    tag = token.tag
-    if isinstance(tag, str):
-        tag = ord(tag)
-    out = Tag.tag2str(tag)
-    outstr_2 += out
-    if out != '\n':
-        outstr_2 += ' '
+        # the line and col number of the token
+        line = lex.line
+        col = lex.col
 
+        # If no more token, it is finished
+        if token is None:
+            break
 
-print outstr_1
-print
-print outstr_2
+        # Keep track of the last token
+        lastTokenTag = token.tag
+
+        # Two outputs
+        out = str(token)
+        outstr_1 += out
+        if out != '\n':
+            outstr_1 += ' '
+
+        tag = token.tag
+        if isinstance(tag, str):
+            tag = ord(tag)
+        out = Tag.tag2str(tag)
+        outstr_2 += out
+        if out != '\n':
+            outstr_2 += ' '
+
+    outs.write(outstr_1)
+    outs.write('\n')
+    outs.write(outstr_2)
+    outs.close()
+
+    #print outstr_1
+    #print outstr_2
+
+    # only compare ot compare files if we are doing output
+    if suffix == '.out':
+        cmpfile = infile[0:-3] + '.cmp'
+        if filecmp.cmp(outfile, cmpfile):
+            print '%-20s: PASS' % file
+        else:
+            print '%-20s: FAIL' % file
 
