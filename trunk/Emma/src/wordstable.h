@@ -6,6 +6,11 @@
 #include "token.h"
 
 typedef struct {
+    char *lexeme;
+    Word *word;
+} WtEntry;
+
+typedef struct {
     /* size of the words table */
     int size;        
     /* number of items in the words table */
