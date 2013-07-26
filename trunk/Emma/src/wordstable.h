@@ -3,16 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-typedef struct {
-    char* lexeme;
-    int tag;
-} Word;
-
-typedef struct {
-    char* lexeme; // a string
-    Word* word;
-} WtEntry;
+#include "token.h"
 
 typedef struct {
     /* size of the words table */

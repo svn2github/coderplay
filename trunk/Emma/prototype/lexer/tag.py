@@ -61,10 +61,7 @@ def gen_c_code():
     '''Generate necessary C code from related content in this file.
     '''
     
-    outs = open(filepath('token.h',root=srcdir), 'w')
-
-    outs.write('#ifndef TOKEN_H\n')
-    outs.write('#define TOKEN_H\n\n')
+    outs = open(filepath('token.i',root=srcdir), 'w')
 
     keys = __tagDict.keys()
     keys.sort()
@@ -72,8 +69,6 @@ def gen_c_code():
     for key in keys:
         line = '#define %-15s %d\n' % (__tagDict[key], key)
         outs.write(line)
-
-    outs.write('\n#endif\n')
 
     outs.close()
 
