@@ -1,3 +1,6 @@
+/**
+  A words table for lexer implemented using a simple hashtable.
+  */
 #include "wordstable.h"
 #include <assert.h>
 
