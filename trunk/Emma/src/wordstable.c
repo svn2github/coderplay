@@ -13,7 +13,7 @@ static unsigned int npnumbers = sizeof(prime_numbers) / sizeof(unsigned int);
 unsigned int wt_getprime(unsigned int size) {
     int ii;
     for (ii=0; ii< npnumbers; ii++) {
-        if (prime_numbers[ii] > size)
+        if (prime_numbers[ii] >= size)
             return prime_numbers[ii];
     }
     fprintf(stderr, "Error: Wordstable size %d overflow.\n", size);

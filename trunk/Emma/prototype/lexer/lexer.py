@@ -1,5 +1,6 @@
 import sys
 import tag as Tag
+from utils.utils import filepath, srcdir
 
 class Token(object):
     '''A token is what returned from a lexer everytime it is called. A basic
@@ -439,4 +440,16 @@ class Lexer(object):
         sys.stderr.write(text+'\n\n')
         raise LexError(msg)
 
+
+def gen_c_code():
+    wtable = WordsTable()
+    outs = open(filepath('lexer.i',root=srcdir), 'w')
+
+    outs.write('#define WT_RESERVE(lexeme,tag) w=NEW_WORD(); w->lexeme=lexeme; w->tag=tag; wt_install(wtable, lexeme, w);\n\n')
+    keys = wtable.table.keys()
+    for key in keys:
+        tag = wtable.table[key].tag
+        outs.write('WT_RESERVE("' + key + '",'+str(tag)+')\n')
+
+    outs.close()
 
