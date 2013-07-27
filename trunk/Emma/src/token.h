@@ -11,7 +11,7 @@ typedef struct _token {
 
 typedef struct _word {
     int tag;
-    char* lexeme;
+    char *lexeme;
 } Word;
 
 /*
@@ -20,9 +20,18 @@ typedef struct _word {
  * tree or AST construction.
  */ 
 typedef Word Integer;
-typedef Word Float;
+
+typedef struct _float {
+    int tag;
+    char *lexeme;
+    char *i; // The integer part of the float
+    char *f; // The fraction part of the float
+    char *e; // The exponential part of the float
+} Float;
+
 typedef Word String;
 
 Word *new_word(char *lexeme, int tag);
 
 #endif
+

@@ -1,8 +1,21 @@
-#include "lexer.h"
+#include "parser.h"
 
-int main(int argc, char **argv) {
+void *
+parse(FILE *fp, char *filename) {
 
-    lexer();
+    lexer_init();
 
-    return 0;
+    char *line;
+    void *token;
+
+    int lastTokenTag = '\n';
+
+    token = get_token(fp, line, lastTokenTag);
+
+
+
+    lexer_free();
+
+    return NULL;
 }
+
