@@ -1,9 +1,9 @@
 #ifndef _TOKEN_H
 #define _TOKEN_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "token.i"
-
-#define NEW_WORD() w = (Word *) malloc (sizeof(Word))
 
 typedef struct _token {
     int tag;
@@ -19,8 +19,10 @@ typedef struct _word {
  * values of certain types. The conversion is defered to parse
  * tree or AST construction.
  */ 
-typedef _word Integer;
-typedef _word Float;
-typedef _word String;
+typedef Word Integer;
+typedef Word Float;
+typedef Word String;
+
+Word *new_word(char *lexeme, int tag);
 
 #endif

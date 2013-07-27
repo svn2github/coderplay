@@ -117,7 +117,7 @@ wt_install(Wordstable * wtable, Word* word)
         wtable->table[idx] = new;
         wtable->nwords++;
     } else {
-        fprintf(stderr,"Error: Trying install lexeme '%s' twice.\n", lexeme);
+        fprintf(stderr,"Error: Trying install lexeme '%s' twice.\n", word->lexeme);
     }
 
     return wtable;
