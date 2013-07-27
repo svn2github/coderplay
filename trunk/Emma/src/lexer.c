@@ -49,7 +49,7 @@ matchc(FILE *fp, char c) {
     return 1;
 }
 
-Token *
+void *
 get_token(FILE *fp, int lastTokenTag) {
 
     while (1) {
@@ -91,7 +91,7 @@ get_token(FILE *fp, int lastTokenTag) {
 
 
         if (peek == '>') {
-            if matchc(fp, '=') {
+            if (matchc(fp, '=')) {
                 return wt_lookup(wt, ">=");
             }
             else {
@@ -100,7 +100,7 @@ get_token(FILE *fp, int lastTokenTag) {
             }
         }
         else if (peek == '=') {
-            if matchc(fp, '=') {
+            if (matchc(fp, '=')) {
                 return wt_lookup(wt, "==");
             }
             else {
@@ -109,7 +109,7 @@ get_token(FILE *fp, int lastTokenTag) {
             }
         }
         else if (peek == '<') {
-            if matchc(fp, '=') {
+            if (matchc(fp, '=')) {
                 return wt_lookup(wt, "<=");
             }
             else {
@@ -118,7 +118,7 @@ get_token(FILE *fp, int lastTokenTag) {
             }
         }
         else if (peek == '*') {
-            if matchc(fp, '*') {
+            if (matchc(fp, '*')) {
                 return wt_lookup(wt, "**");
             }
             else {

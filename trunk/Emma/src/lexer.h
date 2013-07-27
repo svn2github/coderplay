@@ -13,6 +13,6 @@ extern unsigned int row;
 extern unsigned int pos;
 
 void lexer_init();
-Token *get_token(FILE *fp, int lastTokenTag);
+void *get_token(FILE *fp, int lastTokenTag);
 void lexer_free();
 
