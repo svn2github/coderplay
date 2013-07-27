@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     FILE *fp = stdin;
 
     if (argc > 1)
-        filename = argv[1]
+        filename = argv[1];
 
     if (filename != NULL) {
         if ((fp = fopen(filename, "r")) == NULL) {
@@ -20,6 +20,9 @@ int main(int argc, char **argv) {
 
     // parse the input and generate syntax tree
     parse(fp, filename);
+
+    // close the input file
+    if (fp != stdin) fclose(fp);
 
     return 0;
 }

@@ -5,14 +5,18 @@ parse(FILE *fp, char *filename) {
 
     lexer_init();
 
-    char *line;
-    void *token;
+    Token *token;
 
-    int lastTokenTag = '\n';
+    int lastTokenTag = CHAR_LF;
 
-    token = get_token(fp, line, lastTokenTag);
+    while ((token = get_token(fp, lastTokenTag)) != NULL) {
+        lastTokenTag = token->tag;
 
 
+        if (token->tag == CHAR_LF) {
+            printf("\n");
+        } else printf("%c\n", token->tag);
+    }
 
     lexer_free();
 

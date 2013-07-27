@@ -3,67 +3,66 @@
 
 static Wordstable *wt;
 
+char *line;
 unsigned int len = 0;
 unsigned int row = 0;
-unsigned long pos = 0;
+unsigned int pos = 0;
 char peek = ' ';
+Token *token;
 
 
 void
 lexer_init() {
-
-    *wt = wt_create(DEFAULT_WT_SIZE);
+    wt = wt_create(DEFAULT_WT_SIZE);
     WT_RESERVE_KEYWORDS();
     wt_dump(wt);
+
+    line = (char *) malloc (BUFSIZ * sizeof(char));
+    token = (Token *) malloc(sizeof(Token));
 }
 
 static void
-nextc() {
+nextc(FILE *fp) {
     if (pos >= 0 && pos < len) {
         peek = line[pos];
         pos++;
     }
     else {
-        peek = ''; // As end of line
+        if (fgets(line, BUFSIZ-1, fp) == NULL) {
+            peek = 0;
+        } 
+        else {
+            peek = ' ';
+            len = strlen(line);
+            pos = 0;
+        }
     }
-
 }
 
 Token *
-get_token(FILE *fp, char *line, int lastTokenTag) {
-
-    static Token *token = NULL;
-    if (token == NULL) {
-        token = malloc(sizeof(Token));
-    }
-
-    if (pos >= len) {
-        if (fgets(line, BUFSIZ, fp) == NULL) {
-            return NULL; // end of input reached
-        }
-        peek = ' ';
-        len = strlen(line);
-        pos = 0;
-    }
+get_token(FILE *fp, int lastTokenTag) {
 
     while (1) {
-        while (peek == ' ' || peek == '\t') nextc();
+        // ignore whites and CR for linux 
+        while (peek == ' ' || peek == '\t' || peek == CHAR_CR) nextc(fp);
 
-        if (peek == '') {
-            fprintf(stderr, "EOF reached\n");
-            exit(1);
+        if (peek == 0) {
+            return NULL;
         }
 
         if (peek == '#') {
-            while (peek != '\n') nextc();
+            while (peek != CHAR_LF) nextc(fp);
         }
 
-        if (peek == '\n') {
-            while (peek == '\n') {
+        if (peek == CHAR_LF) {
+            while (peek == CHAR_LF) {
                 row += 1;
+                nextc(fp);
+                // following line is to accomodate linux 
+                if (peek == CHAR_CR) nextc(fp);
             }
-            if (lastTokenTag != '\n') {
-                token->tag = '\n';
+            if (lastTokenTag != CHAR_LF) {
+                token->tag = CHAR_LF;
                 return token;
             }
             else {
@@ -72,8 +71,8 @@ get_token(FILE *fp, char *line, int lastTokenTag) {
         }
 
         if (peek == ';') {
-            while (peek == ';') nextc();
-            if (lastTokenTag != ';' && lastTokenTag != '\n') {
+            while (peek == ';') nextc(fp);
+            if (lastTokenTag != ';' && lastTokenTag != CHAR_LF) {
                 token->tag = ';';
                 return token;
             }
@@ -82,8 +81,11 @@ get_token(FILE *fp, char *line, int lastTokenTag) {
             }
         }
 
-        printf("here\n");
-        return NULL;
+        token->tag = peek;
+
+        peek = ' ';
+
+        return token;
 
     }
 
@@ -91,5 +93,7 @@ get_token(FILE *fp, char *line, int lastTokenTag) {
 
 void lexer_free() {
     wt_free(wt);
+    free(line);
+    free(token);
 }
 
