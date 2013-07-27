@@ -1,4 +1,4 @@
-#define WT_RESERVE(lexeme,tag) w=NEW_WORD(); w->lexeme=lexeme; w->tag=tag; wt_install(wtable, lexeme, w);
+#define WT_RESERVE(lexeme,tag) w=NEW_WORD(); w->lexeme=lexeme; w->tag=tag; wt_install(wt, w);
 
 WT_RESERVE("and",269)
 WT_RESERVE("elif",259)

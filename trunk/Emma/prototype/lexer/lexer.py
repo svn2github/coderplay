@@ -445,7 +445,7 @@ def gen_c_code():
     wtable = WordsTable()
     outs = open(filepath('lexer.i',root=srcdir), 'w')
 
-    outs.write('#define WT_RESERVE(lexeme,tag) w=NEW_WORD(); w->lexeme=lexeme; w->tag=tag; wt_install(wtable, lexeme, w);\n\n')
+    outs.write('#define WT_RESERVE(lexeme,tag) w=NEW_WORD(); w->lexeme=lexeme; w->tag=tag; wt_install(wt, w);\n\n')
     keys = wtable.table.keys()
     for key in keys:
         tag = wtable.table[key].tag

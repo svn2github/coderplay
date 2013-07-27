@@ -55,7 +55,8 @@ wt_free(Wordstable * wtable)
     int i;
     for(i=0;i<wtable->size;i++) {
         if( wtable->table[i] != NULL) {
-            free(wtable->table[i]->lexeme);
+            // no need to free table[i]->lexeme since it is freed
+            // by table[i]->word
             free(wtable->table[i]->word);
             free(wtable->table[i]);
         }
@@ -82,7 +83,7 @@ wt_hash(char* lexeme)
  *  insert into hash table and rehash if loadfactor too high.
  */
 Wordstable *
-wt_install(Wordstable * wtable, char* lexeme, Word* word)
+wt_install(Wordstable * wtable, Word* word)
 {
     unsigned long hashval;
     unsigned int idx, incr;
@@ -94,7 +95,7 @@ wt_install(Wordstable * wtable, char* lexeme, Word* word)
     }
     
     /* calculate the hash function */
-    hashval = wt_hash(lexeme);
+    hashval = wt_hash(word->lexeme);
     idx = hashval % wtable->size;
     // calculate the increment for linear probing
     do {
@@ -104,14 +105,14 @@ wt_install(Wordstable * wtable, char* lexeme, Word* word)
 
     /* insert with linear probing */
     while( wtable->table[idx] != NULL && 
-            strcmp(wtable->table[idx]->lexeme, lexeme)!=0 ) {
+            strcmp(wtable->table[idx]->lexeme, word->lexeme)!=0 ) {
         idx = (idx+incr) % wtable->size;
     }
 
     if( wtable->table[idx] == NULL ) {
         /* insert the word */
         new = (WtEntry*) malloc(sizeof(WtEntry));
-        new->lexeme = lexeme;
+        new->lexeme = word->lexeme;
         new->word = word;
         wtable->table[idx] = new;
         wtable->nwords++;
@@ -159,7 +160,7 @@ wt_delete(Wordstable * wtable,char* lexeme)
  *  check for membership of a lexeme
  */
 Word *
-wt_lookup(Wordstable * wtable,char* lexeme)
+wt_lookup(Wordstable * wtable, char* lexeme)
 {
     unsigned long hashval;
     unsigned int idx, incr;
@@ -201,13 +202,12 @@ wt_rehash(Wordstable * wtable)
     /* rehash the values on the old hash table */
     for(i=0;i<wtable->size;i++) {
         if( wtable->table[i] != NULL) {
-            wt_install(newtable, wtable->table[i]->lexeme,
-                        wtable->table[i]->word );
+            wt_install(newtable, wtable->table[i]->word );
         }
         free(wtable->table[i]);
     }
     
-    // we cannot use wt_free since we don't wanna free the lexeme and word
+    // we cannot use wt_free since we don't wanna free the word
     free(wtable->table);
     free(wtable);
     return newtable;

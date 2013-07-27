@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include "token.h"
 
+// Note that lexeme points to the same string as word->lexeme
+// Do not double free
 typedef struct {
     char *lexeme;
     Word *word;
@@ -24,11 +26,11 @@ void wt_free(Wordstable* htable);
 
 unsigned long wt_hash(char* lexeme);
 
-Wordstable* wt_install(Wordstable* htable, char* lexeme, Word* word);
+Wordstable* wt_install(Wordstable* htable, Word* word);
 
-void wt_delete(Wordstable* htable,char* lexeme);
+void wt_delete(Wordstable* htable, char* lexeme);
 
-Word* wt_lookup(Wordstable* htable,char* lexeme);
+Word* wt_lookup(Wordstable* htable, char* lexeme);
 
 Wordstable* wt_rehash(Wordstable* htable);
 

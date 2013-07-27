@@ -3,4 +3,4 @@
 
 #define DEFAULT_WT_SIZE 127
 
-Wordstable *wtable = wt_create(DEFAULT_WT_SIZE);
+Wordstable *wt = wt_create(DEFAULT_WT_SIZE);
