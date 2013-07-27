@@ -15,6 +15,7 @@ void
 lexer_init() {
     wt = wt_create(DEFAULT_WT_SIZE);
     WT_RESERVE_KEYWORDS();
+    WT_RESERVE_COMPOSITE_OP();
     wt_dump(wt);
 
     line = (char *) malloc (BUFSIZ * sizeof(char));
@@ -39,6 +40,15 @@ nextc(FILE *fp) {
     }
 }
 
+static int
+matchc(FILE *fp, char c) {
+    nextc(fp);
+    if (peek != c)
+        return 0;
+    peek = ' ';
+    return 1;
+}
+
 Token *
 get_token(FILE *fp, int lastTokenTag) {
 
@@ -46,9 +56,7 @@ get_token(FILE *fp, int lastTokenTag) {
         // ignore whites and CR for linux 
         while (peek == ' ' || peek == '\t' || peek == CHAR_CR) nextc(fp);
 
-        if (peek == 0) {
-            return NULL;
-        }
+        if (peek == 0) return NULL;
 
         if (peek == '#') {
             while (peek != CHAR_LF) nextc(fp);
@@ -81,14 +89,61 @@ get_token(FILE *fp, int lastTokenTag) {
             }
         }
 
+
+        if (peek == '>') {
+            if matchc(fp, '=') {
+                return wt_lookup(wt, ">=");
+            }
+            else {
+                token->tag = '>';
+                return token;
+            }
+        }
+        else if (peek == '=') {
+            if matchc(fp, '=') {
+                return wt_lookup(wt, "==");
+            }
+            else {
+                token->tag = '=';
+                return token;
+            }
+        }
+        else if (peek == '<') {
+            if matchc(fp, '=') {
+                return wt_lookup(wt, "<=");
+            }
+            else {
+                token->tag = '<';
+                return token;
+            }
+        }
+        else if (peek == '*') {
+            if matchc(fp, '*') {
+                return wt_lookup(wt, "**");
+            }
+            else {
+                token->tag = '*';
+                return token;
+            }
+        }
+
+        // Numbers
+        //
+        //
+        // Strings
+        //
+        // Identifiers
+
+
+
+        // Any single character token
         token->tag = peek;
 
+        // Important, peek is set to blank so next call can proceed.
         peek = ' ';
 
         return token;
-
     }
-
 }
 
 void lexer_free() {

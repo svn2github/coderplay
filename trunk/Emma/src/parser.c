@@ -13,9 +13,7 @@ parse(FILE *fp, char *filename) {
         lastTokenTag = token->tag;
 
 
-        if (token->tag == CHAR_LF) {
-            printf("\n");
-        } else printf("%c\n", token->tag);
+        printf("%d\n", token->tag);
     }
 
     lexer_free();

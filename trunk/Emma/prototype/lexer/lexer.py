@@ -453,8 +453,16 @@ def gen_c_code():
     for key in keys[1:]:
         tag = wtable.table[key].tag
         outs.write('; \\\n    WT_RESERVE("%s", %d)' % (key, tag))
+    outs.write('\n\n')
 
-    outs.write('\n');
+    outs.write('#define WT_RESERVE_COMPOSITE_OP() ');
+    outs.write('WT_RESERVE("%s", %d)' % (W_dstar.lexeme, W_dstar.tag))
+    outs.write('; \\\n    WT_RESERVE("%s", %d)' % (W_le.lexeme, W_le.tag))
+    outs.write('; \\\n    WT_RESERVE("%s", %d)' % (W_eq.lexeme, W_eq.tag))
+    outs.write('; \\\n    WT_RESERVE("%s", %d)' % (W_ge.lexeme, W_ge.tag))
+    outs.write('; \\\n    WT_RESERVE("%s", %d)' % (W_ne.lexeme, W_ne.tag))
+    outs.write('\n')
+
     outs.close()
 
 

@@ -23,3 +23,9 @@
     WT_RESERVE("continue", 263); \
     WT_RESERVE("or", 270); \
     WT_RESERVE("def", 265)
+
+#define WT_RESERVE_COMPOSITE_OP() WT_RESERVE("**", 280); \
+    WT_RESERVE("<=", 281); \
+    WT_RESERVE("==", 282); \
+    WT_RESERVE(">=", 283); \
+    WT_RESERVE("!=", 284)
