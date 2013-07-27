@@ -10,6 +10,8 @@ lexer() {
     WT_RESERVE_KEYWORDS();
     wt_dump(wt);
 
+    wt_free(wt);
+
     return NULL;
 }
 

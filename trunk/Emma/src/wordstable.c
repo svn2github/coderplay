@@ -221,14 +221,16 @@ wt_dump(Wordstable * wtable)
 {
     int i;
     
-    /* output all lexeme + word pairs */
-    fprintf(stdout,"%20s   %60s\n\n","lexeme","word");
+    /* output all lexeme + tag pairs */
+    fprintf(stdout,"%20s   %20s\n\n","lexeme","tag");
     for(i=0;i<wtable->size;i++) {
         if( wtable->table[i] != NULL) {
-            fprintf(stdout,"%20s   %120s\n",wtable->table[i]->lexeme,
-                        wtable->table[i]->word->lexeme);
+            fprintf(stdout,"%20s   %20d\n",wtable->table[i]->lexeme,
+                        wtable->table[i]->word->tag);
         }
     }
+    fprintf(stdout,"%d words filled in wordstable of length %d.\n", 
+            wtable->nwords, wtable->size);
 }
 
 
