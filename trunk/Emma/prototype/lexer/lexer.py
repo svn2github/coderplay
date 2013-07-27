@@ -454,6 +454,7 @@ def gen_c_code():
         tag = wtable.table[key].tag
         outs.write('; \\\n    WT_RESERVE("%s", %d)' % (key, tag))
 
+    outs.write('\n');
     outs.close()
 
 
