@@ -6,7 +6,7 @@ typedef struct {
 } hashentry;
 
 typedef struct _hashobject {
-    EmContainerObject _;
+    OB_HEAD;
     int length;
     int loadFactor;
     hashentry *table;
@@ -14,12 +14,14 @@ typedef struct _hashobject {
 
 
 EmTypeObject Hashtype = {
-    OB_HEAD_INIT(&Typetype), 
-    "hash",
-    sizeof(EmHashObject),
-    0,
-    0,
+        OB_HEAD_INIT(&Typetype),
+        "hash",
+        0,
+        sizeof(EmHashObject),
+        0,
+        0,
 };
 
 EmObject * newhashobject() {
+    return 0;
 }

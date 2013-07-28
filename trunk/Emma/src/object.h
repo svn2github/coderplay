@@ -1,34 +1,53 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#define OB_HEAD_INIT(p_type) {p_type, 1,}
+#define OB_HEAD struct _typeobject *type; \
+    unsigned int refcnt; \
+    struct _object *base; \
+    unsigned int nitems
 
-#define GET_type(ob) (EmObject *)(ob)->type
-#define GET_refcnt(ob) (EmObject *)(ob)->refcnt
+#define OB_HEAD_INIT(p_type) p_type, 1
+
 
 typedef struct _object {
-    struct _typeobject *type;
-    unsigned int refcnt;
+    OB_HEAD;
 } EmObject;
 
-typedef struct _containerobject {
-    EmObject _;
-    unsigned int nitems;
-} EmContainerObject;
+typedef struct {
+    EmObject *(*add) (EmObject *, EmObject *);
+} EmNumberMethods;
+
+typedef struct {
+    unsigned int (*length) (EmObject *);
+    EmObject *(*concate) (EmObject *, EmObject *);
+} EmSequenceMethods;
+
+typedef struct {
+    unsigned int (*length) (EmObject *);
+    EmObject *(*subscript) (EmObject *, EmObject *);
+}EmMappingMethods;
 
 typedef struct _typeobject {
-    EmObject _;
-    char *type_name;
-    unsigned int size;
+    OB_HEAD;
+    char *tp_name;
+    unsigned int tp_size;
+    unsigned int tp_itemsize;
 
-    void (*dealloc) (EmObject *);
+    EmObject *(*tp_alloc)();
+    void (*tp_dealloc)(EmObject *);
+    void (*tp_print)(EmObject *, FILE*);
+    EmObject *(*tp_str)(EmObject *);
+    EmObject *(*tp_getattr)(EmObject *, char *);
+    int (*tp_setattr)(EmObject *, char *, EmObject *);
+    int (*tp_compare)(EmObject *, EmObject *);
+    long (*tp_hashfunc)(EmObject *);
 
-    long (*hashfunc) (EmObject *);
+    EmNumberMethods *tp_as_number;
+    EmSequenceMethods *tp_as_sequence;
+    EmMappingMethods *tp_as_mapping;
+
 
 } EmTypeObject;
-
-
-
 
 
 #endif

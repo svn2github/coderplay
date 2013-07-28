@@ -22,7 +22,8 @@ int main(int argc, char **argv) {
     parse(fp, filename);
 
     // close the input file
-    if (fp != stdin) fclose(fp);
+    if (fp != stdin)
+        fclose(fp);
 
     return 0;
 }
