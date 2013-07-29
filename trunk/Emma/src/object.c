@@ -6,6 +6,9 @@ EmObject * object_new(EmTypeObject *tp) {
 
     EmObject *ob = (EmObject *) malloc(tp->tp_size);
 
+    if (ob == NULL)
+        return log_error(MEMORY_ERROR, "not enough memory");
+
     ob->type = tp;
     ob->refcnt = 1;
     ob->base = NULL;
@@ -27,14 +30,9 @@ char *object_str(EmObject *ob) {
     return asString;
 }
 
-/*
- * Note object_getattr, object_setattr, object_compare are all generic
- * functions that can be used for other type of objects. They all have
- * the abilities to dynamically call related functions defined in the
- * type object.
- */
+
 EmObject *
-object_getattr(EmObject *ob, char *name) {
+getattr(EmObject *ob, char *name) {
     if (ob->type->tp_getattr == NULL) {
         fprintf(stderr, "attribute-less object\n");
         return NULL;
@@ -43,7 +41,7 @@ object_getattr(EmObject *ob, char *name) {
     }
 }
 
-int object_setattr(EmObject *ob, char *name, EmObject *attr) {
+int setattr(EmObject *ob, char *name, EmObject *attr) {
     if (ob->type->tp_setattr == NULL) {
         if (ob->type->tp_getattr == NULL) {
             fprintf(stderr, "attribute-less object\n");
@@ -56,7 +54,7 @@ int object_setattr(EmObject *ob, char *name, EmObject *attr) {
     }
 }
 
-int object_compare(EmObject *ob1, EmObject *ob2) {
+int cmpobj(EmObject *ob1, EmObject *ob2) {
     EmTypeObject *tp;
 
     // Same object
@@ -86,12 +84,26 @@ int object_compare(EmObject *ob1, EmObject *ob2) {
     return ((*tp->tp_compare)(ob1, ob2));
 }
 
-long object_hashfunc(EmObject *ob) {
+long hashobj(EmObject *ob) {
     if (ob->type->tp_hashfunc == NULL) {
-        fprintf(stderr, "object not hashable\n");
-        return 0;
+        return log_error(TYPE_ERROR, "unhashable type");
     }
     return (*ob->type->tp_hashfunc)(ob);
+}
+
+
+/*
+ * The null object singleton
+ */
+EmObject nulobj = {
+        OB_HEAD_INIT(&Nulltype),
+        0,
+        0,
+};
+
+void
+null_print(EmObject *ob) {
+    printf("null\n");
 }
 
 char *
@@ -105,13 +117,13 @@ EmTypeObject Nulltype = {
         0,                              // base
         0,                              // nitems
         "null",                         // tp_name
-        sizeof(EmTypeObject),           // tp_size
+        sizeof(EmObject),               // tp_size
         0,                              // tp_itemsize
 
         0,                              // tp_alloc
         0,                              // tp_dealloc
-        object_print,                   // tp_print
-        object_str,                     // tp_str
+        null_print,                     // tp_print
+        null_str,                       // tp_str
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare

@@ -8,6 +8,17 @@
 
 #define OB_HEAD_INIT(type) type, 1
 
+#define OBJECT_NEW(type, typeobj) ((type *) object_new(typeobj))
+
+#define OBJECT_FREE(ob) if (ob->type->tp_dealloc) { \
+            ob->type->tp_dealloc(ob); \
+        } else { \
+            log_error(SYSTEM_ERROR, "object cannot be freed"); \
+        }
+
+#define INCREF(ob) ob->refcnt++
+#define DECREF(ob) if (--ob->refcnt == 0) OBJECT_FREE(ob)
+
 
 typedef struct _object {
     OB_HEAD;
@@ -70,12 +81,24 @@ typedef struct _typeobject {
     EmMappingMethods *tp_as_mapping;
 } EmTypeObject;
 
+
+/*
+ * Following function can be used as placeholders for type object's
+ * function pointers.
+ */
 extern void object_print(EmObject *, FILE *);
 extern void object_str(EmObject *);
-extern EmObject *object_getattr(EmObject *, char *);
-extern int object_setattr(EmObject *, char *, EmObject *);
-extern int object_compare(EmObject *, EmObject *);
-extern long object_hashfunc(EmObject *);
+
+/*
+ * Note the following function are all generic functions.
+ * They are not supposed to be set as function pointers
+ * for type object (infinite loop), but rather directly
+ * called in other functions.
+ */
+extern EmObject *getattr(EmObject *, char *);
+extern int setattr(EmObject *, char *, EmObject *);
+extern int cmpobj(EmObject *, EmObject *);
+extern long hashobj(EmObject *);
 
 /*
  * The string representation output buffer shared by all objects
@@ -83,5 +106,6 @@ extern long object_hashfunc(EmObject *);
 #define AS_STRING_LENGTH 80
 extern char *asString;
 
+extern EmObject nulobj;
 
 #endif

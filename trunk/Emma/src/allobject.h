@@ -13,6 +13,7 @@
 #include <malloc.h>
 #include "object.h"
 #include "hashobject.h"
+#include "errorobject.h"
 
 
 #endif /* ALLOBJECT_H_ */
