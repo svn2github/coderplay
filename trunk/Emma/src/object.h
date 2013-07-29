@@ -3,21 +3,14 @@
 
 #define OB_HEAD struct _typeobject *type; \
     unsigned int refcnt; \
-    struct _object *base; \
     unsigned int nitems
 
 #define OB_HEAD_INIT(type) type, 1
 
-#define OBJECT_NEW(type, typeobj) ((type *) object_new(typeobj))
-
-#define OBJECT_FREE(ob) if (ob->type->tp_dealloc) { \
-            ob->type->tp_dealloc(ob); \
-        } else { \
-            log_error(SYSTEM_ERROR, "object cannot be freed"); \
-        }
+#define NEWOBJ(type, typeobj) ((type *) newobj(typeobj))
 
 #define INCREF(ob) ob->refcnt++
-#define DECREF(ob) if (--ob->refcnt == 0) OBJECT_FREE(ob)
+#define DECREF(ob) if (--ob->refcnt == 0) freeobj(ob)
 
 
 typedef struct _object {
@@ -90,11 +83,13 @@ extern void object_print(EmObject *, FILE *);
 extern void object_str(EmObject *);
 
 /*
- * Note the following function are all generic functions.
+ * Note the following function are all convenience functions.
  * They are not supposed to be set as function pointers
  * for type object (infinite loop), but rather directly
  * called in other functions.
  */
+extern EmObject *newobj(EmTypeObject *);
+void freeobj(EmObject *);
 extern EmObject *getattr(EmObject *, char *);
 extern int setattr(EmObject *, char *, EmObject *);
 extern int cmpobj(EmObject *, EmObject *);

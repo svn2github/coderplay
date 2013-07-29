@@ -2,7 +2,6 @@
 
 EmTypeObject Typetype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
-        0,                              // base
         0,                              // nitems
         "type",                         // tp_name
         sizeof(EmTypeObject),           // tp_size

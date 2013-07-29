@@ -9,6 +9,7 @@
 #define HASHOBJECT_H_
 
 extern EmTypeObject Hashtype;
+typedef struct _hashobject EmHashObject;
 
 EmHashObject* hashobject_new(unsigned int size);
 

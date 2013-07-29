@@ -2,25 +2,9 @@
 
 char asString[AS_STRING_LENGTH];
 
-EmObject * object_new(EmTypeObject *tp) {
-
-    EmObject *ob = (EmObject *) malloc(tp->tp_size);
-
-    if (ob == NULL)
-        return log_error(MEMORY_ERROR, "not enough memory");
-
-    ob->type = tp;
-    ob->refcnt = 1;
-    ob->base = NULL;
-    ob->nitems = 0;
-
-    return ob;
-}
-
-void object_free(EmObject *ob) {
-    free(ob);
-}
-
+/*
+ * placehoder functions (may not be necessary)
+ */
 void object_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "<%s object at %x>\n", ob->type->tp_name, ob);
 }
@@ -31,10 +15,49 @@ char *object_str(EmObject *ob) {
 }
 
 
+/*
+ * Convenience functions
+ */
+
+EmObject *newobj(EmTypeObject *tp) {
+
+    EmObject *ob = (EmObject *) malloc(tp->tp_size);
+    if (ob == NULL)
+        return log_error(MEMORY_ERROR, "not enough memory");
+    ob->type = tp;
+    ob->refcnt = 1;
+    ob->nitems = 0;
+    return ob;
+}
+
+void freeobj(EmObject *ob) {
+    if (ob->type->tp_dealloc == NULL) {
+        log_error(SYSTEM_ERROR, "object cannot be freed");
+    } else {
+        ob->type->tp_dealloc(ob);
+    }
+}
+
+void printobj(EmObject *ob, FILE *fp) {
+    if (ob->type->tp_print == NULL) {
+        object_print(ob, fp);
+    } else {
+        ob->type->tp_print(ob, fp);
+    }
+}
+
+char *tostrobj(EmObject *ob) {
+    if (ob->type->tp_str == NULL) {
+        return object_str(ob);
+    } else {
+        return ob->type->tp_str(ob);
+    }
+}
+
 EmObject *
 getattr(EmObject *ob, char *name) {
     if (ob->type->tp_getattr == NULL) {
-        fprintf(stderr, "attribute-less object\n");
+        log_error(TYPE_ERROR, "attribute-less object");
         return NULL;
     } else {
         return (*ob->type->tp_getattr)(ob, name);
@@ -44,9 +67,9 @@ getattr(EmObject *ob, char *name) {
 int setattr(EmObject *ob, char *name, EmObject *attr) {
     if (ob->type->tp_setattr == NULL) {
         if (ob->type->tp_getattr == NULL) {
-            fprintf(stderr, "attribute-less object\n");
+            log_error(TYPE_ERROR, "attribute-less object");
         } else {
-            fprintf(stderr, "read-only attributes\n");
+            log_error(TYPE_ERROR, "read-only attributes\n");
         }
         return NULL;
     } else {
@@ -69,7 +92,6 @@ int cmpobj(EmObject *ob1, EmObject *ob2) {
      * If objects are different types, there really is no way to compare them.
      * So we just compare its name.
      */
-
     if ((tp = ob1->type) != ob2->type)
         return strcmp(tp->tp_name, ob2->type->tp_name);
 
@@ -86,7 +108,8 @@ int cmpobj(EmObject *ob1, EmObject *ob2) {
 
 long hashobj(EmObject *ob) {
     if (ob->type->tp_hashfunc == NULL) {
-        return log_error(TYPE_ERROR, "unhashable type");
+        log_error(TYPE_ERROR, "unhashable type");
+        return -1;
     }
     return (*ob->type->tp_hashfunc)(ob);
 }
@@ -114,7 +137,6 @@ null_str(EmObject *ob) {
 
 EmTypeObject Nulltype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
-        0,                              // base
         0,                              // nitems
         "null",                         // tp_name
         sizeof(EmObject),               // tp_size

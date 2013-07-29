@@ -1,39 +1,33 @@
 /*
- * errorobject.c
+ * stringobject.c
  *
  *  Created on: 29/07/2013
- *      Author: ywang@gmail.com
+ *      Author: ywangd
  */
 #include "allobject.h"
 
-typedef struct _errorobject {
-    OB_HEAD;
-    int errorNumber;
-    char *message;
-} EmErrorObject;
+typedef struct _stringobject {
+    OB_HEAD; // nitems included
+    char *sval;
+} EmStringObject;
 
-// The singleton error object
-EmErrorObject errobj = {
-        OB_HEAD_INIT(&Errortype),
-        0,  // base
-        0,  // nitems
-        NO_ERROR,   // errorNumber
-        NULL,       // message
-};
-
-int log_error(int errorNumber, char *message) {
-    errobj->errorNumber = errorNumber;
-    errobj->message = message;
-    return NULL;
+EmStringObject *
+stringobject_new(char *sval) {
+    EmStringObject *ob = NEWOBJ(EmStringObject, &Stringtype);
+    if (ob == NULL)
+        return NULL;
+    ob->sval = (char *) malloc (sizeof(char)*(strlen(sval)+1));
+    strcpy(ob->sval, sval);
+    return ob;
 }
 
 
-EmTypeObject Errortype = {
+EmTypeObject Stringtype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
         0,                              // nitems
-        "error",                        // tp_name
-        sizeof(EmTypeObject),           // tp_size
-        0,                              // tp_itemsize
+        "str",                          // tp_name
+        sizeof(EmStringObject),         // tp_size
+        sizeof(char),                   // tp_itemsize
 
         0,                              // tp_alloc
         0,                              // tp_dealloc
@@ -47,4 +41,4 @@ EmTypeObject Errortype = {
         0,                              // tp_as_number
         0,                              // tp_as_sequence
         0,                              // tp_as_mapping
-        };
+};
