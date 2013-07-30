@@ -80,13 +80,6 @@ typedef struct _typeobject {
 
 
 /*
- * Following function can be used as placeholders for type object's
- * function pointers.
- */
-extern void object_print(EmObject *, FILE *);
-extern void object_tostr(EmObject *);
-
-/*
  * Note the following function are all convenience functions.
  * They are not supposed to be set as function pointers
  * for type object (infinite loop), but rather directly

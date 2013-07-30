@@ -21,6 +21,18 @@ newstringobject(char *sval) {
     return ob;
 }
 
+EmStringObject *
+newstringobject_from_int(long ival) {
+    sprintf(asString, "%l", ival);
+    return newstringobject(asString);
+}
+
+EmStringObject *
+newstringobject_from_float(double fval) {
+    sprintf(asString, "%f", fval);
+    return newstringobject(asString);
+}
+
 void stringobject_free(EmStringObject *ob) {
     DEL(ob->sval);
     DEL(ob);
@@ -30,8 +42,9 @@ void stringobject_print(EmStringObject *ob, FILE *fp) {
     fprintf(fp, "%s\n", ob->sval);
 }
 
-char *stringobject_tostr(EmStringObject *ob) {
-    return ob->sval;
+EmStringObject *stringobject_tostr(EmStringObject *ob) {
+    INCREF(ob);
+    return ob;
 }
 
 EmTypeObject Stringtype = {
@@ -41,7 +54,7 @@ EmTypeObject Stringtype = {
         sizeof(EmStringObject),         // tp_size
         0,                              // tp_itemsize
 
-        0,                              // tp_dealloc
+        stringobject_free,              // tp_dealloc
         stringobject_print,             // tp_print
         stringobject_tostr,             // tp_str
         0,                              // tp_getattr

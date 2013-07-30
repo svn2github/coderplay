@@ -15,6 +15,8 @@
 #include "hashobject.h"
 #include "errorobject.h"
 #include "stringobject.h"
+#include "intobject.h"
+#include "floatobject.h"
 
 
 #endif /* ALLOBJECT_H_ */

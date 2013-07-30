@@ -3,15 +3,16 @@
 char asString[AS_STRING_LENGTH];
 
 /*
- * placehoder functions (may not be necessary)
+ * Following function can be used as placeholders for type object's
+ * function pointers.
  */
 void object_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "<%s object at %x>\n", ob->type->tp_name, ob);
 }
 
-char *object_tostr(EmObject *ob) {
-    sprintf(asString, "<%s object at %x>\n", ob->type->tp_name, ob);
-    return asString;
+EmStringObject *object_tostr(EmObject *ob) {
+    sprintf(asString, "<%s object at %x>", ob->type->tp_name, ob);
+    return newstringobject(asString);
 }
 
 
@@ -42,7 +43,7 @@ void printobj(EmObject *ob, FILE *fp) {
     }
 }
 
-char *tostrobj(EmObject *ob) {
+EmStringObject *tostrobj(EmObject *ob) {
     if (ob->type->tp_str == NULL) {
         return object_tostr(ob);
     } else {
