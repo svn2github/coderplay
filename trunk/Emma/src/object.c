@@ -9,7 +9,7 @@ void object_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "<%s object at %x>\n", ob->type->tp_name, ob);
 }
 
-char *object_str(EmObject *ob) {
+char *object_tostr(EmObject *ob) {
     sprintf(asString, "<%s object at %x>\n", ob->type->tp_name, ob);
     return asString;
 }
@@ -20,22 +20,18 @@ char *object_str(EmObject *ob) {
  */
 
 EmObject *newobj(EmTypeObject *tp) {
-
     EmObject *ob = (EmObject *) malloc(tp->tp_size);
     if (ob == NULL)
         return log_error(MEMORY_ERROR, "not enough memory");
     ob->type = tp;
-    ob->refcnt = 1;
     ob->nitems = 0;
+    NEWREF(ob);
     return ob;
 }
 
 void freeobj(EmObject *ob) {
-    if (ob->type->tp_dealloc == NULL) {
-        log_error(SYSTEM_ERROR, "object cannot be freed");
-    } else {
+    if (ob->type->tp_dealloc)
         ob->type->tp_dealloc(ob);
-    }
 }
 
 void printobj(EmObject *ob, FILE *fp) {
@@ -48,7 +44,7 @@ void printobj(EmObject *ob, FILE *fp) {
 
 char *tostrobj(EmObject *ob) {
     if (ob->type->tp_str == NULL) {
-        return object_str(ob);
+        return object_tostr(ob);
     } else {
         return ob->type->tp_str(ob);
     }

@@ -11,6 +11,6 @@
 extern EmTypeObject Stringtype;
 typedef struct _stringobject EmStringObject;
 
-EmStringObject * stringobject_new(char *sval);
+EmStringObject * newstringobject(char *sval);
 
 #endif /* STRINGOBJECT_H_ */

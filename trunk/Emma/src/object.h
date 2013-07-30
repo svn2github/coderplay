@@ -5,13 +5,16 @@
     unsigned int refcnt; \
     unsigned int nitems
 
-#define OB_HEAD_INIT(type) type, 1
+#define OB_HEAD_INIT(type)      type, 1
 
-#define NEWOBJ(type, typeobj) ((type *) newobj(typeobj))
+#define NEWOBJ(type, typeobj)   ((type *) newobj(typeobj))
 
-#define INCREF(ob) ob->refcnt++
-#define DECREF(ob) if (--ob->refcnt == 0) freeobj(ob)
+#define NEWREF(ob)  ob->refcnt = 1
+#define INCREF(ob)  ob->refcnt++
+#define DECREF(ob)  if (--ob->refcnt == 0) freeobj(ob)
+#define CLRREF(ob)  freeobj(ob)
 
+#define DEL(p)      free(p); p=NULL
 
 typedef struct _object {
     OB_HEAD;
@@ -48,7 +51,9 @@ typedef struct {
 typedef struct {
     unsigned int (*length) (EmObject *);
     EmObject *(*subscript) (EmObject *, EmObject *);
-}EmMappingMethods;
+} EmMappingMethods;
+
+
 
 
 /*
@@ -60,7 +65,6 @@ typedef struct _typeobject {
     unsigned int tp_size;
     unsigned int tp_itemsize;
 
-    EmObject *(*tp_alloc)();
     void (*tp_dealloc)(EmObject *);
     void (*tp_print)(EmObject *, FILE*);
     char *(*tp_str)(EmObject *);
@@ -80,7 +84,7 @@ typedef struct _typeobject {
  * function pointers.
  */
 extern void object_print(EmObject *, FILE *);
-extern void object_str(EmObject *);
+extern void object_tostr(EmObject *);
 
 /*
  * Note the following function are all convenience functions.

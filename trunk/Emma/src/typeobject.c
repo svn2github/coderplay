@@ -7,7 +7,6 @@ EmTypeObject Typetype = {
         sizeof(EmTypeObject),           // tp_size
         0,                              // tp_itemsize
 
-        0,                              // tp_alloc
         0,                              // tp_dealloc
         0,                              // tp_print
         0,                              // tp_str

@@ -36,26 +36,25 @@ unsigned int ht_getprime(unsigned int size) {
 }
 
 EmHashObject *
-hashobject_new(unsigned int size) {
+newhashobject() {
+    EmHashObject *ht;
+    unsigned int size;
 
-    if (!(size = ht_getprime(size))) {
-        log_error(MEMORY_ERROR, "hash table size overflow");
-        return NULL;
+    if (!(size = ht_getprime(DEFAULT_HASH_SIZE))) {
+        return log_error(MEMORY_ERROR, "hash table size overflow");
     }
 
-    EmHashObject *ht = NEWOBJ(EmHashObject, &Hashtype);
-    if (ht == NULL)
+    if ((ht = NEWOBJ(EmHashObject, &Hashtype)) == NULL)
         return NULL;
 
     ht->size = size;
     ht->nitems = 0;
 
-    ht->table = (EmHashEntry **) calloc (ht->size, sizeof(EmHashEntry *));
-    if (ht->table == NULL) {
-        free(ht);
+    if ((ht->table = (EmHashEntry **) calloc(ht->size * sizeof(EmHashEntry *)))
+            == NULL) {
+        DEL(ht);
         return log_error(MEMORY_ERROR, "not enough memory for hashtable");
     }
-
     return ht;
 }
 
@@ -64,19 +63,29 @@ hashobject_free(EmHashObject * ht)
 {
     int i;
     for(i=0;i<ht->size;i++) {
-        if( ht->table[i] != NULL) {
+        if( ht->table[i]) {
             // free entry elements by decrease their reference count
             DECREF(ht->table[i]->key);
             DECREF(ht->table[i]->val);
-            free(ht->table[i]); // free the entry root
+            DEL(ht->table[i]); // free the entry root
         }
     }
-    free( ht->table );
-    free( ht );
+    DEL( ht->table );
+    DEL( ht );
+}
+
+void hashobject_print(EmHashObject * ht, FILE *fp) {
+    int i;
+    for (i = 0; i < ht->size; i++) {
+        if (ht->table[i] != NULL) {
+            fprintf(fp, "%20s :   %20d\n", tostrobj(ht->table[i]->key),
+                    tostrobj(ht->table[i]->val));
+        }
+    }
 }
 
 /*
- * This is the internal lookup function used by other wrappers
+ * This is the internal lookup function used by other wrapper function.
  */
 static EmObject *
 __hashobject_lookup(EmHashObject *ht, EmObject *key)
@@ -104,10 +113,15 @@ __hashobject_lookup(EmHashObject *ht, EmObject *key)
     if( ht->table[idx] == NULL ) {
         return NULL;
     } else {
+        INCREF(ht->table[idx]->val); // retain reference for any returned value
         return ht->table[idx]->val;
     }
 }
 
+/*
+ * The lookup uses an object as a key. The object types can be string, integer or
+ * any other types that can be used as key.
+ */
 EmObject *
 hashobject_lookup(EmHashObject *ht, EmObject *key) {
     EmHashEntry * ent = __hashobject_lookup(EmHashObject *ht, EmObject *key);
@@ -118,7 +132,7 @@ hashobject_lookup(EmHashObject *ht, EmObject *key) {
 }
 
 EmHashObject *
-hashobject_insert(EmHashObject * ht, EmObject *key, EmObject *val) {
+hashobject_insert(EmHashObject *ht, EmObject *key, EmObject *val) {
 
     unsigned long hashval;
     unsigned int idx, incr;
@@ -129,7 +143,7 @@ hashobject_insert(EmHashObject * ht, EmObject *key, EmObject *val) {
         ht = hashobject_rehash(ht);
     }
 
-    new = __hashobject_lookup(EmHashObject *ht, EmObject *key);
+    new = __hashobject_lookup(ht, key);
 
     if (new == NULL) { // create new entry
         new = (EmHashEntry*) malloc(sizeof(EmHashEntry));
@@ -139,14 +153,13 @@ hashobject_insert(EmHashObject * ht, EmObject *key, EmObject *val) {
         }
         new->key = key;
         new->val = val;
+        // always retain references to the new key and val
         INCREF(key);
         INCREF(val);
         ht->table[idx] = new;
         ht->nitems++;
     } else { // replace old entry
-        DECREF(ht->table[idx]->key);
         DECREF(ht->table[idx]->val);
-        ht->table[idx]->key = key;
         ht->table[idx]->val = val;
     }
 
@@ -173,25 +186,60 @@ hashobject_rehash(EmHashObject * ht)
     return newht;
 }
 
-void hashobject_print(EmHashObject * ht, FILE *fp) {
-    int i;
-    for (i = 0; i < ht->size; i++) {
-        if (ht->table[i] != NULL) {
-            fprintf(fp, "%20s :   %20d\n", tostrobj(ht->table[i]->key),
-                    tostrobj(ht->table[i]->val));
-        }
+int
+hashobject_delete(EmHashObject *ht, EmObject *key) {
+    EmHashEntry *found = __hashobject_lookup(ht, key);
+    if (found) {
+        DECREF(found->key);
+        DECREF(found->val);
+        DEL(found);
+        return 1;
+    } else {
+        log_error(KEY_ERROR, "key not found");
+        return 0;
     }
+}
+
+/*
+ * Convenience function for String keys
+ */
+EmObject *
+hashobject_lookup_by_string(EmHashObject *ht, char *key) {
+    EmStringObject *obkey = newstringobject(key);
+    EmObject *ob = hashobject_lookup(ht, key);
+    DECREF(obkey); // release the key after use
+    return ob;
+}
+
+EmHashObject *
+hashobject_insert_by_string(EmHashObject *ht, char *key, EmObject *val) {
+    EmObject *obkey = newstringobject(key);
+    hashobject_insert(ht, obkey, val);
+    DECREF(obkey);
+    return ht;
+}
+
+int
+hashobject_delete_by_string(EmHashObject *ht, char *key) {
+    EmStringObject *obkey = newstringobject(key);
+    int ret = hashobject_delete(ht, key);
+    DECREF(obkey); // release the key after use
+    return ret;
 }
 
 
 /*
- * Wrapper function for String ONLY keys
+ * Mapping functions
  */
-EmObject *
-hashobject_lookup_by_string(EmHashObject *ht, char *key) {
-    EmStringObject *obkey = stringobject_new(key);
-    return hashobject_lookup(ht, obkey);
+unsigned int
+hashobject_mp_length(EmHashObject *ob) {
+    return ob->nitems;
 }
+
+static EmMappingMethods hash_as_mapping = {
+        hashobject_mp_length, // map length
+        0,
+};
 
 EmTypeObject Hashtype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -200,9 +248,8 @@ EmTypeObject Hashtype = {
         sizeof(EmHashObject),           // tp_size
         0,                              // tp_itemsize
 
-        0,                              // tp_alloc
-        0,                              // tp_dealloc
-        0,                              // tp_print
+        hashobject_free,                // tp_dealloc
+        hashobject_print,               // tp_print
         0,                              // tp_str
         0,                              // tp_getattr
         0,                              // tp_setattr
@@ -211,6 +258,6 @@ EmTypeObject Hashtype = {
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence
-        0,                              // tp_as_mapping
+        hash_as_mapping,                // tp_as_mapping
 };
 

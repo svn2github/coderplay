@@ -12,27 +12,38 @@ typedef struct _stringobject {
 } EmStringObject;
 
 EmStringObject *
-stringobject_new(char *sval) {
-    EmStringObject *ob = NEWOBJ(EmStringObject, &Stringtype);
-    if (ob == NULL)
+newstringobject(char *sval) {
+    EmStringObject *ob;
+    if ((ob = NEWOBJ(EmStringObject, &Stringtype)) == NULL)
         return NULL;
     ob->sval = (char *) malloc (sizeof(char)*(strlen(sval)+1));
     strcpy(ob->sval, sval);
     return ob;
 }
 
+void stringobject_free(EmStringObject *ob) {
+    DEL(ob->sval);
+    DEL(ob);
+}
+
+void stringobject_print(EmStringObject *ob, FILE *fp) {
+    fprintf(fp, "%s\n", ob->sval);
+}
+
+char *stringobject_tostr(EmStringObject *ob) {
+    return ob->sval;
+}
 
 EmTypeObject Stringtype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
         0,                              // nitems
         "str",                          // tp_name
         sizeof(EmStringObject),         // tp_size
-        sizeof(char),                   // tp_itemsize
+        0,                              // tp_itemsize
 
-        0,                              // tp_alloc
         0,                              // tp_dealloc
-        0,                              // tp_print
-        0,                              // tp_str
+        stringobject_print,             // tp_print
+        stringobject_tostr,             // tp_str
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare
