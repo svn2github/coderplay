@@ -3,6 +3,8 @@
 
 #define ENDMARK         0
 
+#define EOL             10
+
 #define DSTAR           256
 #define LE              257
 #define EQ              258

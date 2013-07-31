@@ -7,11 +7,6 @@
 
 #include "allobject.h"
 
-typedef struct _floatobject {
-    OB_HEAD;
-    double fval;
-} EmFloatObject;
-
 EmFloatObject *
 newfloatobject(double fval) {
     EmFloatObject *ob;

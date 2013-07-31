@@ -67,7 +67,7 @@ typedef struct _typeobject {
 
     void (*tp_dealloc)(EmObject *);
     void (*tp_print)(EmObject *, FILE*);
-    char *(*tp_str)(EmObject *);
+    struct _stringobject *(*tp_str)(EmObject *);
     EmObject *(*tp_getattr)(EmObject *, char *);
     int (*tp_setattr)(EmObject *, char *, EmObject *);
     int (*tp_compare)(EmObject *, EmObject *);
@@ -92,11 +92,14 @@ extern int setattr(EmObject *, char *, EmObject *);
 extern int cmpobj(EmObject *, EmObject *);
 extern long hashobj(EmObject *);
 
+
+extern EmTypeObject Typetype;
+
 /*
  * The string representation output buffer shared by all objects
  */
 #define AS_STRING_LENGTH 80
-extern char *asString;
+extern char asString[];
 
 extern EmObject nulobj;
 

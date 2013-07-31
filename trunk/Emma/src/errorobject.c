@@ -6,11 +6,6 @@
  */
 #include "allobject.h"
 
-typedef struct _errorobject {
-    OB_HEAD;
-    int errorNumber;
-    char *message;
-} EmErrorObject;
 
 // The singleton error object
 EmErrorObject errobj = {
@@ -21,9 +16,9 @@ EmErrorObject errobj = {
         NULL,       // message
 };
 
-int log_error(int errorNumber, char *message) {
-    errobj->errorNumber = errorNumber;
-    errobj->message = message;
+void * log_error(int errorNumber, char *message) {
+    errobj.errorNumber = errorNumber;
+    errobj.message = message;
     return NULL;
 }
 

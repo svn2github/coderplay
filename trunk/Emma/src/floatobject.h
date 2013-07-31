@@ -9,8 +9,12 @@
 #define FLOATOBJECT_H_
 
 
+typedef struct _floatobject {
+    OB_HEAD;
+    double fval;
+} EmFloatObject;
+
 extern EmTypeObject Floattype;
-typedef struct _intobject EmFloatObject;
 
 EmFloatObject *newfloatobject(double val);
 

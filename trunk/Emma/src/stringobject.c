@@ -6,10 +6,6 @@
  */
 #include "allobject.h"
 
-typedef struct _stringobject {
-    OB_HEAD; // nitems included
-    char *sval;
-} EmStringObject;
 
 EmStringObject *
 newstringobject(char *sval) {
@@ -47,6 +43,15 @@ EmStringObject *stringobject_tostr(EmStringObject *ob) {
     return ob;
 }
 
+long stringobject_hash(EmStringObject *ob) {
+    unsigned char *p = (unsigned char *) ob->sval;
+    long hashval = *p << 7;
+    while (*p != '\0')
+        hashval = hashval + hashval + *p++;
+    return hashval;
+}
+
+
 EmTypeObject Stringtype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
         0,                              // nitems
@@ -60,7 +65,7 @@ EmTypeObject Stringtype = {
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare
-        0,                              // tp_hashfunc
+        stringobject_hash,              // tp_hashfunc
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence

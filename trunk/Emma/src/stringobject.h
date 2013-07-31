@@ -8,8 +8,12 @@
 #ifndef STRINGOBJECT_H_
 #define STRINGOBJECT_H_
 
+typedef struct _stringobject {
+    OB_HEAD; // nitems included
+    char *sval;
+} EmStringObject;
+
 extern EmTypeObject Stringtype;
-typedef struct _stringobject EmStringObject;
 
 EmStringObject *newstringobject(char *sval);
 EmStringObject *newstringobject_from_int(long ival);

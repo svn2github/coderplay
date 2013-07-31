@@ -61,7 +61,11 @@ def gen_c_code():
     '''Generate necessary C code from related content in this file.
     '''
     
-    outs = open(filepath('token.i',root=srcdir), 'w')
+    outs = open(filepath('token.h',root=srcdir), 'w')
+
+    outs.write('#ifndef _TOKEN_H_\n#define _TOKEN_H_\n\n')
+    outs.write('#define %-15s %d\n\n' %('ENDMARK', 0))
+    outs.write('#define %-15s %d\n\n' %('EOL', 10))
 
     keys = __tagDict.keys()
     keys.sort()
@@ -72,5 +76,35 @@ def gen_c_code():
         line = '#define %-15s %d\n' % (__tagDict[key], key)
         outs.write(line)
 
+    outs.write('\n#endif\n')
     outs.close()
+
+
+    outs = open(filepath('lexer.i',root=srcdir), 'w')
+    outs.write('int match_keyword() {\n')
+
+    from .lexer import WordsTable 
+    wtable = WordsTable()
+
+    table = {}
+    for k, v in wtable.table.items():
+        table[v.tag] = k
+
+    keys = table.keys()
+    keys.sort()
+
+    tag = keys[0]
+    kw = table[tag]
+    text = '    if (strcmp(lexeme, "%s") == 0)\n        return %s;\n' % (kw, tag2str(tag))
+    outs.write(text);
+
+    for tag in keys[1:]:
+        kw = table[tag]
+        text = '    else if (strcmp(lexeme, "%s") == 0)\n        return %s;\n' % (kw, tag2str(tag))
+        outs.write(text)
+
+    outs.write('    else\n        return ENDMARK;\n')
+    outs.write('}\n')
+    outs.close()
+
 

@@ -36,13 +36,12 @@ unsigned int ht_getprime(unsigned int size) {
 }
 
 EmHashObject *
-newhashobject() {
+newhashobject_from_size(unsigned int size_req) {
     EmHashObject *ht;
     unsigned int size;
 
-    if (!(size = ht_getprime(DEFAULT_HASH_SIZE))) {
+    if (!(size = ht_getprime(size_req)))
         return log_error(MEMORY_ERROR, "hash table size overflow");
-    }
 
     if ((ht = NEWOBJ(EmHashObject, &Hashtype)) == NULL)
         return NULL;
@@ -50,12 +49,17 @@ newhashobject() {
     ht->size = size;
     ht->nitems = 0;
 
-    if ((ht->table = (EmHashEntry **) calloc(ht->size * sizeof(EmHashEntry *)))
+    if ((ht->table = (EmHashEntry **) calloc(ht->size, sizeof(EmHashEntry *)))
             == NULL) {
         DEL(ht);
         return log_error(MEMORY_ERROR, "not enough memory for hashtable");
     }
     return ht;
+}
+
+EmHashObject *
+newhashobject() {
+    return newhashobject_from_size(DEFAULT_HASH_SIZE);
 }
 
 void
@@ -87,7 +91,7 @@ void hashobject_print(EmHashObject * ht, FILE *fp) {
 /*
  * This is the internal lookup function used by other wrapper function.
  */
-static EmObject *
+static EmHashEntry *
 __hashobject_lookup(EmHashObject *ht, EmObject *key)
 {
     unsigned long hashval;
@@ -114,7 +118,7 @@ __hashobject_lookup(EmHashObject *ht, EmObject *key)
         return NULL;
     } else {
         INCREF(ht->table[idx]->val); // retain reference for any returned value
-        return ht->table[idx]->val;
+        return ht->table[idx];
     }
 }
 
@@ -124,7 +128,7 @@ __hashobject_lookup(EmHashObject *ht, EmObject *key)
  */
 EmObject *
 hashobject_lookup(EmHashObject *ht, EmObject *key) {
-    EmHashEntry * ent = __hashobject_lookup(EmHashObject *ht, EmObject *key);
+    EmHashEntry * ent = __hashobject_lookup(ht, key);
     if (ent == NULL)
         return log_error(KEY_ERROR, "key not found");
     else
@@ -139,9 +143,8 @@ hashobject_insert(EmHashObject *ht, EmObject *key, EmObject *val) {
     EmHashEntry* new;
 
     /* rehash if too full */
-    if( ht->nitems*3 > ht->size*2) {
+    if( ht->nitems*3 > ht->size*2)
         ht = hashobject_rehash(ht);
-    }
 
     new = __hashobject_lookup(ht, key);
 
@@ -170,11 +173,12 @@ EmHashObject *
 hashobject_rehash(EmHashObject * ht)
 {
     EmHashObject * newht;
-    int size,i;
+    unsigned int size;
+    int i;
 
     /* calculate new hash table size based on load factor */
-    size = ht_getprime(ht->nitems * 2);  // 50% load
-    newht = hashobject_new(size);
+    size = ht->nitems * 2u;  // 50% load
+    newht = newhashobject_from_size(size);
 
     /* rehash the values on the old hash table */
     for (i = 0; i < ht->size; i++) {
@@ -258,6 +262,6 @@ EmTypeObject Hashtype = {
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence
-        hash_as_mapping,                // tp_as_mapping
+        &hash_as_mapping,               // tp_as_mapping
 };
 

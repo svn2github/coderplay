@@ -7,10 +7,6 @@
 
 #include "allobject.h"
 
-typedef struct _intobject {
-    OB_HEAD;
-    long ival;
-} EmIntObject;
 
 EmIntObject *
 newintobject(long ival) {

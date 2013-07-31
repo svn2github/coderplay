@@ -115,15 +115,10 @@ long hashobj(EmObject *ob) {
 /*
  * The null object singleton
  */
-EmObject nulobj = {
-        OB_HEAD_INIT(&Nulltype),
-        0,
-        0,
-};
 
 void
-null_print(EmObject *ob) {
-    printf("null\n");
+null_print(EmObject *ob, FILE *fp) {
+    fprintf(fp, "null\n");
 }
 
 char *
@@ -153,4 +148,9 @@ EmTypeObject Nulltype = {
         0,                              // tp_as_mapping
 };
 
+EmObject nulobj = {
+        OB_HEAD_INIT(&Nulltype),
+        0,
+        0,
+};
 

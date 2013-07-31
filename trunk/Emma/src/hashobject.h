@@ -8,12 +8,12 @@
 #ifndef HASHOBJECT_H_
 #define HASHOBJECT_H_
 
-#define DEFAULT_HASH_SIZE       13
+#define DEFAULT_HASH_SIZE       13u
 
 extern EmTypeObject Hashtype;
 typedef struct _hashobject EmHashObject;
 
-EmHashObject* newhashobject(unsigned int size);
+EmHashObject* newhashobject();
 void hashobject_free(EmHashObject *ht);
 void hashobject_print(EmHashObject *ht, FILE *fp);
 

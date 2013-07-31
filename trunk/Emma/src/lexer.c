@@ -1,3 +1,4 @@
+#include "allobject.h"
 #include "lexer.h"
 #include "lexer.i"
 
@@ -10,6 +11,7 @@ char *lexeme;
 
 char peek = ' ';
 
+EmHashObject *symtab;
 
 void
 lexer_init() {
@@ -131,8 +133,10 @@ get_token(FILE *fp, int lastTokenTag) {
             }
             lexeme[length] = '\0';
             tag = match_keyword();
-            if (tag)
+            if (tag) // keywords
                 return tag;
+            else // identifier
+                return IDENT;
         }
 
         // Any single character token

@@ -14,9 +14,15 @@
 #define TYPE_ERROR      3
 #define KEY_ERROR       4
 
-// The singleton error object
-extern struct _errorobject errobj;
+typedef struct _errorobject {
+    OB_HEAD;
+    int errorNumber;
+    char *message;
+} EmErrorObject;
 
-int log_error(int errorNumber, char *message);
+// The singleton error object
+extern EmTypeObject Errortype;
+
+void* log_error(int errorNumber, char *message);
 
 #endif /* ERROROBJECT_H_ */

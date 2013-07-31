@@ -1,6 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
+
+#include "allobject.h"
 #include "parser.h"
+#include "Emma.h"
+
 
 int main(int argc, char **argv) {
 
@@ -17,6 +19,8 @@ int main(int argc, char **argv) {
             exit(1);
         }
     }
+
+    symtab = newhashobject();
 
     // parse the input and generate syntax tree
     parse(fp, filename);

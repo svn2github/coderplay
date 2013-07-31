@@ -8,8 +8,13 @@
 #ifndef INTOBJECT_H_
 #define INTOBJECT_H_
 
+
+typedef struct _intobject {
+    OB_HEAD;
+    long ival;
+} EmIntObject;
+
 extern EmTypeObject Inttype;
-typedef struct _intobject EmIntObject;
 
 EmIntObject *newintobject(long ival);
 
