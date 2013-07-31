@@ -7,12 +7,11 @@ OBJ = wordstable.o lexer.o parser.o token.o Emma.o
 
 all: Emma
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
 Emma: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 .PHONY: clean
 

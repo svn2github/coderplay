@@ -11,8 +11,9 @@
 extern char *line;
 extern unsigned int row;
 extern unsigned int pos;
+extern char *lexeme;
 
 void lexer_init();
-void *get_token(FILE *fp, int lastTokenTag);
+int get_token(FILE *fp, int lastTag);
 void lexer_free();
 

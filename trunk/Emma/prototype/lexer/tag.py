@@ -4,46 +4,46 @@ from utils.utils import filepath, srcdir
 Tags for tokens (starts from 256 to avoid conflict against ASCII code)
 '''
 
-# Keywords
-PRINT       = 256
-READ        = 257
-IF          = 258
-ELIF        = 259
-ELSE        = 260
-WHILE       = 261
-FOR         = 262
-CONTINUE    = 263
-BREAK       = 264
-DEF         = 265
-RETURN      = 266
-NUL         = 267
-CLASS       = 268
-AND         = 269
-OR          = 270
-NOT         = 271
-IMPORT      = 272
-PACKAGE     = 273
-TRY         = 274
-RAISE       = 275
-CATCH       = 276
-FINALLY     = 277
-SELF        = 278
-
 # Composite operators longer than 1 character
 # Single character operators just use its own Ascii code
-DSTAR       = 280
-LE          = 281
-EQ          = 282
-GE          = 283
-NE          = 284
+DSTAR       = 256
+LE          = 257
+EQ          = 258
+GE          = 259
+NE          = 260
+
+# Keywords
+PRINT       = 271
+READ        = 272
+IF          = 273
+ELIF        = 274
+ELSE        = 275
+WHILE       = 276
+FOR         = 277
+CONTINUE    = 278
+BREAK       = 279
+DEF         = 280
+RETURN      = 281
+NUL         = 282
+CLASS       = 283
+AND         = 284
+OR          = 285
+NOT         = 286
+IMPORT      = 287
+PACKAGE     = 288
+TRY         = 289
+RAISE       = 290
+CATCH       = 291
+FINALLY     = 292
+SELF        = 293
 
 # Literals
-INTEGER     = 290
-FLOAT       = 291
-STRING      = 292
+INTEGER     = 301
+FLOAT       = 302
+STRING      = 303
 
 #
-IDENT       = 300
+IDENT       = 304
 
 # Following code to get the name of a tag is only for debug purpose
 __tagDict = {}
@@ -67,6 +67,8 @@ def gen_c_code():
     keys.sort()
 
     for key in keys:
+        if key == 271 or key == 301:
+            outs.write('\n');
         line = '#define %-15s %d\n' % (__tagDict[key], key)
         outs.write(line)
 

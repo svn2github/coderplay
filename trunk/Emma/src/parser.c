@@ -5,15 +5,30 @@ parse(FILE *fp, char *filename) {
 
     lexer_init();
 
-    Token *token;
+    int tag;
 
-    int lastTokenTag = CHAR_LF;
+    int lastTag = CHAR_LF;
 
-    while ((token = get_token(fp, lastTokenTag)) != NULL) {
-        lastTokenTag = token->tag;
+    while ((lastTag = tag = get_token(fp, lastTag)) != 0) {
 
+        if (tag < 256) {
+            printf("%5d %20c\n", tag, tag);
+        } else if (tag == 256) {
+            printf("%5d %20s\n", tag, "**");
+        } else if (tag == 257) {
+            printf("%5d %20s\n", tag, "<=");
+        } else if (tag == 258) {
+            printf("%5d %20s\n", tag, "==");
+        } else if (tag == 259) {
+            printf("%5d %20s\n", tag, ">=");
+        } else if (tag == 260) {
+            printf("%5d %20s\n", tag, "!=");
+        } else if (tag > 300) { // ID, numbers, strings
+            printf("%5d  %20s\n", tag, lexeme);
+        } else { // keywords
+            printf("%5d  %20s\n", tag, lexeme);
+        }
 
-        printf("%d\n", token->tag);
     }
 
     lexer_free();

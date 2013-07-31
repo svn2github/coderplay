@@ -7,19 +7,19 @@ char *line;
 unsigned int len = 0;
 unsigned int row = 0;
 unsigned int pos = 0;
+char *lexeme;
+
 char peek = ' ';
-Token *token;
 
 
 void
 lexer_init() {
     wt = wt_create(DEFAULT_WT_SIZE);
     WT_RESERVE_KEYWORDS();
-    WT_RESERVE_COMPOSITE_OP();
     wt_dump(wt);
 
     line = (char *) malloc (BUFSIZ * sizeof(char));
-    token = (Token *) malloc(sizeof(Token));
+    lexeme = (char *) malloc (BUFSIZ * sizeof(char));
 }
 
 static void
@@ -49,18 +49,22 @@ matchc(FILE *fp, char c) {
     return 1;
 }
 
-void *
+int
 get_token(FILE *fp, int lastTokenTag) {
+
+    int tag;
 
     while (1) {
         // ignore whites and CR for linux 
-        while (peek == ' ' || peek == '\t' || peek == CHAR_CR) nextc(fp);
+        while (peek == ' ' || peek == '\t' || peek == CHAR_CR)
+            nextc(fp);
 
-        if (peek == 0) return NULL;
+        if (peek == 0)
+            return 0; // end of INPUT
 
-        if (peek == '#') {
-            while (peek != CHAR_LF) nextc(fp);
-        }
+        if (peek == '#')
+            while (peek != CHAR_LF)
+                nextc(fp);
 
         if (peek == CHAR_LF) {
             while (peek == CHAR_LF) {
@@ -69,86 +73,77 @@ get_token(FILE *fp, int lastTokenTag) {
                 // following line is to accomodate linux 
                 if (peek == CHAR_CR) nextc(fp);
             }
-            if (lastTokenTag != CHAR_LF) {
-                token->tag = CHAR_LF;
-                return token;
-            }
-            else {
+            if (lastTokenTag != CHAR_LF)
+                return CHAR_LF;
+            else
                 continue;
-            }
+
         }
 
         if (peek == ';') {
             while (peek == ';') nextc(fp);
-            if (lastTokenTag != ';' && lastTokenTag != CHAR_LF) {
-                token->tag = ';';
-                return token;
-            }
-            else {
+            if (lastTokenTag != ';' && lastTokenTag != CHAR_LF)
+                return ';';
+            else
                 continue;
-            }
         }
-
 
         if (peek == '>') {
-            if (matchc(fp, '=')) {
-                return wt_lookup(wt, ">=");
-            }
-            else {
-                token->tag = '>';
-                return token;
-            }
+            if (matchc(fp, '='))
+                return GE;
+            else
+                return '>';
         }
         else if (peek == '=') {
-            if (matchc(fp, '=')) {
-                return wt_lookup(wt, "==");
-            }
-            else {
-                token->tag = '=';
-                return token;
-            }
+            if (matchc(fp, '='))
+                return EQ;
+            else
+                return '=';
         }
         else if (peek == '<') {
-            if (matchc(fp, '=')) {
-                return wt_lookup(wt, "<=");
-            }
-            else {
-                token->tag = '<';
-                return token;
-            }
+            if (matchc(fp, '='))
+                return LE;
+            else
+                return '<';
         }
         else if (peek == '*') {
-            if (matchc(fp, '*')) {
-                return wt_lookup(wt, "**");
-            }
-            else {
-                token->tag = '*';
-                return token;
-            }
+            if (matchc(fp, '*'))
+                return DSTAR;
+            else
+                return '*';
         }
 
         // Numbers
-        //
-        //
+        if (isdigit(peek)) {
+
+        }
+
+
+
         // Strings
-        //
+        if (peek == '"' || peek == '\'') {
+
+        }
+
+
         // Identifiers
+        if (isalpha(peek) || peek == '_') {
 
-
+        }
 
         // Any single character token
-        token->tag = peek;
+        tag = peek;
 
         // Important, peek is set to blank so next call can proceed.
         peek = ' ';
 
-        return token;
+        return tag;
     }
 }
 
 void lexer_free() {
     wt_free(wt);
     free(line);
-    free(token);
+    free(lexeme);
 }
 
