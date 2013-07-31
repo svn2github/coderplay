@@ -1,7 +1,6 @@
 #include "lexer.h"
 #include "lexer.i"
 
-static Wordstable *wt;
 
 char *line;
 unsigned int len = 0;
@@ -14,10 +13,6 @@ char peek = ' ';
 
 void
 lexer_init() {
-    wt = wt_create(DEFAULT_WT_SIZE);
-    WT_RESERVE_KEYWORDS();
-    wt_dump(wt);
-
     line = (char *) malloc (BUFSIZ * sizeof(char));
     lexeme = (char *) malloc (BUFSIZ * sizeof(char));
 }
@@ -53,6 +48,7 @@ int
 get_token(FILE *fp, int lastTokenTag) {
 
     int tag;
+    int length;
 
     while (1) {
         // ignore whites and CR for linux 
@@ -60,7 +56,7 @@ get_token(FILE *fp, int lastTokenTag) {
             nextc(fp);
 
         if (peek == 0)
-            return 0; // end of INPUT
+            return ENDMARK; // end of INPUT
 
         if (peek == '#')
             while (peek != CHAR_LF)
@@ -126,9 +122,17 @@ get_token(FILE *fp, int lastTokenTag) {
         }
 
 
+        length = 0;
         // Identifiers
         if (isalpha(peek) || peek == '_') {
-
+            while (isalnum(peek) || peek == '_') {
+                lexeme[length++] = peek;
+                nextc(fp);
+            }
+            lexeme[length] = '\0';
+            tag = match_keyword();
+            if (tag)
+                return tag;
         }
 
         // Any single character token
@@ -142,7 +146,6 @@ get_token(FILE *fp, int lastTokenTag) {
 }
 
 void lexer_free() {
-    wt_free(wt);
     free(line);
     free(lexeme);
 }

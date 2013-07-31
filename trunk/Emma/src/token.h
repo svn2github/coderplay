@@ -1,37 +1,41 @@
-#ifndef _TOKEN_H
-#define _TOKEN_H
+#ifndef _TOKEN_H_
+#define _TOKEN_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "token.i"
+#define ENDMARK         0
 
-typedef struct _token {
-    int tag;
-} Token;
+#define DSTAR           256
+#define LE              257
+#define EQ              258
+#define GE              259
+#define NE              260
 
-typedef struct _word {
-    int tag;
-    char *lexeme;
-} Word;
+#define PRINT           271
+#define READ            272
+#define IF              273
+#define ELIF            274
+#define ELSE            275
+#define WHILE           276
+#define FOR             277
+#define CONTINUE        278
+#define BREAK           279
+#define DEF             280
+#define RETURN          281
+#define NUL             282
+#define CLASS           283
+#define AND             284
+#define OR              285
+#define NOT             286
+#define IMPORT          287
+#define PACKAGE         288
+#define TRY             289
+#define RAISE           290
+#define CATCH           291
+#define FINALLY         292
+#define SELF            293
 
-/*
- * The tokens are return by its lexeme instead of the converted
- * values of certain types. The conversion is defered to parse
- * tree or AST construction.
- */ 
-typedef Word Integer;
-
-typedef struct _float {
-    int tag;
-    char *lexeme;
-    char *i; // The integer part of the float
-    char *f; // The fraction part of the float
-    char *e; // The exponential part of the float
-} Float;
-
-typedef Word String;
-
-Word *new_word(char *lexeme, int tag);
+#define INTEGER         301
+#define FLOAT           302
+#define STRING          303
+#define IDENT           304
 
 #endif
-

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "token.h"
-#include "wordstable.h"
 
 #define DEFAULT_WT_SIZE 127
 #define CHAR_CR         13

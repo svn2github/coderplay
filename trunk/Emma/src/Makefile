@@ -1,9 +1,9 @@
 
 CC=gcc
 CFLAGS=-g
-DEPS = lexer.h token.h wordstable.h lexer.i token.i
-SRC = wordstable.c lexer.c parser.c token.c Emma.c
-OBJ = wordstable.o lexer.o parser.o token.o Emma.o
+DEPS = lexer.h token.h lexer.i
+SRC = lexer.c parser.c Emma.c
+OBJ = lexer.o parser.o Emma.o
 
 all: Emma
 
