@@ -370,10 +370,7 @@ EOL symbol.
 A logical line can be a single physical line, multiple physical lines, or
 part of a single physical line.
 
-A logical line is terminated by either a EOL or a semicolon if the last
-statement is a simple one. A compound statement always has a ``\}'' at 
-the end, which also works as a logical line termination.
-
+A logical line is terminated by either a EOL or a semicolon. 
 Termination of a logical line by a EOL is the most straightforward choice. 
 This makes a physical line to be also a logical line.
 
@@ -555,7 +552,7 @@ read.}
 
 <simple_stmt_list> ::= <simple_stmt> [ `;' <list_rest> ]
 
-<compound_stmt_list> ::= <compound_stmt> [`;'] [ <list_rest> ]
+<compound_stmt_list> ::= <compound_stmt> [`;' <list_rest> ]
 
 <list_rest> ::= <smiple_stmt_list> 
     \alt <compound_stmt_list>
@@ -572,9 +569,6 @@ read.}
     \alt <classdef>
     \alt <try_stmt>
 
-% we may NOT want a compound stmt following something like 'if 1'
-% so we might have to split, say, if_stmt into 	if_simple_stmt 
-% and if_compound_stmt
 <if_stmt> ::= `if' <expression> <stmt> [`elif' <stmt>] [`else' <stmt>]
               
 <while_stmt> ::= `while' <expression> <stmt>
