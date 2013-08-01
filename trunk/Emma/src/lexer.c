@@ -48,8 +48,64 @@ matchc(FILE *fp, char c) {
     return 1;
 }
 
-double process_fraction(int intpart) {
-    return 0.0;
+int process_exponential(FILE *fp, int length) {
+    int expval = 0, sign = 1;
+    if (peek == '-' || peek =='+') {
+        if (peek == '-')
+            sign = -1;
+        lexeme[length++] = peek;
+        nextc(fp);
+    }
+    while (isdigit(peek)) {
+        lexeme[length++] = peek;
+        expval = 10*expval + (peek - '0');
+        nextc(fp);
+    }
+    lexeme[length] = '\0';
+    return expval*sign;
+
+
+}
+
+int process_fraction(FILE *fp, int intpart, int length) {
+
+    EmObject *ob;
+    double d;
+    int expval;
+
+    // if a fraction part is found
+    if (isdigit(peek)) {
+        fval = intpart;
+        d = 10.0;
+        // loop for the float digit
+        while (isdigit(peek)) {
+            lexeme[length++] = peek;
+            fval += (peek - '0')/d;
+            d *= 10.0;
+            nextc(fp);
+        }
+        // check for scientific notation
+        if (peek != 'e' && peek != 'E') {
+            lexeme[length] = '\0';
+        } else {
+            lexeme[length++] = peek;
+            nextc(fp);
+            expval = process_exponential(fp, length);
+            fval = fval * pow(10, expval);
+        }
+    } else if (peek == 'e' || peek == 'E') {
+        lexeme[length++] = peek;
+        nextc(fp);
+        expval = process_exponential(fp, length);
+        fval = intpart * pow(10, expval);
+    } else {
+        lexeme[length] = '\0';
+        fval = intpart;
+    }
+    ob = newfloatobject(fval);
+    constTable = hashobject_insert_by_string(constTable, lexeme, ob);
+    DECREF(ob);
+    return FLOAT;
 }
 
 int
@@ -133,15 +189,15 @@ get_token(FILE *fp, int lastTokenTag) {
             if (peek != '.' && peek != 'e' && peek != 'E') {
                 lexeme[length] = '\0';
                 ob = newintobject(ival);
-                hashobject_insert_by_string(constTable, lexeme, ob);
+                constTable = hashobject_insert_by_string(constTable, lexeme, ob);
                 DECREF(ob);
                 return INTEGER;
-            } else { // we haev a float
+            } else { // we have a float
                 if (peek == '.') {
                     lexeme[length++] = peek;
                     nextc(fp);
                 }
-                return process_fraction(ival);
+                return process_fraction(fp, ival, length);
             }
         }
 
@@ -151,7 +207,7 @@ get_token(FILE *fp, int lastTokenTag) {
             lexeme[length++] = peek;
             nextc(fp);
             if (isdigit(peek)) {
-                return process_fraction(0);
+                return process_fraction(fp, 0, length);
             } else {
                 return '.';
             }

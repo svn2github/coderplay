@@ -79,10 +79,11 @@ void hashobject_print(EmObject * ob, FILE *fp) {
         return;
     }
     EmHashObject *ho = (EmHashObject *)ob;
+
     int i;
     for (i = 0; i < ho->size; i++) {
         if (ho->table[i] != NULL) {
-            fprintf(fp, "%s :  %20s\n", tostrobj(ho->table[i]->key),
+            fprintf(fp, "%s:    %s\n", tostrobj(ho->table[i]->key),
                     tostrobj(ho->table[i]->val));
         }
     }
@@ -158,8 +159,9 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
     EmHashEntry* new;
 
     /* rehash if too full */
-    if( ho->nitems*3 > ho->size*2)
+    if( ho->nitems*3 > ho->size*2) {
         ho = hashobject_rehash(ho);
+    }
 
     new = __hashobject_lookup(ho, key, &idx);
 
@@ -241,7 +243,7 @@ hashobject_lookup_by_string(EmObject *ho, char *key) {
 EmObject *
 hashobject_insert_by_string(EmObject *ho, char *key, EmObject *val) {
     EmObject *obkey = newstringobject(key);
-    hashobject_insert(ho, obkey, val);
+    ho = hashobject_insert(ho, obkey, val);
     DECREF(obkey);
     return ho;
 }
