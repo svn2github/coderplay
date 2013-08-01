@@ -1,8 +1,9 @@
 
 CC=gcc
 CFLAGS=-g
-DEPS = lexer.h token.h lexer.i hashobject.h errorobject.h stringobject.h \
-       object.h Emma.h intobject.h floatobject.h
+LIBS=-lm
+DEPS = Makefile lexer.h token.h lexer.i hashobject.h errorobject.h \
+       stringobject.h object.h Emma.h intobject.h floatobject.h
        
 SRC = lexer.c parser.c Emma.c hashobject.c errobject.c stringobject.c \
       object.c typeobject.c intobject.c floatobject.c
@@ -13,7 +14,7 @@ OBJ = lexer.o parser.o Emma.o hashobject.o errorobject.o stringobject.o \
 all: Emma
 
 Emma: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
