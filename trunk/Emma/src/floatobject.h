@@ -16,7 +16,7 @@ typedef struct _floatobject {
 
 extern EmTypeObject Floattype;
 
-EmFloatObject *newfloatobject(double val);
+EmObject *newfloatobject(double val);
 
 
 #endif /* FLOATOBJECT_H_ */

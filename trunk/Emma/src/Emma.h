@@ -10,7 +10,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "allobject.h"
+#include "parser.h"
 
-extern EmHashObject *symtab;
+/*
+ * Constant table (hashobject) that stores all constants
+ * in the source file.
+ */
+extern EmObject *constTable;
 
 #endif /* EMMA_H_ */

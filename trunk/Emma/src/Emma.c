@@ -1,8 +1,6 @@
-
-#include "allobject.h"
-#include "parser.h"
 #include "Emma.h"
 
+EmObject *constTable;
 
 int main(int argc, char **argv) {
 
@@ -20,7 +18,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    symtab = newhashobject();
+    constTable = newhashobject();
 
     // parse the input and generate syntax tree
     parse(fp, filename);

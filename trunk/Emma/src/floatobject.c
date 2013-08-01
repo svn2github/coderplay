@@ -7,25 +7,25 @@
 
 #include "allobject.h"
 
-EmFloatObject *
+EmObject *
 newfloatobject(double fval) {
     EmFloatObject *ob;
     if ((ob = NEWOBJ(EmFloatObject, &Floattype)) == NULL)
         return NULL;
     ob->fval = fval;
-    return ob;
+    return (EmFloatObject *)ob;
 }
 
-void floatobject_free(EmFloatObject *ob) {
-    DEL(ob);
+void floatobject_free(EmObject *ob) {
+    DEL((EmFloatObject *)ob);
 }
 
-void floatobject_print(EmFloatObject *ob, FILE *fp) {
-    fprintf(fp, "%f\n", ob->fval);
+void floatobject_print(EmObject *ob, FILE *fp) {
+    fprintf(fp, "%f\n", ((EmFloatObject *)ob)->fval);
 }
 
-EmStringObject *floatobject_tostr(EmFloatObject *ob) {
-    return newstringobject_from_float(ob->fval);
+EmStringObject *floatobject_tostr(EmObject *ob) {
+    return newstringobject_from_float(((EmFloatObject *)ob)->fval);
 }
 
 
@@ -38,7 +38,7 @@ EmTypeObject Floattype = {
 
         floatobject_free,               // tp_dealloc
         floatobject_print,              // tp_print
-        floatobject_tostr,              // tp_str
+        floatobject_tostr,              // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare

@@ -15,8 +15,8 @@ typedef struct _stringobject {
 
 extern EmTypeObject Stringtype;
 
-EmStringObject *newstringobject(char *sval);
-EmStringObject *newstringobject_from_int(long ival);
-EmStringObject *newstringobject_from_float(double fval);
+EmObject *newstringobject(char *sval);
+EmObject *newstringobject_from_int(long ival);
+EmObject *newstringobject_from_float(double fval);
 
 #endif /* STRINGOBJECT_H_ */

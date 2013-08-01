@@ -6,45 +6,44 @@
  */
 #include "allobject.h"
 
-
-EmStringObject *
+EmObject *
 newstringobject(char *sval) {
     EmStringObject *ob;
     if ((ob = NEWOBJ(EmStringObject, &Stringtype)) == NULL)
         return NULL;
     ob->sval = (char *) malloc (sizeof(char)*(strlen(sval)+1));
     strcpy(ob->sval, sval);
-    return ob;
+    return (EmObject *)ob;
 }
 
-EmStringObject *
+EmObject *
 newstringobject_from_int(long ival) {
     sprintf(asString, "%l", ival);
     return newstringobject(asString);
 }
 
-EmStringObject *
+EmObject *
 newstringobject_from_float(double fval) {
     sprintf(asString, "%f", fval);
     return newstringobject(asString);
 }
 
-void stringobject_free(EmStringObject *ob) {
-    DEL(ob->sval);
+void stringobject_free(EmObject *ob) {
+    DEL(((EmStringObject *)ob)->sval);
     DEL(ob);
 }
 
-void stringobject_print(EmStringObject *ob, FILE *fp) {
-    fprintf(fp, "%s\n", ob->sval);
+void stringobject_print(EmObject *ob, FILE *fp) {
+    fprintf(fp, "%s\n", ((EmStringObject *)ob)->sval);
 }
 
-EmStringObject *stringobject_tostr(EmStringObject *ob) {
+EmObject *stringobject_tostr(EmObject *ob) {
     INCREF(ob);
     return ob;
 }
 
-long stringobject_hash(EmStringObject *ob) {
-    unsigned char *p = (unsigned char *) ob->sval;
+long stringobject_hash(EmObject *ob) {
+    unsigned char *p = (unsigned char *) (((EmStringObject *)ob)->sval);
     long hashval = *p << 7;
     while (*p != '\0')
         hashval = hashval + hashval + *p++;
@@ -61,7 +60,7 @@ EmTypeObject Stringtype = {
 
         stringobject_free,              // tp_dealloc
         stringobject_print,             // tp_print
-        stringobject_tostr,             // tp_str
+        stringobject_tostr,             // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare

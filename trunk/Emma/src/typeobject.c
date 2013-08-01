@@ -9,7 +9,7 @@ EmTypeObject Typetype = {
 
         0,                              // tp_dealloc
         0,                              // tp_print
-        0,                              // tp_str
+        0,                              // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare

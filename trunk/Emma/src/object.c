@@ -10,11 +10,10 @@ void object_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "<%s object at %x>\n", ob->type->tp_name, ob);
 }
 
-EmStringObject *object_tostr(EmObject *ob) {
+EmObject *object_tostr(EmObject *ob) {
     sprintf(asString, "<%s object at %x>", ob->type->tp_name, ob);
     return newstringobject(asString);
 }
-
 
 /*
  * Convenience functions
@@ -43,11 +42,11 @@ void printobj(EmObject *ob, FILE *fp) {
     }
 }
 
-EmStringObject *tostrobj(EmObject *ob) {
-    if (ob->type->tp_str == NULL) {
+EmObject *tostrobj(EmObject *ob) {
+    if (ob->type->tp_tostr == NULL) {
         return object_tostr(ob);
     } else {
-        return ob->type->tp_str(ob);
+        return ob->type->tp_tostr(ob);
     }
 }
 
@@ -68,7 +67,7 @@ int setattr(EmObject *ob, char *name, EmObject *attr) {
         } else {
             log_error(TYPE_ERROR, "read-only attributes\n");
         }
-        return NULL;
+        return 0;
     } else {
         return (*ob->type->tp_setattr)(ob, name, attr);
     }
@@ -116,15 +115,12 @@ long hashobj(EmObject *ob) {
  * The null object singleton
  */
 
-void
-null_print(EmObject *ob, FILE *fp) {
+void null_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "null\n");
 }
 
-char *
-null_str(EmObject *ob) {
-    sprintf(asString, "null");
-    return asString;
+EmObject *null_tostr(EmObject *ob) {
+    return newstringobject("null");
 }
 
 EmTypeObject Nulltype = {
@@ -134,10 +130,9 @@ EmTypeObject Nulltype = {
         sizeof(EmObject),               // tp_size
         0,                              // tp_itemsize
 
-        0,                              // tp_alloc
         0,                              // tp_dealloc
         null_print,                     // tp_print
-        null_str,                       // tp_str
+        null_tostr,                     // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare
@@ -150,7 +145,6 @@ EmTypeObject Nulltype = {
 
 EmObject nulobj = {
         OB_HEAD_INIT(&Nulltype),
-        0,
         0,
 };
 

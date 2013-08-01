@@ -8,25 +8,25 @@
 #include "allobject.h"
 
 
-EmIntObject *
+EmObject *
 newintobject(long ival) {
     EmIntObject *ob;
     if ((ob = NEWOBJ(EmIntObject, &Inttype)) == NULL)
         return NULL;
     ob->ival = ival;
-    return ob;
+    return (EmObject *)ob;
 }
 
-void intobject_free(EmIntObject *ob) {
-    DEL(ob);
+void intobject_free(EmObject *ob) {
+    DEL((EmIntObject *)ob);
 }
 
-void intobject_print(EmIntObject *ob, FILE *fp) {
-    fprintf(fp, "%l\n", ob->ival);
+void intobject_print(EmObject *ob, FILE *fp) {
+    fprintf(fp, "%l\n", ((EmIntObject *)ob)->ival);
 }
 
-EmStringObject *intobject_tostr(EmIntObject *ob) {
-    return newstringobject_from_int(ob->ival);
+EmObject *intobject_tostr(EmObject *ob) {
+    return newstringobject_from_int(((EmIntObject *)ob)->ival);
 }
 
 
@@ -39,7 +39,7 @@ EmTypeObject Inttype = {
 
         intobject_free,                 // tp_dealloc
         intobject_print,                // tp_print
-        intobject_tostr,                // tp_str
+        intobject_tostr,                // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare

@@ -10,7 +10,6 @@
 // The singleton error object
 EmErrorObject errobj = {
         OB_HEAD_INIT(&Errortype),
-        0,  // base
         0,  // nitems
         NO_ERROR,   // errorNumber
         NULL,       // message
@@ -30,10 +29,9 @@ EmTypeObject Errortype = {
         sizeof(EmTypeObject),           // tp_size
         0,                              // tp_itemsize
 
-        0,                              // tp_alloc
         0,                              // tp_dealloc
         0,                              // tp_print
-        0,                              // tp_str
+        0,                              // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare

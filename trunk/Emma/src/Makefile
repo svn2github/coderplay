@@ -2,7 +2,7 @@
 CC=gcc
 CFLAGS=-g
 DEPS = lexer.h token.h lexer.i hashobject.h errorobject.h stringobject.h \
-       object.h allobject.h
+       object.h Emma.h
 SRC = lexer.c parser.c Emma.c hashobject.c errobject.c stringobject.c \
       object.c typeobject.c
 OBJ = lexer.o parser.o Emma.o hashobject.o errorobject.o stringobject.o \
@@ -15,6 +15,8 @@ Emma: $(OBJ)
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
+
+allobject.h: $(DEPS)
 
 .PHONY: clean
 

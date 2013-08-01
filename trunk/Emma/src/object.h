@@ -67,7 +67,7 @@ typedef struct _typeobject {
 
     void (*tp_dealloc)(EmObject *);
     void (*tp_print)(EmObject *, FILE*);
-    struct _stringobject *(*tp_str)(EmObject *);
+    EmObject *(*tp_tostr)(EmObject *);
     EmObject *(*tp_getattr)(EmObject *, char *);
     int (*tp_setattr)(EmObject *, char *, EmObject *);
     int (*tp_compare)(EmObject *, EmObject *);

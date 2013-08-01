@@ -11,8 +11,6 @@ char *lexeme;
 
 char peek = ' ';
 
-EmHashObject *symtab;
-
 void
 lexer_init() {
     line = (char *) malloc (BUFSIZ * sizeof(char));

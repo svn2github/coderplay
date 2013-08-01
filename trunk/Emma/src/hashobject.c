@@ -8,16 +8,6 @@
  * 3. Some records of the keys, so I don't have to loop all slots to find
  *    filled entries.
  */
-typedef struct {
-    EmObject *key;
-    EmObject *val;
-} EmHashEntry;
-
-typedef struct _hashobject {
-    OB_HEAD; // nitems included
-    unsigned int size; // size of the hash including unused spots
-    EmHashEntry **table; // the entry array
-} EmHashObject;
 
 static unsigned int prime_numbers[] = {
     3, 7, 13, 31, 61, 127, 251, 509, 1021, 2017, 4093,
@@ -35,7 +25,7 @@ unsigned int ht_getprime(unsigned int size) {
     return 0;
 }
 
-EmHashObject *
+EmObject *
 newhashobject_from_size(unsigned int size_req) {
     EmHashObject *ht;
     unsigned int size;
@@ -54,36 +44,46 @@ newhashobject_from_size(unsigned int size_req) {
         DEL(ht);
         return log_error(MEMORY_ERROR, "not enough memory for hashtable");
     }
-    return ht;
+    return (EmObject *)ht;
 }
 
-EmHashObject *
+EmObject *
 newhashobject() {
     return newhashobject_from_size(DEFAULT_HASH_SIZE);
 }
 
 void
-hashobject_free(EmHashObject * ht)
+hashobject_free(EmObject * ob)
 {
+    if (!is_EmHashObject(ob)) {
+        log_error(TYPE_ERROR, "hash free on non-hash object");
+        return;
+    }
     int i;
-    for(i=0;i<ht->size;i++) {
-        if( ht->table[i]) {
+    EmHashObject *ho = (EmHashObject *)ob;
+    for(i=0;i<ho->size;i++) {
+        if( ho->table[i]) {
             // free entry elements by decrease their reference count
-            DECREF(ht->table[i]->key);
-            DECREF(ht->table[i]->val);
-            DEL(ht->table[i]); // free the entry root
+            DECREF(ho->table[i]->key);
+            DECREF(ho->table[i]->val);
+            DEL(ho->table[i]); // free the entry root
         }
     }
-    DEL( ht->table );
-    DEL( ht );
+    DEL( ho->table );
+    DEL( ho );
 }
 
-void hashobject_print(EmHashObject * ht, FILE *fp) {
+void hashobject_print(EmObject * ob, FILE *fp) {
+    if (!is_EmHashObject(ob)) {
+        log_error(TYPE_ERROR, "hash print on non-hash object");
+        return;
+    }
+    EmHashObject *ho = (EmHashObject *)ob;
     int i;
-    for (i = 0; i < ht->size; i++) {
-        if (ht->table[i] != NULL) {
-            fprintf(fp, "%20s :   %20d\n", tostrobj(ht->table[i]->key),
-                    tostrobj(ht->table[i]->val));
+    for (i = 0; i < ho->size; i++) {
+        if (ho->table[i] != NULL) {
+            fprintf(fp, "%20s :   %20d\n", tostrobj(ho->table[i]->key),
+                    tostrobj(ho->table[i]->val));
         }
     }
 }
@@ -92,33 +92,32 @@ void hashobject_print(EmHashObject * ht, FILE *fp) {
  * This is the internal lookup function used by other wrapper function.
  */
 static EmHashEntry *
-__hashobject_lookup(EmHashObject *ht, EmObject *key)
+__hashobject_lookup(EmHashObject *ho, EmObject *key)
 {
     unsigned long hashval;
     unsigned int idx, incr;
 
     // calculate the hash
     hashval = hashobj(key);
-    idx = hashval % ht->size;
+    idx = hashval % ho->size;
 
     // calculate the increment for linear probing
     do {
         hashval = hashval + hashval + 1;
-        incr = hashval % ht->size;
+        incr = hashval % ho->size;
     } while (incr ==0 );
 
     // If the spot is occupied and not equal to this key
-    while( ht->table[idx] != NULL
-            && cmpobj(key, ht->table[idx]->key) != 0 ) {
-        idx = (idx+incr) % ht->size;
+    while( ho->table[idx] != NULL
+            && cmpobj(key, ho->table[idx]->key) != 0 ) {
+        idx = (idx+incr) % ho->size;
     }
 
     // Do we have this key or not
-    if( ht->table[idx] == NULL ) {
+    if( ho->table[idx] == NULL ) {
         return NULL;
     } else {
-        INCREF(ht->table[idx]->val); // retain reference for any returned value
-        return ht->table[idx];
+        return ho->table[idx];
     }
 }
 
@@ -127,72 +126,94 @@ __hashobject_lookup(EmHashObject *ht, EmObject *key)
  * any other types that can be used as key.
  */
 EmObject *
-hashobject_lookup(EmHashObject *ht, EmObject *key) {
-    EmHashEntry * ent = __hashobject_lookup(ht, key);
+hashobject_lookup(EmObject *ob, EmObject *key) {
+    if (!is_EmHashObject(ob)) {
+        log_error(TYPE_ERROR, "hash print on non-hash object");
+        return NULL;
+    }
+    EmHashObject *ho = (EmHashObject *)ob;
+    EmHashEntry * ent = __hashobject_lookup(ho, key);
     if (ent == NULL)
         return log_error(KEY_ERROR, "key not found");
-    else
+    else {
+        INCREF(ent->val);
         return ent->val;
+    }
 }
 
-EmHashObject *
-hashobject_insert(EmHashObject *ht, EmObject *key, EmObject *val) {
+static EmHashObject *hashobject_rehash(EmHashObject *ho);
+
+EmObject *
+hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
+
+    if (!is_EmHashObject(ob)) {
+        log_error(TYPE_ERROR, "hash free on non-hash object");
+        return NULL;
+    }
+    EmHashObject *ho = (EmHashObject *)ob;
 
     unsigned long hashval;
     unsigned int idx, incr;
     EmHashEntry* new;
 
     /* rehash if too full */
-    if( ht->nitems*3 > ht->size*2)
-        ht = hashobject_rehash(ht);
+    if( ho->nitems*3 > ho->size*2)
+        ho = hashobject_rehash(ho);
 
-    new = __hashobject_lookup(ht, key);
+    new = __hashobject_lookup(ho, key);
 
     if (new == NULL) { // create new entry
         new = (EmHashEntry*) malloc(sizeof(EmHashEntry));
         if (new == NULL) {
             log_error(MEMORY_ERROR, "No memory to create new entry in dict");
-            return ht;
+            return (EmObject *)ho;
         }
         new->key = key;
         new->val = val;
         // always retain references to the new key and val
         INCREF(key);
         INCREF(val);
-        ht->table[idx] = new;
-        ht->nitems++;
+        ho->table[idx] = new;
+        ho->nitems++;
     } else { // replace old entry
-        DECREF(ht->table[idx]->val);
-        ht->table[idx]->val = val;
+        DECREF(ho->table[idx]->val);
+        ho->table[idx]->val = val;
+        INCREF(val);
     }
 
-    return ht;
+    return (EmObject *)ho;
 }
 
-EmHashObject *
-hashobject_rehash(EmHashObject * ht)
+static EmHashObject *
+hashobject_rehash(EmHashObject *ho)
 {
-    EmHashObject * newht;
+    EmHashObject * newho;
     unsigned int size;
     int i;
 
     /* calculate new hash table size based on load factor */
-    size = ht->nitems * 2u;  // 50% load
-    newht = newhashobject_from_size(size);
+    size = ho->nitems * 2u;  // 50% load
+    newho = (EmHashObject *)newhashobject_from_size(size);
 
     /* rehash the values on the old hash table */
-    for (i = 0; i < ht->size; i++) {
-        if (ht->table[i] != NULL) {
-            hashobject_insert(newht, ht->table[i]->key, ht->table[i]->val);
+    for (i = 0; i < ho->size; i++) {
+        if (ho->table[i] != NULL) {
+            hashobject_insert((EmObject *)newho,
+                    ho->table[i]->key, ho->table[i]->val);
         }
     }
-    hashobject_free(ht);
-    return newht;
+    hashobject_free((EmObject *)ho);
+    return newho;
 }
 
 int
-hashobject_delete(EmHashObject *ht, EmObject *key) {
-    EmHashEntry *found = __hashobject_lookup(ht, key);
+hashobject_delete(EmObject *ob, EmObject *key) {
+    if (!is_EmHashObject(ob)) {
+        log_error(TYPE_ERROR, "hash free on non-hash object");
+        return 0;
+    }
+    EmHashObject *ho = (EmHashObject *)ob;
+    EmHashEntry *found = __hashobject_lookup(ho, key);
     if (found) {
         DECREF(found->key);
         DECREF(found->val);
@@ -208,25 +229,25 @@ hashobject_delete(EmHashObject *ht, EmObject *key) {
  * Convenience function for String keys
  */
 EmObject *
-hashobject_lookup_by_string(EmHashObject *ht, char *key) {
-    EmStringObject *obkey = newstringobject(key);
-    EmObject *ob = hashobject_lookup(ht, key);
+hashobject_lookup_by_string(EmObject *ho, char *key) {
+    EmObject *obkey = newstringobject(key);
+    EmObject *ob = hashobject_lookup(ho, obkey);
     DECREF(obkey); // release the key after use
     return ob;
 }
 
-EmHashObject *
-hashobject_insert_by_string(EmHashObject *ht, char *key, EmObject *val) {
+EmObject *
+hashobject_insert_by_string(EmObject *ho, char *key, EmObject *val) {
     EmObject *obkey = newstringobject(key);
-    hashobject_insert(ht, obkey, val);
+    hashobject_insert(ho, obkey, val);
     DECREF(obkey);
-    return ht;
+    return ho;
 }
 
 int
-hashobject_delete_by_string(EmHashObject *ht, char *key) {
-    EmStringObject *obkey = newstringobject(key);
-    int ret = hashobject_delete(ht, key);
+hashobject_delete_by_string(EmObject *ho, char *key) {
+    EmObject *obkey = newstringobject(key);
+    int ret = hashobject_delete(ho, obkey);
     DECREF(obkey); // release the key after use
     return ret;
 }
@@ -236,8 +257,8 @@ hashobject_delete_by_string(EmHashObject *ht, char *key) {
  * Mapping functions
  */
 unsigned int
-hashobject_mp_length(EmHashObject *ob) {
-    return ob->nitems;
+hashobject_mp_length(EmObject *ob) {
+    return ((EmHashObject *)ob)->nitems;
 }
 
 static EmMappingMethods hash_as_mapping = {
@@ -254,7 +275,7 @@ EmTypeObject Hashtype = {
 
         hashobject_free,                // tp_dealloc
         hashobject_print,               // tp_print
-        0,                              // tp_str
+        0,                              // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare

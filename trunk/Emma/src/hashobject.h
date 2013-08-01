@@ -8,22 +8,33 @@
 #ifndef HASHOBJECT_H_
 #define HASHOBJECT_H_
 
+#define is_EmHashObject(ob) ((ob)->type == &Hashtype)
 #define DEFAULT_HASH_SIZE       13u
 
+typedef struct {
+    EmObject *key;
+    EmObject *val;
+} EmHashEntry;
+
+typedef struct _hashobject {
+    OB_HEAD; // nitems included
+    unsigned int size; // size of the hash including unused spots
+    EmHashEntry **table; // the entry array
+} EmHashObject;
+
 extern EmTypeObject Hashtype;
-typedef struct _hashobject EmHashObject;
 
-EmHashObject* newhashobject();
-void hashobject_free(EmHashObject *ht);
-void hashobject_print(EmHashObject *ht, FILE *fp);
+EmObject *newhashobject();
+EmObject *newhashobject_from_size(unsigned int size);
+void hashobject_free(EmObject *ht);
+void hashobject_print(EmObject *ht, FILE *fp);
 
-EmObject* hashobject_lookup(EmHashObject *ht, EmObject *key);
-EmHashObject* hashobject_insert(EmHashObject *ht, EmObject *key, EmObject *val);
-EmHashObject* hashobject_rehash(EmHashObject *ht);
-int hashobject_delete(EmHashObject *ht, EmObject *key);
+EmObject* hashobject_lookup(EmObject *ht, EmObject *key);
+EmObject* hashobject_insert(EmObject *ht, EmObject *key, EmObject *val);
+int hashobject_delete(EmObject *ht, EmObject *key);
 
-EmObject *hashobject_lookup_by_string(EmHashObject *ht, char *key);
-EmHashObject *hashobject_insert_by_string(EmHashObject *ht, char *key, EmObject *val);
-int hashobject_delete_by_string(EmHashObject *ht, char *key);
+EmObject *hashobject_lookup_by_string(EmObject *ht, char *key);
+EmObject *hashobject_insert_by_string(EmObject *ht, char *key, EmObject *val);
+int hashobject_delete_by_string(EmObject *ht, char *key);
 
 #endif /* HASHOBJECT_H_ */
