@@ -87,6 +87,8 @@ typedef struct _typeobject {
  */
 EmObject *newobj(EmTypeObject *);
 void freeobj(EmObject *);
+void printobj(EmObject *, FILE *);
+char *tostrobj(EmObject *);
 EmObject *getattr(EmObject *, char *);
 int setattr(EmObject *, char *, EmObject *);
 int cmpobj(EmObject *, EmObject *);

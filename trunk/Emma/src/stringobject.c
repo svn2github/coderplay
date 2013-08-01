@@ -18,7 +18,7 @@ newstringobject(char *sval) {
 
 EmObject *
 newstringobject_from_int(long ival) {
-    sprintf(asString, "%l", ival);
+    sprintf(asString, "%ld", ival);
     return newstringobject(asString);
 }
 
