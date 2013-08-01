@@ -224,6 +224,9 @@ get_token(FILE *fp, int lastTokenTag) {
                 lexeme[length++] = peek;
             } while (!(peek == quote && lastPeek != '\\'));
             lexeme[--length] = '\0'; // -- to erase ending quote
+            ob = newstringobject(lexeme);
+            constTable = hashobject_insert_by_string(constTable, lexeme, ob);
+            DECREF(ob);
             nextc(fp); // read pass the ending quote
             return STRING;
         }

@@ -11,7 +11,7 @@ void object_print(EmObject *ob, FILE *fp) {
 }
 
 char *object_tostr(EmObject *ob) {
-    sprintf(asString, "<%s object at %x>", ob->type->tp_name, ob);
+    sprintf(asString, "<%s object at 0x%08x>", ob->type->tp_name, ob);
     return asString;
 }
 

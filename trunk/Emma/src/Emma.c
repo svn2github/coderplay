@@ -28,6 +28,7 @@ int main(int argc, char **argv) {
         fclose(fp);
 
     printobj(constTable, stdout);
+    printf("constTable = %s\n", tostrobj(constTable));
     freeobj(constTable);
 
     return 0;
