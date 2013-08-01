@@ -27,6 +27,8 @@ int main(int argc, char **argv) {
     if (fp != stdin)
         fclose(fp);
 
+    freeobj(constTable);
+
     return 0;
 }
 

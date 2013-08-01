@@ -10,6 +10,7 @@ unsigned int pos = 0;
 char *lexeme;
 
 char peek = ' ';
+char lastPeek = ' ';
 
 void
 lexer_init() {
@@ -49,6 +50,7 @@ get_token(FILE *fp, int lastTokenTag) {
 
     int tag;
     int length;
+    char quote;
 
     while (1) {
         // ignore whites and CR for linux 
@@ -114,13 +116,20 @@ get_token(FILE *fp, int lastTokenTag) {
 
         }
 
-
-
         // Strings
+        length = 0;
+        //printf("peek %c\n", peek);
         if (peek == '"' || peek == '\'') {
-
+            quote = peek;
+            do {
+                lastPeek = peek;
+                nextc(fp);
+                lexeme[length++] = peek;
+            } while (!(peek == quote && lastPeek != '\\'));
+            lexeme[--length] = '\0'; // -- to erase ending quote
+            nextc(fp); // read pass the ending quote
+            return STRING;
         }
-
 
         length = 0;
         // Identifiers
