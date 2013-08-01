@@ -18,6 +18,7 @@
 #include "stringobject.h"
 #include "intobject.h"
 #include "floatobject.h"
+#include "listobject.h"
 
 
 #endif /* ALLOBJECT_H_ */

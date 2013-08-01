@@ -26,15 +26,15 @@ extern EmTypeObject Hashtype;
 
 EmObject *newhashobject();
 EmObject *newhashobject_from_size(unsigned int size);
-void hashobject_free(EmObject *ht);
-void hashobject_print(EmObject *ht, FILE *fp);
+void hashobject_free(EmObject *ho);
+void hashobject_print(EmObject *ho, FILE *fp);
 
-EmObject* hashobject_lookup(EmObject *ht, EmObject *key);
-EmObject* hashobject_insert(EmObject *ht, EmObject *key, EmObject *val);
-int hashobject_delete(EmObject *ht, EmObject *key);
+EmObject* hashobject_lookup(EmObject *ho, EmObject *key);
+EmObject* hashobject_insert(EmObject *ho, EmObject *key, EmObject *val);
+int hashobject_delete(EmObject *ho, EmObject *key);
 
-EmObject *hashobject_lookup_by_string(EmObject *ht, char *key);
-EmObject *hashobject_insert_by_string(EmObject *ht, char *key, EmObject *val);
-int hashobject_delete_by_string(EmObject *ht, char *key);
+EmObject *hashobject_lookup_by_string(EmObject *ho, char *key);
+EmObject *hashobject_insert_by_string(EmObject *ho, char *key, EmObject *val);
+int hashobject_delete_by_string(EmObject *ho, char *key);
 
 #endif /* HASHOBJECT_H_ */
