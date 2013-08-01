@@ -14,7 +14,7 @@
 #define DECREF(ob)  if (--ob->refcnt == 0) freeobj(ob)
 #define CLRREF(ob)  freeobj(ob)
 
-#define DEL(p)      free(p); p=NULL
+#define DEL(p)      free(p); (p) = NULL
 
 typedef struct _object {
     OB_HEAD;
@@ -67,7 +67,7 @@ typedef struct _typeobject {
 
     void (*tp_dealloc)(EmObject *);
     void (*tp_print)(EmObject *, FILE*);
-    EmObject *(*tp_tostr)(EmObject *);
+    char *(*tp_tostr)(EmObject *);
     EmObject *(*tp_getattr)(EmObject *, char *);
     int (*tp_setattr)(EmObject *, char *, EmObject *);
     int (*tp_compare)(EmObject *, EmObject *);
@@ -85,12 +85,12 @@ typedef struct _typeobject {
  * for type object (infinite loop), but rather directly
  * called in other functions.
  */
-extern EmObject *newobj(EmTypeObject *);
+EmObject *newobj(EmTypeObject *);
 void freeobj(EmObject *);
-extern EmObject *getattr(EmObject *, char *);
-extern int setattr(EmObject *, char *, EmObject *);
-extern int cmpobj(EmObject *, EmObject *);
-extern long hashobj(EmObject *);
+EmObject *getattr(EmObject *, char *);
+int setattr(EmObject *, char *, EmObject *);
+int cmpobj(EmObject *, EmObject *);
+long hashobj(EmObject *);
 
 
 extern EmTypeObject Typetype;

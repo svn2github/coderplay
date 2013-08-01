@@ -13,26 +13,28 @@ newfloatobject(double fval) {
     if ((ob = NEWOBJ(EmFloatObject, &Floattype)) == NULL)
         return NULL;
     ob->fval = fval;
-    return (EmFloatObject *)ob;
+    return (EmObject *)ob;
 }
 
 void floatobject_free(EmObject *ob) {
-    DEL((EmFloatObject *)ob);
+    EmFloatObject * fob = (EmFloatObject *)ob;
+    DEL(fob);
 }
 
 void floatobject_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "%f\n", ((EmFloatObject *)ob)->fval);
 }
 
-EmStringObject *floatobject_tostr(EmObject *ob) {
-    return newstringobject_from_float(((EmFloatObject *)ob)->fval);
+char *floatobject_tostr(EmObject *ob) {
+    sprintf(asString, "%f", ((EmFloatObject *)ob)->fval);
+    return asString;
 }
 
 
 EmTypeObject Floattype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
         0,                              // nitems
-        "int",                          // tp_name
+        "float",                        // tp_name
         sizeof(EmFloatObject),          // tp_size
         0,                              // tp_itemsize
 

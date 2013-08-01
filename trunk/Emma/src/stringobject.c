@@ -29,17 +29,17 @@ newstringobject_from_float(double fval) {
 }
 
 void stringobject_free(EmObject *ob) {
-    DEL(((EmStringObject *)ob)->sval);
-    DEL(ob);
+    EmStringObject * sob = (EmStringObject *)ob;
+    DEL(sob->sval);
+    DEL(sob);
 }
 
 void stringobject_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "%s\n", ((EmStringObject *)ob)->sval);
 }
 
-EmObject *stringobject_tostr(EmObject *ob) {
-    INCREF(ob);
-    return ob;
+char *stringobject_tostr(EmObject *ob) {
+    return ((EmStringObject *)ob)->sval;
 }
 
 long stringobject_hash(EmObject *ob) {

@@ -82,7 +82,7 @@ void hashobject_print(EmObject * ob, FILE *fp) {
     int i;
     for (i = 0; i < ho->size; i++) {
         if (ho->table[i] != NULL) {
-            fprintf(fp, "%20s :   %20d\n", tostrobj(ho->table[i]->key),
+            fprintf(fp, "%s :  %20s\n", tostrobj(ho->table[i]->key),
                     tostrobj(ho->table[i]->val));
         }
     }
@@ -92,14 +92,14 @@ void hashobject_print(EmObject * ob, FILE *fp) {
  * This is the internal lookup function used by other wrapper function.
  */
 static EmHashEntry *
-__hashobject_lookup(EmHashObject *ho, EmObject *key)
+__hashobject_lookup(EmHashObject *ho, EmObject *key, unsigned int *idx)
 {
     unsigned long hashval;
-    unsigned int idx, incr;
+    unsigned int incr;
 
     // calculate the hash
     hashval = hashobj(key);
-    idx = hashval % ho->size;
+    *idx = hashval % ho->size;
 
     // calculate the increment for linear probing
     do {
@@ -108,16 +108,16 @@ __hashobject_lookup(EmHashObject *ho, EmObject *key)
     } while (incr ==0 );
 
     // If the spot is occupied and not equal to this key
-    while( ho->table[idx] != NULL
-            && cmpobj(key, ho->table[idx]->key) != 0 ) {
-        idx = (idx+incr) % ho->size;
+    while( ho->table[*idx] != NULL
+            && cmpobj(key, ho->table[*idx]->key) != 0 ) {
+        *idx = (*idx+incr) % ho->size;
     }
 
     // Do we have this key or not
-    if( ho->table[idx] == NULL ) {
+    if( ho->table[*idx] == NULL ) {
         return NULL;
     } else {
-        return ho->table[idx];
+        return ho->table[*idx];
     }
 }
 
@@ -131,8 +131,9 @@ hashobject_lookup(EmObject *ob, EmObject *key) {
         log_error(TYPE_ERROR, "hash print on non-hash object");
         return NULL;
     }
+    unsigned int idx;
     EmHashObject *ho = (EmHashObject *)ob;
-    EmHashEntry * ent = __hashobject_lookup(ho, key);
+    EmHashEntry * ent = __hashobject_lookup(ho, key, &idx);
     if (ent == NULL)
         return log_error(KEY_ERROR, "key not found");
     else {
@@ -153,14 +154,14 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
     EmHashObject *ho = (EmHashObject *)ob;
 
     unsigned long hashval;
-    unsigned int idx, incr;
+    unsigned int idx;
     EmHashEntry* new;
 
     /* rehash if too full */
     if( ho->nitems*3 > ho->size*2)
         ho = hashobject_rehash(ho);
 
-    new = __hashobject_lookup(ho, key);
+    new = __hashobject_lookup(ho, key, &idx);
 
     if (new == NULL) { // create new entry
         new = (EmHashEntry*) malloc(sizeof(EmHashEntry));
@@ -212,8 +213,9 @@ hashobject_delete(EmObject *ob, EmObject *key) {
         log_error(TYPE_ERROR, "hash free on non-hash object");
         return 0;
     }
+    unsigned int idx;
     EmHashObject *ho = (EmHashObject *)ob;
-    EmHashEntry *found = __hashobject_lookup(ho, key);
+    EmHashEntry *found = __hashobject_lookup(ho, key, &idx);
     if (found) {
         DECREF(found->key);
         DECREF(found->val);

@@ -1,4 +1,5 @@
 #include "allobject.h"
+#include "Emma.h"
 #include "lexer.h"
 #include "lexer.i"
 
@@ -11,6 +12,8 @@ char *lexeme;
 
 char peek = ' ';
 char lastPeek = ' ';
+long ival;
+double fval;
 
 void
 lexer_init() {
@@ -45,12 +48,17 @@ matchc(FILE *fp, char c) {
     return 1;
 }
 
+double process_fraction(int intpart) {
+    return 0.0;
+}
+
 int
 get_token(FILE *fp, int lastTokenTag) {
 
     int tag;
     int length;
     char quote;
+    EmObject *ob;
 
     while (1) {
         // ignore whites and CR for linux 
@@ -112,8 +120,41 @@ get_token(FILE *fp, int lastTokenTag) {
         }
 
         // Numbers
+        length = 0;
         if (isdigit(peek)) {
+            ival = 0;
+            while (isdigit(peek)) {
+                lexeme[length++] = peek;
+                ival = 10*ival + (peek - '0');
+                nextc(fp);
+            }
 
+            // make sure it is an integer
+            if (peek != '.' && peek != 'e' && peek != 'E') {
+                lexeme[length] = '\0';
+                ob = newintobject(ival);
+                hashobject_insert_by_string(constTable, lexeme, ob);
+                DECREF(ob);
+                return INTEGER;
+            } else { // we haev a float
+                if (peek == '.') {
+                    lexeme[length++] = peek;
+                    nextc(fp);
+                }
+                return process_fraction(ival);
+            }
+        }
+
+        length = 0;
+        // float number starts with a dot, i.e. no integer part
+        if (peek == '.') {
+            lexeme[length++] = peek;
+            nextc(fp);
+            if (isdigit(peek)) {
+                return process_fraction(0);
+            } else {
+                return '.';
+            }
         }
 
         // Strings

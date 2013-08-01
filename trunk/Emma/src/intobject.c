@@ -18,15 +18,17 @@ newintobject(long ival) {
 }
 
 void intobject_free(EmObject *ob) {
-    DEL((EmIntObject *)ob);
+    EmIntObject * iob = (EmIntObject *) ob;
+    DEL(iob);
 }
 
 void intobject_print(EmObject *ob, FILE *fp) {
-    fprintf(fp, "%l\n", ((EmIntObject *)ob)->ival);
+    fprintf(fp, "%ld\n", ((EmIntObject *)ob)->ival);
 }
 
-EmObject *intobject_tostr(EmObject *ob) {
-    return newstringobject_from_int(((EmIntObject *)ob)->ival);
+char *intobject_tostr(EmObject *ob) {
+    sprintf(asString, "%ld", ((EmIntObject *)ob)->ival);
+    return asString;
 }
 
 
