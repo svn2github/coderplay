@@ -42,6 +42,27 @@ char *stringobject_tostr(EmObject *ob) {
     return ((EmStringObject *)ob)->sval;
 }
 
+/*
+ * The convenience function cmpobj ensures the objects are of the same
+ * type when the following is called.
+ */
+int stringobject_compare(EmObject *a, EmObject *b) {
+    EmStringObject *u, *v;
+    int lu, lv, minlen, cmp;
+
+    u = (EmStringObject *) a;
+    v = (EmStringObject *) b;
+    lu = strlen(u->sval);
+    lv = strlen(v->sval);
+    minlen = (lu < lv) ? lu : lv;
+
+    cmp = memcmp(u->sval, v->sval, minlen);
+    if (cmp || (!cmp && lu == lv))
+        return cmp;
+    else
+        return (lu < lv) ? -1 : 1;
+}
+
 long stringobject_hash(EmObject *ob) {
     unsigned char *p = (unsigned char *) (((EmStringObject *)ob)->sval);
     long hashval = *p << 7;
@@ -63,7 +84,7 @@ EmTypeObject Stringtype = {
         stringobject_tostr,             // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
-        0,                              // tp_compare
+        stringobject_compare,           // tp_compare
         stringobject_hash,              // tp_hashfunc
 
         0,                              // tp_as_number

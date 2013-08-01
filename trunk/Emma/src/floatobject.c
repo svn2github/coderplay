@@ -30,6 +30,12 @@ char *floatobject_tostr(EmObject *ob) {
     return asString;
 }
 
+int floatobject_compare(EmObject *a, EmObject *b) {
+    double u = ((EmFloatObject *) a)->fval;
+    double v = ((EmFloatObject *) b)->fval;
+    return (u < v) ? -1 : ((u > v) ? 1 : 0);
+}
+
 
 EmTypeObject Floattype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -43,7 +49,7 @@ EmTypeObject Floattype = {
         floatobject_tostr,              // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
-        0,                              // tp_compare
+        floatobject_compare,            // tp_compare
         0,                              // tp_hashfunc
 
         0,                              // tp_as_number

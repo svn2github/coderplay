@@ -31,6 +31,19 @@ char *intobject_tostr(EmObject *ob) {
     return asString;
 }
 
+int intobject_compare(EmObject *a, EmObject *b) {
+    long u = ((EmIntObject *) a)->ival;
+    long v = ((EmIntObject *) b)->ival;
+    return (u < v) ? -1 : ((u > v) ? 1 : 0);
+}
+
+long intobject_hash(EmObject *ob) {
+    long hashval = ((EmIntObject *)ob)->ival;
+    if (hashval == -1)
+        hashval = -2;
+    return hashval;
+}
+
 
 EmTypeObject Inttype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -44,8 +57,8 @@ EmTypeObject Inttype = {
         intobject_tostr,                // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
-        0,                              // tp_compare
-        0,                              // tp_hashfunc
+        intobject_compare,              // tp_compare
+        intobject_hash,                 // tp_hashfunc
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence

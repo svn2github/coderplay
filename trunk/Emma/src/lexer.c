@@ -214,17 +214,20 @@ get_token(FILE *fp, int lastTokenTag) {
         }
 
         // Strings
+        // TODO Interpret escape sequence
         length = 0;
-        //printf("peek %c\n", peek);
         if (peek == '"' || peek == '\'') {
-            quote = peek;
+            lexeme[length++] = quote = peek;
             do {
                 lastPeek = peek;
                 nextc(fp);
                 lexeme[length++] = peek;
             } while (!(peek == quote && lastPeek != '\\'));
-            lexeme[--length] = '\0'; // -- to erase ending quote
-            ob = newstringobject(lexeme);
+            lexeme[length-1] = '\0'; // -1 to erase ending quote
+            ob = newstringobject(lexeme+1); // +1 to skip leading quote
+            // Now add the quote to use as key
+            lexeme[length-1] = quote;
+            lexeme[length] = '\0';
             constTable = hashobject_insert_by_string(constTable, lexeme, ob);
             DECREF(ob);
             nextc(fp); // read pass the ending quote
