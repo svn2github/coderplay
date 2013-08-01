@@ -102,9 +102,11 @@ int process_fraction(FILE *fp, int intpart, int length) {
         lexeme[length] = '\0';
         fval = intpart;
     }
-    ob = newfloatobject(fval);
-    constTable = hashobject_insert_by_string(constTable, lexeme, ob);
-    DECREF(ob);
+    if (hashobject_lookup_by_string(constTable, lexeme) == NULL) {
+        ob = newfloatobject(fval);
+        constTable = hashobject_insert_by_string(constTable, lexeme, ob);
+        DECREF(ob);
+    }
     return FLOAT;
 }
 
@@ -188,9 +190,12 @@ get_token(FILE *fp, int lastTokenTag) {
             // make sure it is an integer
             if (peek != '.' && peek != 'e' && peek != 'E') {
                 lexeme[length] = '\0';
-                ob = newintobject(ival);
-                constTable = hashobject_insert_by_string(constTable, lexeme, ob);
-                DECREF(ob);
+                if (hashobject_lookup_by_string(constTable, lexeme) == NULL) {
+                    ob = newintobject(ival);
+                    constTable = hashobject_insert_by_string(constTable, lexeme,
+                            ob);
+                    DECREF(ob);
+                }
                 return INTEGER;
             } else { // we have a float
                 if (peek == '.') {
@@ -223,13 +228,17 @@ get_token(FILE *fp, int lastTokenTag) {
                 nextc(fp);
                 lexeme[length++] = peek;
             } while (!(peek == quote && lastPeek != '\\'));
-            lexeme[length-1] = '\0'; // -1 to erase ending quote
-            ob = newstringobject(lexeme+1); // +1 to skip leading quote
-            // Now add the quote to use as key
-            lexeme[length-1] = quote;
             lexeme[length] = '\0';
-            constTable = hashobject_insert_by_string(constTable, lexeme, ob);
-            DECREF(ob);
+            if (hashobject_lookup_by_string(constTable, lexeme) == NULL) {
+                lexeme[length - 1] = '\0'; // -1 to erase ending quote
+                ob = newstringobject(lexeme + 1); // +1 to skip leading quote
+                // Now add the quote to use as key
+                lexeme[length - 1] = quote;
+                lexeme[length] = '\0';
+                constTable = hashobject_insert_by_string(constTable, lexeme,
+                        ob);
+                DECREF(ob);
+            }
             nextc(fp); // read pass the ending quote
             return STRING;
         }

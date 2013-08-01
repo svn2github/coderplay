@@ -143,7 +143,27 @@ hashobject_lookup(EmObject *ob, EmObject *key) {
     }
 }
 
-static EmHashObject *hashobject_rehash(EmHashObject *ho);
+static EmHashObject *
+hashobject_rehash(EmHashObject *ho)
+{
+    EmHashObject * newho;
+    unsigned int size;
+    int i;
+
+    /* calculate new hash table size based on load factor */
+    size = ho->nitems * 2u;  // 50% load
+    newho = (EmHashObject *)newhashobject_from_size(size);
+
+    /* rehash the values on the old hash table */
+    for (i = 0; i < ho->size; i++) {
+        if (ho->table[i] != NULL) {
+            hashobject_insert((EmObject *)newho,
+                    ho->table[i]->key, ho->table[i]->val);
+        }
+    }
+    hashobject_free((EmObject *)ho);
+    return newho;
+}
 
 EmObject *
 hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
@@ -185,28 +205,6 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
     }
 
     return (EmObject *)ho;
-}
-
-static EmHashObject *
-hashobject_rehash(EmHashObject *ho)
-{
-    EmHashObject * newho;
-    unsigned int size;
-    int i;
-
-    /* calculate new hash table size based on load factor */
-    size = ho->nitems * 2u;  // 50% load
-    newho = (EmHashObject *)newhashobject_from_size(size);
-
-    /* rehash the values on the old hash table */
-    for (i = 0; i < ho->size; i++) {
-        if (ho->table[i] != NULL) {
-            hashobject_insert((EmObject *)newho,
-                    ho->table[i]->key, ho->table[i]->val);
-        }
-    }
-    hashobject_free((EmObject *)ho);
-    return newho;
 }
 
 int
