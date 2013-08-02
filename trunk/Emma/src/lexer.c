@@ -70,11 +70,11 @@ int process_fraction(int intpart, int length) {
         lexeme[length] = '\0';
         fval = intpart;
     }
-    if (hashobject_lookup_by_string(constTable, lexeme) == NULL) {
+    if ((ob = hashobject_lookup_by_string(constTable, lexeme)) == NULL) {
         ob = newfloatobject(fval);
         constTable = hashobject_insert_by_string(constTable, lexeme, ob);
-        DECREF(ob);
     }
+    DECREF(ob);
     return FLOAT;
 }
 
@@ -158,12 +158,12 @@ get_token(int lastTokenTag) {
             // make sure it is an integer
             if (source.peek != '.' && source.peek != 'e' && source.peek != 'E') {
                 lexeme[length] = '\0';
-                if (hashobject_lookup_by_string(constTable, lexeme) == NULL) {
+                if ((ob = hashobject_lookup_by_string(constTable, lexeme)) == NULL) {
                     ob = newintobject(ival);
                     constTable = hashobject_insert_by_string(constTable, lexeme,
                             ob);
-                    DECREF(ob);
                 }
+                DECREF(ob);
                 return INTEGER;
             } else { // we have a float
                 if (source.peek == '.') {
@@ -197,7 +197,7 @@ get_token(int lastTokenTag) {
                 lexeme[length++] = source.peek;
             } while (!(source.peek == quote && source.lastPeek != '\\'));
             lexeme[length] = '\0';
-            if (hashobject_lookup_by_string(constTable, lexeme) == NULL) {
+            if ((ob = hashobject_lookup_by_string(constTable, lexeme)) == NULL) {
                 lexeme[length - 1] = '\0'; // -1 to erase ending quote
                 ob = newstringobject(lexeme + 1); // +1 to skip leading quote
                 // Now add the quote to use as key
@@ -205,8 +205,9 @@ get_token(int lastTokenTag) {
                 lexeme[length] = '\0';
                 constTable = hashobject_insert_by_string(constTable, lexeme,
                         ob);
-                DECREF(ob);
             }
+            DECREF(ob);
+
             source.nextc(); // read pass the ending quote
             return STRING;
         }
