@@ -72,6 +72,8 @@ long stringobject_hash(EmObject *ob) {
 }
 
 
+
+
 EmTypeObject Stringtype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
         0,                              // nitems

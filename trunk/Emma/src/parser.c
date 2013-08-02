@@ -1,7 +1,7 @@
 #include "parser.h"
 
 void *
-parse(FILE *fp, char *filename) {
+parse() {
 
     lexer_init();
 
@@ -11,7 +11,7 @@ parse(FILE *fp, char *filename) {
 
     do {
 
-        lastTag = tag = get_token(fp, lastTag);
+        lastTag = tag = get_token(lastTag);
 
         if (tag == ENDMARK) {
             printf("%5d  %-20s\n", tag, "END");

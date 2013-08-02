@@ -39,6 +39,136 @@ void listobject_free(EmObject *ob) {
     DEL(lo);
 }
 
+void listobject_print(EmObject *ob, FILE *fp) {
+    EmListObject *lo = (EmListObject *)ob;
+    int i;
+    for (i=0;i<lo->nitems;i++) {
+        fprintf(fp, "%s, ", tostrobj(lo->list[i]));
+    }
+}
+
+
+unsigned int listobject_len(EmObject *ob) {
+    return ob->nitems;
+}
+
+EmObject *
+listobject_concate(EmObject *ob1, EmObject *ob2) {
+    EmListObject *newlo = (EmListObject *) newlistobject(
+            ob1->nitems + ob2->nitems);
+    int i;
+    for (i=0;i<ob1->nitems;i++) {
+        newlo->list[i] = listobject_get(ob1, i);
+    }
+    for (i=0;i<ob2->nitems;i++) {
+        newlo->list[i+ob2->nitems] = listobject_get(ob2, i);
+    }
+    return (EmObject *)newlo;
+}
+
+
+EmObject *listobject_get(EmObject *ob, int idx) {
+    EmListObject *lo = (EmListObject *)ob;
+    if (idx < 0)
+        idx += lo->nitems;
+    if (idx >= lo->nitems) {
+        return log_error(INDEX_ERROR, "index out of list boundary");
+    }
+    INCREF(lo->list[idx]);
+    return lo->list[idx];
+}
+
+int listobject_set(EmObject *ob, int idx, EmObject *val) {
+    EmListObject *lo = (EmListObject *)ob;
+    if (idx < 0)
+        idx += lo->nitems;
+    if (idx >= lo->nitems) {
+        log_error(INDEX_ERROR, "index out of list boundary");
+        return 0;
+    }
+    DECREF(lo->list[idx]);
+    INCREF(val);
+    lo->list[idx] = val;
+    return 1;
+}
+
+EmObject *listobject_slice(EmObject *ob, int start, int end, int step) {
+    EmListObject *lo = (EmListObject *)ob;
+    if (start < 0)
+        start += lo->nitems;
+    if (end < 0)
+        end += lo->nitems;
+    if (start >= lo->nitems || end >= lo->nitems)
+        return log_error(INDEX_ERROR, "slice out of list boundary");
+
+    int nitems = (int) (fabs((start - end)/step) + 1);
+    EmListObject *newlo = (EmListObject *) newlistobject(nitems);
+    int i = 0;
+    if (start <= end) {
+        for (; start <= end; start += step) {
+            newlo->list[i] = listobject_get(ob, start);
+            i++;
+        }
+    } else {
+        for (; start >= end; i -= step) {
+            newlo->list[i] = listobject_get(ob, start);
+            i++;
+        }
+    }
+    return (EmObject *)newlo;
+}
+
+EmListObject *listobject_resize(EmListObject *lo, int size) {
+    EmListObject *newlo = (EmListObject *)newlistobject(size);
+    lo->list = (EmObject **) realloc(lo->list, size*sizeof(EmObject *));
+    return lo;
+}
+
+EmObject *listobject_append(EmObject *ob, EmObject *val) {
+    EmListObject *lo = (EmListObject *)ob;
+    if (lo->nitems * 2 > lo->size) {
+        lo = listobject_resize(lo, lo->nitems*4); // load 0.25
+    }
+    INCREF(val);
+    lo->list[lo->nitems] = val;
+    lo->nitems++;
+    return (EmObject *)lo;
+}
+
+EmObject *listobject_delete(EmObject *ob, int idx) {
+    EmListObject *lo = (EmListObject *) ob;
+    if (idx < 0)
+        idx += lo->nitems;
+    if (idx >= lo->nitems) {
+        log_error(INDEX_ERROR, "index out of list boundary");
+        return NULL;
+    }
+    EmObject *val = lo->list[idx];
+    if (idx < lo->nitems - 1) { // not last entry
+        memmove(lo->list[idx], lo->list[idx + 1],
+                sizeof(EmObject *) * (lo->nitems - 1 - idx));
+    }
+    lo->list[lo->nitems - 1] = NULL;
+    lo->nitems--;
+    return val;
+}
+
+EmObject *listobject_pop(EmObject *ob) {
+    return listobject_delete(ob, ob->nitems);
+}
+
+EmObject *listobject_shift(EmObject *ob) {
+    return listobject_delete(ob, 0);
+}
+
+static EmSequenceMethods list_as_sequence = {
+        listobject_len,             // length
+        listobject_concate,         // concatenate
+        listobject_get,             // get subscript
+        listobject_slice,           // get slice
+        listobject_set,             // set subscript
+        0,                          // set slice
+};
 
 
 EmTypeObject Listtype = {
@@ -57,6 +187,6 @@ EmTypeObject Listtype = {
         0,                              // tp_hashfunc
 
         0,                              // tp_as_number
-        0,                              // tp_as_sequence
+        &list_as_sequence,              // tp_as_sequence
         0,                              // tp_as_mapping
 };

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "allobject.h"
+#include "source.h"
 #include "parser.h"
 
 /*
@@ -19,5 +20,6 @@
  * in the source file.
  */
 extern EmObject *constTable;
+
 
 #endif /* EMMA_H_ */

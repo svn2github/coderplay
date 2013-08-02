@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
+#include <math.h>
 #include "object.h"
 #include "hashobject.h"
 #include "errorobject.h"

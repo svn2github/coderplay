@@ -13,6 +13,7 @@
 #define SYSTEM_ERROR    2
 #define TYPE_ERROR      3
 #define KEY_ERROR       4
+#define INDEX_ERROR     5
 
 typedef struct _errorobject {
     OB_HEAD;

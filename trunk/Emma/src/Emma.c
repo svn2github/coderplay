@@ -16,12 +16,18 @@ int main(int argc, char **argv) {
             fprintf(stderr, "Cannot open file %s\n", filename);
             exit(1);
         }
+        source.type = SOURCE_TYPE_FILE;
+    } else {
+        source.type = SOURCE_TYPE_PROMPT;
     }
+
+    source.filename = filename;
+    source.fp = fp;
 
     constTable = newhashobject();
 
     // parse the input and generate syntax tree
-    parse(fp, filename);
+    parse();
 
     // close the input file
     if (fp != stdin)
@@ -33,4 +39,7 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
+
+
 

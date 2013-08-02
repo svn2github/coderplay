@@ -25,8 +25,9 @@ void listobject_free(EmObject *ob);
 void listobject_print(EmObject *ob, FILE *fp);
 
 EmObject *listobject_get(EmObject *ob, int idx);
-EmObject *listobject_set(EmObject *ob, int idx);
-EmObject *listobject_append(EmObject *ob, EmObject u);
+EmObject *listobject_slice(EmObject *ob, int start, int end, int step);
+int listobject_set(EmObject *ob, int idx, EmObject *val);
+EmObject *listobject_append(EmObject *ob, EmObject *val);
 EmObject *listobject_delete(EmObject *ob, int idx);
 EmObject *listobject_pop(EmObject *ob);
 EmObject *listobject_shift(EmObject *ob);

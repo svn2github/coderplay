@@ -3,7 +3,7 @@
 
 #include "lexer.h"
 
-void *parse(FILE *fp, char *filename);
+void *parse();
 
 
 #endif

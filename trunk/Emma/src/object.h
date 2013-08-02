@@ -20,6 +20,15 @@ typedef struct _object {
     OB_HEAD;
 } EmObject;
 
+
+/*
+ * Following number, sequence and mapping methods are supposed to be
+ * used without function calls. For an example, the number add method
+ * is called when an expression "a + b" is encountered.
+ * The getattr function is to get the methods of the object can should
+ * be called as a function. For an example, sort on a list.
+ */
+
 /*
  * A series of methods that operate on numbers
  */
@@ -38,10 +47,12 @@ typedef struct {
  * Methods for sequences like list and string
  */
 typedef struct {
-    unsigned int (*length) (EmObject *);
+    unsigned int (*len) (EmObject *);
     EmObject *(*concate) (EmObject *, EmObject *);
-    EmObject *(*subscript) (EmObject *, int);
+    EmObject *(*get) (EmObject *, int);
     EmObject *(*slice) (EmObject *, int, int, int);
+    int (*set) (EmObject *, int, EmObject *);
+    int (*set_slice) (EmObject *, int, int, int, EmObject *);
 } EmSequenceMethods;
 
 
@@ -49,8 +60,9 @@ typedef struct {
  * Methods for mappings like hash
  */
 typedef struct {
-    unsigned int (*length) (EmObject *);
-    EmObject *(*subscript) (EmObject *, EmObject *);
+    unsigned int (*len) (EmObject *);
+    EmObject *(*get) (EmObject *, EmObject *);
+    int (*set) (EmObject *, EmObject *, EmObject *);
 } EmMappingMethods;
 
 

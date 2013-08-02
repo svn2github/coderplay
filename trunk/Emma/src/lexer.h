@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "token.h"
+#include "source.h"
 
 #define DEFAULT_WT_SIZE 127
 #define CHAR_CR         13
@@ -14,6 +15,6 @@ extern unsigned int pos;
 extern char *lexeme;
 
 void lexer_init();
-int get_token(FILE *fp, int lastTag);
+int get_token(int lastTag);
 void lexer_free();
 

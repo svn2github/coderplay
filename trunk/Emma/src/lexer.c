@@ -4,62 +4,30 @@
 #include "lexer.i"
 
 
-char *line;
-unsigned int len = 0;
-unsigned int row = 0;
-unsigned int pos = 0;
 char *lexeme;
-
-char peek = ' ';
-char lastPeek = ' ';
 long ival;
 double fval;
 
 void
 lexer_init() {
-    line = (char *) malloc (BUFSIZ * sizeof(char));
+    source.line = (char *) malloc (BUFSIZ * sizeof(char));
+    source.line[0] = '\0'; // initiate as blank line
     lexeme = (char *) malloc (BUFSIZ * sizeof(char));
 }
 
-static void
-nextc(FILE *fp) {
-    if (pos >= 0 && pos < len) {
-        peek = line[pos];
-        pos++;
-    }
-    else {
-        if (fgets(line, BUFSIZ-1, fp) == NULL) {
-            peek = 0;
-        } 
-        else {
-            peek = ' ';
-            len = strlen(line);
-            pos = 0;
-        }
-    }
-}
 
-static int
-matchc(FILE *fp, char c) {
-    nextc(fp);
-    if (peek != c)
-        return 0;
-    peek = ' ';
-    return 1;
-}
-
-int process_exponential(FILE *fp, int length) {
+int process_exponential(int length) {
     int expval = 0, sign = 1;
-    if (peek == '-' || peek =='+') {
-        if (peek == '-')
+    if (source.peek == '-' || source.peek =='+') {
+        if (source.peek == '-')
             sign = -1;
-        lexeme[length++] = peek;
-        nextc(fp);
+        lexeme[length++] = source.peek;
+        source.nextc();
     }
-    while (isdigit(peek)) {
-        lexeme[length++] = peek;
-        expval = 10*expval + (peek - '0');
-        nextc(fp);
+    while (isdigit(source.peek)) {
+        lexeme[length++] = source.peek;
+        expval = 10*expval + (source.peek - '0');
+        source.nextc();
     }
     lexeme[length] = '\0';
     return expval*sign;
@@ -67,36 +35,36 @@ int process_exponential(FILE *fp, int length) {
 
 }
 
-int process_fraction(FILE *fp, int intpart, int length) {
+int process_fraction(int intpart, int length) {
 
     EmObject *ob;
     double d;
     int expval;
 
     // if a fraction part is found
-    if (isdigit(peek)) {
+    if (isdigit(source.peek)) {
         fval = intpart;
         d = 10.0;
         // loop for the float digit
-        while (isdigit(peek)) {
-            lexeme[length++] = peek;
-            fval += (peek - '0')/d;
+        while (isdigit(source.peek)) {
+            lexeme[length++] = source.peek;
+            fval += (source.peek - '0')/d;
             d *= 10.0;
-            nextc(fp);
+            source.nextc();
         }
         // check for scientific notation
-        if (peek != 'e' && peek != 'E') {
+        if (source.peek != 'e' && source.peek != 'E') {
             lexeme[length] = '\0';
         } else {
-            lexeme[length++] = peek;
-            nextc(fp);
-            expval = process_exponential(fp, length);
+            lexeme[length++] = source.peek;
+            source.nextc();
+            expval = process_exponential(length);
             fval = fval * pow(10, expval);
         }
-    } else if (peek == 'e' || peek == 'E') {
-        lexeme[length++] = peek;
-        nextc(fp);
-        expval = process_exponential(fp, length);
+    } else if (source.peek == 'e' || source.peek == 'E') {
+        lexeme[length++] = source.peek;
+        source.nextc();
+        expval = process_exponential(length);
         fval = intpart * pow(10, expval);
     } else {
         lexeme[length] = '\0';
@@ -111,7 +79,7 @@ int process_fraction(FILE *fp, int intpart, int length) {
 }
 
 int
-get_token(FILE *fp, int lastTokenTag) {
+get_token(int lastTokenTag) {
 
     int tag;
     int length;
@@ -120,22 +88,22 @@ get_token(FILE *fp, int lastTokenTag) {
 
     while (1) {
         // ignore whites and CR for linux 
-        while (peek == ' ' || peek == '\t' || peek == CHAR_CR)
-            nextc(fp);
+        while (source.peek == ' ' || source.peek == '\t' || source.peek == CHAR_CR)
+            source.nextc();
 
-        if (peek == 0)
+        if (source.peek == 0)
             return ENDMARK; // end of INPUT
 
-        if (peek == '#')
-            while (peek != CHAR_LF)
-                nextc(fp);
+        if (source.peek == '#')
+            while (source.peek != CHAR_LF)
+                source.nextc();
 
-        if (peek == CHAR_LF) {
-            while (peek == CHAR_LF) {
-                row += 1;
-                nextc(fp);
+        if (source.peek == CHAR_LF) {
+            while (source.peek == CHAR_LF) {
+                source.row += 1;
+                source.nextc();
                 // following line is to accomodate linux 
-                if (peek == CHAR_CR) nextc(fp);
+                if (source.peek == CHAR_CR) source.nextc();
             }
             if (lastTokenTag != CHAR_LF)
                 return CHAR_LF;
@@ -144,34 +112,34 @@ get_token(FILE *fp, int lastTokenTag) {
 
         }
 
-        if (peek == ';') {
-            while (peek == ';') nextc(fp);
+        if (source.peek == ';') {
+            while (source.peek == ';') source.nextc();
             if (lastTokenTag != ';' && lastTokenTag != CHAR_LF)
                 return ';';
             else
                 continue;
         }
 
-        if (peek == '>') {
-            if (matchc(fp, '='))
+        if (source.peek == '>') {
+            if (source.matchc('='))
                 return GE;
             else
                 return '>';
         }
-        else if (peek == '=') {
-            if (matchc(fp, '='))
+        else if (source.peek == '=') {
+            if (source.matchc('='))
                 return EQ;
             else
                 return '=';
         }
-        else if (peek == '<') {
-            if (matchc(fp, '='))
+        else if (source.peek == '<') {
+            if (source.matchc('='))
                 return LE;
             else
                 return '<';
         }
-        else if (peek == '*') {
-            if (matchc(fp, '*'))
+        else if (source.peek == '*') {
+            if (source.matchc('*'))
                 return DSTAR;
             else
                 return '*';
@@ -179,16 +147,16 @@ get_token(FILE *fp, int lastTokenTag) {
 
         // Numbers
         length = 0;
-        if (isdigit(peek)) {
+        if (isdigit(source.peek)) {
             ival = 0;
-            while (isdigit(peek)) {
-                lexeme[length++] = peek;
-                ival = 10*ival + (peek - '0');
-                nextc(fp);
+            while (isdigit(source.peek)) {
+                lexeme[length++] = source.peek;
+                ival = 10*ival + (source.peek - '0');
+                source.nextc();
             }
 
             // make sure it is an integer
-            if (peek != '.' && peek != 'e' && peek != 'E') {
+            if (source.peek != '.' && source.peek != 'e' && source.peek != 'E') {
                 lexeme[length] = '\0';
                 if (hashobject_lookup_by_string(constTable, lexeme) == NULL) {
                     ob = newintobject(ival);
@@ -198,21 +166,21 @@ get_token(FILE *fp, int lastTokenTag) {
                 }
                 return INTEGER;
             } else { // we have a float
-                if (peek == '.') {
-                    lexeme[length++] = peek;
-                    nextc(fp);
+                if (source.peek == '.') {
+                    lexeme[length++] = source.peek;
+                    source.nextc();
                 }
-                return process_fraction(fp, ival, length);
+                return process_fraction(ival, length);
             }
         }
 
         length = 0;
         // float number starts with a dot, i.e. no integer part
-        if (peek == '.') {
-            lexeme[length++] = peek;
-            nextc(fp);
-            if (isdigit(peek)) {
-                return process_fraction(fp, 0, length);
+        if (source.peek == '.') {
+            lexeme[length++] = source.peek;
+            source.nextc();
+            if (isdigit(source.peek)) {
+                return process_fraction(0, length);
             } else {
                 return '.';
             }
@@ -221,13 +189,13 @@ get_token(FILE *fp, int lastTokenTag) {
         // Strings
         // TODO Interpret escape sequence
         length = 0;
-        if (peek == '"' || peek == '\'') {
-            lexeme[length++] = quote = peek;
+        if (source.peek == '"' || source.peek == '\'') {
+            lexeme[length++] = quote = source.peek;
             do {
-                lastPeek = peek;
-                nextc(fp);
-                lexeme[length++] = peek;
-            } while (!(peek == quote && lastPeek != '\\'));
+                source.lastPeek = source.peek;
+                source.nextc();
+                lexeme[length++] = source.peek;
+            } while (!(source.peek == quote && source.lastPeek != '\\'));
             lexeme[length] = '\0';
             if (hashobject_lookup_by_string(constTable, lexeme) == NULL) {
                 lexeme[length - 1] = '\0'; // -1 to erase ending quote
@@ -239,16 +207,16 @@ get_token(FILE *fp, int lastTokenTag) {
                         ob);
                 DECREF(ob);
             }
-            nextc(fp); // read pass the ending quote
+            source.nextc(); // read pass the ending quote
             return STRING;
         }
 
         length = 0;
         // Identifiers
-        if (isalpha(peek) || peek == '_') {
-            while (isalnum(peek) || peek == '_') {
-                lexeme[length++] = peek;
-                nextc(fp);
+        if (isalpha(source.peek) || source.peek == '_') {
+            while (isalnum(source.peek) || source.peek == '_') {
+                lexeme[length++] = source.peek;
+                source.nextc();
             }
             lexeme[length] = '\0';
             tag = match_keyword();
@@ -259,17 +227,17 @@ get_token(FILE *fp, int lastTokenTag) {
         }
 
         // Any single character token
-        tag = peek;
+        tag = source.peek;
 
-        // Important, peek is set to blank so next call can proceed.
-        peek = ' ';
+        // Important, source.peek is set to blank so next call can proceed.
+        source.peek = ' ';
 
         return tag;
     }
 }
 
 void lexer_free() {
-    free(line);
+    free(source.line);
     free(lexeme);
 }
 

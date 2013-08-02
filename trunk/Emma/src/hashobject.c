@@ -259,12 +259,13 @@ hashobject_delete_by_string(EmObject *ho, char *key) {
  * Mapping functions
  */
 unsigned int
-hashobject_mp_length(EmObject *ob) {
+hashobject_mp_len(EmObject *ob) {
     return ((EmHashObject *)ob)->nitems;
 }
 
 static EmMappingMethods hash_as_mapping = {
-        hashobject_mp_length, // map length
+        hashobject_mp_len, // map length
+        0,
         0,
 };
 
