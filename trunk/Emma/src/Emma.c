@@ -1,3 +1,10 @@
+/*
+ * TODO
+ * 1. support line continuation
+ * 2. Check paired brackets
+ * 3.
+ */
+
 #include "Emma.h"
 
 EmObject *constTable;

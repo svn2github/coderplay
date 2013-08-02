@@ -16,7 +16,13 @@ lexer_init() {
 }
 
 
-int process_exponential(int length) {
+void lexer_free() {
+    free(source.line);
+    free(lexeme);
+}
+
+static int
+process_exponential(int length) {
     int expval = 0, sign = 1;
     if (source.peek == '-' || source.peek =='+') {
         if (source.peek == '-')
@@ -31,11 +37,10 @@ int process_exponential(int length) {
     }
     lexeme[length] = '\0';
     return expval*sign;
-
-
 }
 
-int process_fraction(int intpart, int length) {
+static int
+process_fraction(int intpart, int length) {
 
     EmObject *ob;
     double d;
@@ -91,7 +96,7 @@ get_token(int lastTokenTag) {
         while (source.peek == ' ' || source.peek == '\t' || source.peek == CHAR_CR)
             source.nextc();
 
-        if (source.peek == 0)
+        if (source.peek == ENDMARK)
             return ENDMARK; // end of INPUT
 
         if (source.peek == '#')
@@ -102,14 +107,13 @@ get_token(int lastTokenTag) {
             while (source.peek == CHAR_LF) {
                 source.row += 1;
                 source.nextc();
-                // following line is to accomodate linux 
+                // following line is to accommodate Linux end-of-line sequence
                 if (source.peek == CHAR_CR) source.nextc();
             }
             if (lastTokenTag != CHAR_LF)
                 return CHAR_LF;
             else
                 continue;
-
         }
 
         if (source.peek == ';') {
@@ -235,10 +239,5 @@ get_token(int lastTokenTag) {
 
         return tag;
     }
-}
-
-void lexer_free() {
-    free(source.line);
-    free(lexeme);
 }
 
