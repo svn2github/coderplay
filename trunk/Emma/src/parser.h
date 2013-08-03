@@ -1,8 +1,8 @@
 #ifndef _PARSER_H
 #define _PARSER_H
 
-#include "lexer.h"
-
+void *parse_file();
+void *parse_prompt();
 void *parse();
 
 

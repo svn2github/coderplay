@@ -24,6 +24,9 @@ typedef struct _source {
     char *line;             // The current input line
     char peek;              // The look ahead character
     char lastPeek;          // The last look ahead char
+    int lastTag;            // The last returned tag
+    int nulcb;              // number of unbalanced left curly bracket
+    int isContinue;         // If set, the following reading are for line continuation
     unsigned int row;       // The current line number of the input line
     unsigned int pos;       // The current column number of the input line
     char PS1[10];           // prompt 1

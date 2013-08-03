@@ -9,8 +9,7 @@
 
 EmObject *constTable;
 
-int main(int argc, char **argv) {
-
+int init_all(int argc, char **argv) {
     // process command line arguments
     char *filename = NULL;
     FILE *fp = stdin;
@@ -27,22 +26,42 @@ int main(int argc, char **argv) {
     } else {
         source.type = SOURCE_TYPE_PROMPT;
     }
-
     source.filename = filename;
     source.fp = fp;
 
+    // Constant hash table
     constTable = newhashobject();
 
+    // initialize the lexer
+    lexer_init();
+}
+
+int cleanup() {
+    lexer_free();
+    freeobj(constTable);
+}
+
+int main(int argc, char **argv) {
+
+    init_all(argc, argv);
+
+
     // parse the input and generate syntax tree
-    parse();
+    if (source.type == SOURCE_TYPE_PROMPT) {
+        parse_prompt();
+    } else if (source.type == SOURCE_TYPE_FILE) {
+        parse_file();
+    }
 
     // close the input file
-    if (fp != stdin)
-        fclose(fp);
+    if (source.fp != stdin)
+        fclose(source.fp);
 
     printobj(constTable, stdout);
     printf("constTable = %s\n", tostrobj(constTable));
-    freeobj(constTable);
+
+
+    cleanup();
 
     return 0;
 }

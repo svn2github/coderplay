@@ -9,6 +9,7 @@
 #include "source.h"
 
 void nextc() {
+    source.lastPeek = source.peek;
     if (source.pos >= 0 && source.pos < strlen(source.line)) {
         source.peek = source.line[source.pos];
         source.pos++;
@@ -17,7 +18,6 @@ void nextc() {
             if (fgets(source.line, BUFSIZ - 1, source.fp) == NULL) {
                 source.peek = ENDMARK;
             } else {
-                source.row += 1;
                 source.peek = ' ';
                 source.pos = 0;
             }
@@ -42,10 +42,13 @@ EmSource source = {
         NULL,                   // current line
         ' ',                    // peek
         ' ',                    // lastPeek
+        CHAR_LF,                // lastTag
+        0,                      // nulcb
+        0,                      // isContinue
         0,                      // row
         0,                      // column
-        "In>",
-        "...",
+        "In>",                  // PS1
+        "...",                  // PS2
 
 };
 

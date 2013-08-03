@@ -5,16 +5,9 @@
 #include "token.h"
 #include "source.h"
 
-#define DEFAULT_WT_SIZE 127
-#define CHAR_CR         13
-#define CHAR_LF         10
-
-extern char *line;
-extern unsigned int row;
-extern unsigned int pos;
 extern char *lexeme;
 
 void lexer_init();
-int get_token(int lastTag);
+int get_token();
 void lexer_free();
 

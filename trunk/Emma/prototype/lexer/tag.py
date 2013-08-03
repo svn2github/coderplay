@@ -66,6 +66,8 @@ def gen_c_code():
     outs.write('#ifndef _TOKEN_H_\n#define _TOKEN_H_\n\n')
     outs.write('#define %-15s %d\n\n' %('ENDMARK', 0))
     outs.write('#define %-15s %d\n\n' %('EOL', 10))
+    outs.write('#define %-15s %d\n' %('CHAR_LF', 10))
+    outs.write('#define %-15s %d\n\n' %('CHAR_CR', 13))
 
     keys = __tagDict.keys()
     keys.sort()

@@ -5,6 +5,9 @@
 
 #define EOL             10
 
+#define CHAR_LF         10
+#define CHAR_CR         13
+
 #define DSTAR           256
 #define LE              257
 #define EQ              258

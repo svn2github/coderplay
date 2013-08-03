@@ -23,6 +23,19 @@ void lexer_free() {
     free(lexeme);
 }
 
+static void
+source_balance() {
+    if (source.peek == '{') {
+        source.nulcb++;
+    }
+    else if (source.peek == '}') {
+        source.nulcb--;
+        if (source.nulcb < 0) {
+            log_error(SYNTAX_ERROR, "redundant right curly bracket");
+        }
+    }
+}
+
 static int
 process_exponential(int length) {
     int expval = 0, sign = 1;
@@ -86,7 +99,7 @@ process_fraction(int intpart, int length) {
 }
 
 int
-get_token(int lastTag) {
+get_token() {
 
     int tag;
     int length;
@@ -94,12 +107,9 @@ get_token(int lastTag) {
     EmObject *ob;
 
     while (1) {
-        // ignore whites and CR for linux 
+        // ignore whites and CR for Linux
         while (source.peek == ' ' || source.peek == '\t' || source.peek == CHAR_CR)
             nextc();
-
-        if (source.peek == ENDMARK)
-            return ENDMARK; // end of INPUT
 
         if (source.peek == '#')
             while (source.peek != CHAR_LF)
@@ -107,21 +117,30 @@ get_token(int lastTag) {
 
         if (source.peek == CHAR_LF) {
             source.peek = ' ';
-            if (lastTag != CHAR_LF || source.type == SOURCE_TYPE_PROMPT)
-                return CHAR_LF;
-            else
-                continue;
+            return CHAR_LF;
         }
 
         // following line is to accommodate Linux end-of-line sequence
-        if (source.peek == CHAR_CR && lastTag == CHAR_LF) {
+        if (source.peek == CHAR_CR && source.lastPeek == CHAR_LF) {
             source.peek = ' ';
             continue;
         }
 
+        // Only comments and EOL are allowed after line continuation
+        // symbol. So if the code reaches here with continuation mode
+        // on, it is an error.
+        if (source.isContinue) {
+            log_error(SYNTAX_ERROR,
+                    "illegal tokens after line continuation symbol");
+        }
+
+
+        if (source.peek == ENDMARK)
+            return ENDMARK; // end of INPUT
+
         if (source.peek == ';') {
             while (source.peek == ';') nextc();
-            if (lastTag != ';' && lastTag != CHAR_LF)
+            if (source.lastTag != ';' && source.lastTag != CHAR_LF)
                 return ';';
             else
                 continue;
@@ -199,7 +218,6 @@ get_token(int lastTag) {
         if (source.peek == '"' || source.peek == '\'') {
             lexeme[length++] = quote = source.peek;
             do {
-                source.lastPeek = source.peek;
                 nextc();
                 lexeme[length++] = source.peek;
             } while (!(source.peek == quote && source.lastPeek != '\\'));
@@ -237,10 +255,22 @@ get_token(int lastTag) {
         // Any single character token
         tag = source.peek;
 
+        // Check source bracket balance
+        source_balance();
+
         // Important, source.peek is set to blank so next call can proceed.
         source.peek = ' ';
+
+
+        // line continuation
+        if (tag == '\\') {
+            source.isContinue = 1;
+            continue;
+        }
 
         return tag;
     }
 }
+
+
 

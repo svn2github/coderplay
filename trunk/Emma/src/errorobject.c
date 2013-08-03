@@ -5,6 +5,7 @@
  *      Author: ywang@gmail.com
  */
 #include "allobject.h"
+#include "source.h"
 
 
 // The singleton error object
@@ -15,12 +16,22 @@ EmErrorObject errobj = {
         NULL,       // message
 };
 
-void * log_error(int errorNumber, char *message) {
+void *log_error(int errorNumber, char *message) {
+
     errobj.errorNumber = errorNumber;
     errobj.message = message;
+    fprintf(stderr, "Error: %s near <row %d, col %d>\n", message,
+            source.row + 1, source.pos);
+    if (source.type == SOURCE_TYPE_FILE)
+        exit(1);
     return NULL;
 }
 
+void fatal(char *message) {
+    fprintf(stderr, "Fatal error: %s near <row %d, col %d>\n", message,
+            source.row + 1, source.pos);
+    exit(1);
+}
 
 EmTypeObject Errortype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1

@@ -14,6 +14,7 @@
 #define TYPE_ERROR      3
 #define KEY_ERROR       4
 #define INDEX_ERROR     5
+#define SYNTAX_ERROR    6
 
 typedef struct _errorobject {
     OB_HEAD;
@@ -25,5 +26,6 @@ typedef struct _errorobject {
 extern EmTypeObject Errortype;
 
 void* log_error(int errorNumber, char *message);
+void fatal(char *message);
 
 #endif /* ERROROBJECT_H_ */

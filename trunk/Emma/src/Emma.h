@@ -13,6 +13,7 @@
 #include <math.h>
 #include "allobject.h"
 #include "source.h"
+#include "lexer.h"
 #include "parser.h"
 
 /*
