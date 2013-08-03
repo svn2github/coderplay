@@ -98,6 +98,12 @@ process_fraction(int intpart, int length) {
     return FLOAT;
 }
 
+/*
+ * The reading is performed here. There we should really deal with the
+ * prompt output (e.g. PS1, PS2) here. Thus the parser should not care
+ * about any I/O. It simply asks for token and build syntax tree.
+ */
+
 int
 get_token() {
 
@@ -117,7 +123,7 @@ get_token() {
 
         if (source.peek == CHAR_LF) {
             source.peek = ' ';
-            return CHAR_LF;
+            return (source.lastTag = CHAR_LF);
         }
 
         // following line is to accommodate Linux end-of-line sequence
@@ -136,39 +142,39 @@ get_token() {
 
 
         if (source.peek == ENDMARK)
-            return ENDMARK; // end of INPUT
+            return (source.lastTag = ENDMARK); // end of INPUT
 
         if (source.peek == ';') {
             while (source.peek == ';') nextc();
             if (source.lastTag != ';' && source.lastTag != CHAR_LF)
-                return ';';
+                return (source.lastTag = ';');
             else
                 continue;
         }
 
         if (source.peek == '>') {
             if (matchc('='))
-                return GE;
+                return (source.lastTag = GE);
             else
-                return '>';
+                return (source.lastTag = '>');
         }
         else if (source.peek == '=') {
             if (matchc('='))
-                return EQ;
+                return (source.lastTag = EQ);
             else
-                return '=';
+                return (source.lastTag = '=');
         }
         else if (source.peek == '<') {
             if (matchc('='))
-                return LE;
+                return (source.lastTag = LE);
             else
-                return '<';
+                return (source.lastTag = '<');
         }
         else if (source.peek == '*') {
             if (matchc('*'))
-                return DSTAR;
+                return (source.lastTag = DSTAR);
             else
-                return '*';
+                return (source.lastTag = '*');
         }
 
         // Numbers
@@ -190,13 +196,13 @@ get_token() {
                             ob);
                 }
                 DECREF(ob);
-                return INTEGER;
+                return (source.lastTag = INTEGER);
             } else { // we have a float
                 if (source.peek == '.') {
                     lexeme[length++] = source.peek;
                     nextc();
                 }
-                return process_fraction(ival, length);
+                return (source.lastTag = process_fraction(ival, length));
             }
         }
 
@@ -206,9 +212,9 @@ get_token() {
             lexeme[length++] = source.peek;
             nextc();
             if (isdigit(source.peek)) {
-                return process_fraction(0, length);
+                return (source.lastTag = process_fraction(0, length));
             } else {
-                return '.';
+                return (source.lastTag = '.');
             }
         }
 
@@ -234,7 +240,7 @@ get_token() {
             DECREF(ob);
 
             nextc(); // read pass the ending quote
-            return STRING;
+            return (source.lastTag = STRING);
         }
 
         length = 0;
@@ -247,9 +253,9 @@ get_token() {
             lexeme[length] = '\0';
             tag = match_keyword();
             if (tag) // keywords
-                return tag;
+                return (source.lastTag = tag);
             else // identifier
-                return IDENT;
+                return (source.lastTag = IDENT);
         }
 
         // Any single character token
@@ -268,7 +274,7 @@ get_token() {
             continue;
         }
 
-        return tag;
+        return (source.lastTag = tag);
     }
 }
 

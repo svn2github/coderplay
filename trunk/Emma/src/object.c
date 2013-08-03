@@ -3,7 +3,7 @@
 char asString[AS_STRING_LENGTH];
 
 /*
- * Following function can be used as placeholders for type object's
+ * Following function can be used as placeholder for type object's
  * function pointers.
  */
 void object_print(EmObject *ob, FILE *fp) {
