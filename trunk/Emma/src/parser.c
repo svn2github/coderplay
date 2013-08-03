@@ -9,6 +9,9 @@ parse() {
 
     int lastTag = CHAR_LF;
 
+    if (source.type == SOURCE_TYPE_PROMPT)
+        printf("%s ", source.PS1);
+
     do {
 
         lastTag = tag = get_token(lastTag);
@@ -16,7 +19,9 @@ parse() {
         if (tag == ENDMARK) {
             printf("%5d  %-20s\n", tag, "END");
         } else if (tag == 10) {
-            printf("%5d  %-20s\n", tag, "EOL");
+            printf("%5d  %-20s at line %d\n", tag, "EOL", source.row);
+            if (source.type == SOURCE_TYPE_PROMPT)
+                printf("%s ", source.PS1);
         } else if (tag < 256) {
             printf("%5d  %-20c\n", tag, tag);
         } else if (tag == 256) {

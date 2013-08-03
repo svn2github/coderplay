@@ -17,6 +17,7 @@ void nextc() {
             if (fgets(source.line, BUFSIZ - 1, source.fp) == NULL) {
                 source.peek = ENDMARK;
             } else {
+                source.row += 1;
                 source.peek = ' ';
                 source.pos = 0;
             }
@@ -43,8 +44,9 @@ EmSource source = {
         ' ',                    // lastPeek
         0,                      // row
         0,                      // column
-        nextc,
-        matchc,
+        "In>",
+        "...",
+
 };
 
 

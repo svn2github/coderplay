@@ -26,9 +26,12 @@ typedef struct _source {
     char lastPeek;          // The last look ahead char
     unsigned int row;       // The current line number of the input line
     unsigned int pos;       // The current column number of the input line
-    void (* nextc) ();      // Get next character
-    int (* matchc) (char c);// match the given character
+    char PS1[10];           // prompt 1
+    char PS2[10];           // prompt 2
 } EmSource;
+
+void nextc();
+int matchc(char c);
 
 extern EmSource source;
 
