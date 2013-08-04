@@ -367,50 +367,45 @@ by a linefeed). All of these sequences are treated equally as a single
 EOL symbol.
 
 \subsubsection{Logical line}
-A logical line can be a single physical line, multiple physical lines, or
-part of a single physical line.
-
-A logical line is terminated by either a EOL or a semicolon. 
-Termination of a logical line by a EOL is the most straightforward choice. 
-This makes a physical line to be also a logical line.
-
-A semicolon is supposed to be used in middle of a physical line to separate 
-statements. This allows a single physical line to contain multiple logical
-lines, which is useful to enter a long script in an interactive session.
+A logical line can be a single physical line or multiple physical lines.
+A logical line is terminated an EOL, which makes a physical line to be also 
+a logical line.
 
 The line continuation symbol, ``\textbackslash", joins two physical lines
 by effectively ignoring the EOL symbol between them.
 This makes it possible to have a logical line span across multiple 
 physical lines. 
+Note that only comments and EOL are allowed after the line continuation
+symbol.
 
 Simple statements can never cross the boundaries of a logical line.
-For compound statements, the language syntax allows both EOL and semicolon
-to be in between statements in a ``\{\}'' pair. Therefore compound statements
-may be consisted of multiple logical lines. Note that even for a compound 
-statement, line termination is still not allowed outside of the 
-``\{\}'' pair. 
+For compound statements, the language syntax allows EOLs
+to be in between statements inside a ``\{\}'' pair. 
+Therefore compound statements may be consisted of multiple logical lines. 
+
+Note that even for a compound statement, before the statement ends, 
+EOL is still not allowed outside of the ``\{\}'' pair 
 
 These rules are better clarified with the following example:
 
 \begin{lstlisting}
 # Line termination rules
 if (x == 1) {
-    y = 1;
+    y = 1
 } else {
     y = 0
-} a = 5; b = 6
+}
+a = 5
 \end{lstlisting}
 
-Note that both EOL and semicolon can appear inside the ``\{\}'' pairs. 
-But lines cannot be terminated outside of the ``\{\}'' pairs. That is
-why the ``\{'' has to be in the same line with ``\lstinline$if (x == 1)$''.
+Note EOLs can appear inside the ``\{\}'' pairs. 
+But they cannot present outside of the ``\{\}'' pairs before the end of
+the if statement. 
+That is why the ``\{'' has to be in the same line with 
+``\lstinline$if (x == 1)$''.
 For the same reason, ``\lstinline$else$'' is in the same line with both 
 the leading
-``\}'' and the ending ``\{''. Also note that the ``\lstinline$a = 5$'' 
-statement does
-not need a semicolon before it because the previous compound statement
-is properly terminated by a ``\}''. In contrast, a semicolon is needed
-after it for the following ``\lstinline$b = 6$'' statement.
+``\}'' and the ending ``\{''. 
 
 \subsubsection{Line joining}
 The backslash character, ``\textbackslash'', can be used to join two 
@@ -531,11 +526,6 @@ FOLLOW($A$) are disjoint sets.
 \end{itemize}
 
 The BNF notations of the Emma language grammar are shown as follows:
-\footnote{
-The grammar shown here does have left recursive terms and they
-can be sysmatically eliminated during the parser writing. They
-are however shown here because it is more concise and easy to
-read.}
 
 \setlength{\grammarparsep}{10pt plus 1pt minus 1pt} % increase separation between rules
 \setlength{\grammarindent}{12em} % increase separation between LHS/RHS 
@@ -543,24 +533,53 @@ read.}
 
 % We could let lexer to do more work on merge consecutive ';' as a single ';'
 
-<program> ::= <statement>*
+<file_input> ::= <statement>* "ENDMARK"
+
+<prompt_input> ::= <statement>
+
+<string_input> ::= <statement>* "ENDMARK"
 
 <statement> ::= "EOL" 
-    \alt <stmt_list> [`;'] "EOL"
-
-<stmt_list> ::= <simple_stmt_list> | <compound_stmt_list>
-
-<simple_stmt_list> ::= <simple_stmt> [ `;' <list_rest> ]
-
-<compound_stmt_list> ::= <compound_stmt> [`;' <list_rest> ]
-
-<list_rest> ::= <smiple_stmt_list> 
-    \alt <compound_stmt_list>
+    \alt <stmt> "EOL"
 
 <stmt> ::= <simple_stmt> 
-    \alt <stmt_block>
+    \alt <compound_stmt>
+    
 
-<stmt_block> ::= `{' <statement>* [<stmt_list>] "EOL"* `}'
+<simple_stmt> ::= <expression>
+	\alt <assign_stmt>                    
+	\alt <print_stmt>
+	\alt <read_stmt>
+	\alt <continue_stmt>
+	\alt <break_stmt>
+	\alt <return_stmt>
+	\alt <package_stmt>
+	\alt <import_stmt>
+
+<expression> ::= <r_expr>
+	
+<print_stmt> ::= `print' [`>' <primary>] [<expression_list>]
+
+<read_stmt> ::= `read' [`<' <primary>] <expression_list>
+
+<expression_list> ::= <expression> (`,' <expression>)*
+
+<assign_stmt> ::= <target> `=' <expression>
+
+<target> ::= "IDENT" <trailer>* \footnote{Additional rule is enforced for the
+assign_stmt by the interpreter that it cannot assign to function calls.}
+
+<continue_stmt> ::= `continue'
+
+<break_stmt> ::= `break'
+
+<return_stmt> ::= `return' <expression>
+
+<package_stmt> ::= `package' "IDENT"
+
+<import_stmt> ::= `import' "IDENT" (`.' "IDENT" | `*')*\footnote{
+Additional rule is enforced by the interpreter to make sure the asterisk
+can only appear once at the end of the line or not present at all.}
 
 <compound_stmt> ::= <if_stmt>
 	\alt <while_stmt>
@@ -569,62 +588,28 @@ read.}
     \alt <classdef>
     \alt <try_stmt>
 
-<if_stmt> ::= `if' <expression> <stmt> [`elif' <stmt>] [`else' <stmt>]
+<if_stmt> ::= `if' <expression> <suite> [`elif' <suite>] [`else' <suite>]
               
-<while_stmt> ::= `while' <expression> <stmt>
+<while_stmt> ::= `while' <expression> <suite>
 
-<for_stmt> ::= `for' "IDENT" `=' <for_expr> <stmt>
+<for_stmt> ::= `for' "IDENT" `=' <for_expr> <suite>
 
 <for_expr> ::= <expression> `,' <expression> [`,' <expression>]
 
-<oparm_list> ::= <oparm> (`,' <oparm>)*
+<funcdef> ::= `def' "IDENT" `(' [<parmlist>] `)' <suite>
 
-<oparm> ::= <kvpair> | "IDENT"
+<classdef> ::= `class' "IDENT" `(' "IDENT" `)' <suite>
 
-<parmlist> ::= <oparm_list> [`,' `*' "IDENT"] [`,' `**' "IDENT"]
-    \alt `*' "IDENT" [`,' `**' "IDENT"]
-    \alt `**' "IDENT"
+<try_stmt> ::= `try' <suite> (<catch>)$^{+}$ [<finally>]
 
-<funcdef> ::= `def' "IDENT" `(' [<parmlist>] `)' <stmt>
+<catch> ::= `catch' `(' "IDENT" "IDENT" `)' <suite>
 
-<classdef> ::= `class' "IDENT" `(' "IDENT" `)' <stmt>
+<finally> ::= `finally' <suite>
 
-<try_stmt> ::= `try' <stmt> (<catch>)$^{+}$ [<finally>]
+<suite> ::= <simple_stmt> | <stmt_block>
 
-<catch> ::= `catch' `(' "IDENT" "IDENT" `)' <stmt>
+<stmt_block> ::= `{' "EOL" <statement>* `}'
 
-<finally> ::= `finally' <stmt>
-
-<simple_stmt> ::= <expression>
-	\alt <assign_stmt>                    
-	\alt <print_stmt>
-	\alt `continue'
-	\alt `break'
-	\alt `return' <expression>
-	
-<print_stmt> ::= `print' [`>' <primary>] [<expression_list>]
-
-<read_stmt> ::= `read' [`<' <primary>] <expression_list>
-
-<expression_list> ::= <expression> (`,' <expression>)*
-
-<target> ::= "IDENT" | <dotname> | <slice>
-
-<assign_stmt> ::= <target> `=' <expression>
-
-<r_orop> ::= `or' | `xor'
-
-<r_andop> ::= `and'
-
-<l_op> ::= `>' | `<' | `>=' | `<=' | `==' | `!='
-
-<addop> ::= `+' | `-'
-
-<mulop> ::= `*' | `/' | `\%'
-
-<unary_op> ::= `+' | `-'
-
-<expression> ::= <r_expr>
 
 <r_expr> ::= <r_term> (<r_orop> <r_term>)*
 
@@ -636,25 +621,34 @@ read.}
 
 <a_expr> ::= <a_term> (<addop> <a_term>)*
 
-<a_term> ::= <u_expr> (<mulop> <u_expr>)*
+<a_term> ::= <factor> (<mulop> <factor>)*
 
-<u_expr> ::= [<unary_op>] <power>
+<factor> ::= <unary_op> <factor> | <power>
 
-<power> ::= <factor> [`**' <u_expr>]
+<power> ::= <primary> <trailer>* [`**' <factor>]
+
+<primary> ::= "IDENT" | <literal>
+
+<trailer> ::= `(' [<arglist>] `)' 
+	\alt `[' <subscription> `]'
+	\alt `.' "IDENT"
 
 <literal> ::= "STRING" | "NUMBER" | "NULL"
 
-<str_factor> :: = <primary> | "STRING"
 
-<factor> ::= <primary> | <literal> | `(' <expression> `)'
+<oparm_list> ::= <oparm> (`,' <oparm>)*
+
+<oparm> ::= <kvpair> | "IDENT"
+
+<parmlist> ::= <oparm_list> [`,' `*' "IDENT"] [`,' `**' "IDENT"]
+    \alt `*' "IDENT" [`,' `**' "IDENT"]
+    \alt `**' "IDENT"
 
 <kvpair> ::= "IDENT" `=' <expression>
 
 <oarg> ::= <kvpair> | <expression>
 
 <arglist> ::= <oarg> (`,' <oarg>)*
-
-<call> ::= <primary> `(' [<arglist>] `)'
 
 <idxlist> ::= <singleidx> (`,' <expression>)*
 
@@ -669,11 +663,17 @@ read.}
 	\alt long_idxrange 
 	\alt idxlist
 
-<slice> ::= <primary> `[' <subscription> `]'
+<r_orop> ::= `or' | `xor'
 
-<dotname> ::= <primary> [`.' "IDENT"]
+<r_andop> ::= `and'
 
-<primary> ::= "IDENT" | <dotname> | <slice> | <call>
+<l_op> ::= `>' | `<' | `>=' | `<=' | `==' | `!='
+
+<addop> ::= `+' | `-'
+
+<mulop> ::= `*' | `/' | `\%'
+
+<unary_op> ::= `+' | `-'
 
 \end{grammar}
 
