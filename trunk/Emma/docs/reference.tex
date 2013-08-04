@@ -615,7 +615,7 @@ can only appear once at the end of the line or not present at all.}
 
 <r_term> ::= <r_factor> (<r_andop> <r_factor>)*
 
-<r_factor> ::= [`not'] <l_expression>
+<r_factor> ::= [`not'] <l_expr>
 
 <l_expr> ::= <a_expr> (<l_op> <a_expr>)*
 
@@ -625,9 +625,11 @@ can only appear once at the end of the line or not present at all.}
 
 <factor> ::= <unary_op> <factor> | <power>
 
-<power> ::= <primary> <trailer>* [`**' <factor>]
+<power> ::= <primary> [`**' <factor>]
 
-<primary> ::= "IDENT" | <literal>
+<primary> ::= <atom> <trailer>*
+
+<atom> ::= "IDENT" | <literal>
 
 <trailer> ::= `(' [<arglist>] `)' 
 	\alt `[' <subscription> `]'

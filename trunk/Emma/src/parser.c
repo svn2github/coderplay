@@ -12,20 +12,24 @@ static int match_token(int t) {
     }
 }
 
-void *parse_file() {
+Node *parse_file() {
+    Node *stree = newsyntaxtree(FILE_INPUT);
     do {
         parse_statement();
-
     } while (tag != ENDMARK);
 }
 
-
-void *parse_prompt() {
+Node *parse_prompt() {
     return parse_statement();
 }
 
+Node *parse_string() {
+    do {
+        parse_statement();
+    } while (tag != ENDMARK);
+}
 
-void *parse_statement() {
+Node *parse_statement() {
     tag = get_token();
     while (tag == EOL) {
         tag = get_token();
@@ -37,7 +41,7 @@ void *parse_statement() {
     }
 }
 
-void *parse_stmt_list() {
+Node *parse_stmt_list() {
     tag = get_token();
     if (tag == IF) {
         parse_compound_stmt();
@@ -47,11 +51,11 @@ void *parse_stmt_list() {
 }
 
 
-void *parse_compound_stmt() {
+Node *parse_compound_stmt() {
 
 }
 
-void *parse_simple_stmt() {
+Node *parse_simple_stmt() {
 
 }
 
@@ -61,7 +65,7 @@ void *parse_simple_stmt() {
 
 
 
-void *
+Node *
 parse() {
 
 
