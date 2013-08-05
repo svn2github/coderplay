@@ -12,6 +12,11 @@
 #include "allobject.h"
 #include "token.h"
 
+// The ith child from the left, zero based
+#define CHILD(n, i)     (&(n)->child[i])
+// The ith child from the right, zero based
+#define RCHILD(n, i)    (&(n)->child[(n)->nchildren-i-1])
+
 extern char *node_types[];
 
 typedef struct _node {

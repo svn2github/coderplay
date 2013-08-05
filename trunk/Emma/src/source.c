@@ -19,6 +19,7 @@ void nextc() {
                 source.peek = ENDMARK;
             } else {
                 source.peek = ' ';
+                source.row++;
                 source.pos = 0;
             }
         } else {

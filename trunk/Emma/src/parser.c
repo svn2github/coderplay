@@ -8,6 +8,7 @@ static int match_token(int t) {
         tag = get_token(); // get next token
         return 1;
     } else {
+        fprintf(stderr, "Unexpected token near %d, %d\n", source.row, source.pos);
         log_error(SYNTAX_ERROR, "Unexpected token");
         return 0;
     }
@@ -121,9 +122,24 @@ Node *parse_simple_stmt(Node *p) {
     Node * n = addchild(p, SIMPLE_STMT, NULL, source.row);
     if (tag == PRINT) {
         parse_print_stmt(n);
+    } else if (tag == READ){
+        parse_read_stmt(n);
+    } else if (tag == CONTINUE) {
+        parse_continue_stmt(n);
+    } else if (tag == BREAK) {
+        parse_break_stmt(n);
+    } else if (tag == RETURN) {
+        parse_return_stmt(n);
+    } else if (tag == PACKAGE) {
+        parse_package_stmt(n);
+    } else if (tag == IMPORT) {
+        parse_import_stmt(n);
+    } else if (tag == IDENT) {
+        parse_assign_stmt(n); // an expr can be returned instead of an assign_stmt
     } else {
-        printf("here\n");
+        parse_expr(n);
     }
+    return n;
 }
 
 Node *parse_print_stmt(Node *p) {
@@ -137,9 +153,74 @@ Node *parse_print_stmt(Node *p) {
     return n;
 }
 
-Node *parse_compound_stmt(Node *p) {
+Node *parse_read_stmt(Node *p) {
+    Node *n = addchild(p, READ_STMT, NULL, source.row);
 
+    return n;
 }
+
+Node *parse_continue_stmt(Node *p) {
+    Node *n = addchild(p, CONTINUE_STMT, NULL, source.row);
+
+    return n;
+}
+
+Node *parse_break_stmt(Node *p) {
+    Node *n = addchild(p, BREAK_STMT, NULL, source.row);
+
+    return n;
+}
+
+Node *parse_return_stmt(Node *p) {
+    Node *n = addchild(p, RETURN_STMT, NULL, source.row);
+
+    return n;
+}
+
+Node *parse_package_stmt(Node *p) {
+    Node *n = addchild(p, PACKAGE_STMT, NULL, source.row);
+
+    return n;
+}
+
+Node *parse_import_stmt(Node *p) {
+    Node *n = addchild(p, IMPORT_STMT, NULL, source.row);
+
+    return n;
+}
+
+Node *parse_assign_stmt(Node *p) {
+    Node *n = addchild(p, ASSIGN_STMT, NULL, source.row);
+    Node *t = parse_target(n);
+    if (tag == '=') { // we have an assignment
+        if (t->nchildren > 1 && CHILD(t,1)->type == TRAILER) { // we have a trailer
+            // Cannot assign to function calls
+            if (RCHILD(CHILD(t,1), 0)->type == ')') {
+                printf("cannot assign to function calls\n");
+            }
+            log_error(SYNTAX_ERROR, "cannot assign to function calls");
+        }
+        parse_token(n, '=', NULL);
+        parse_expr(n);
+    } else { // it is actually an expression
+        n->type = EXPR;
+    }
+    return n;
+}
+
+Node *parse_target(Node *p) {
+    Node *n = addchild(p, TARGET, NULL, source.row);
+    parse_token(n, IDENT, lexeme);
+    parse_trailer(n);
+    return n;
+}
+
+
+Node *parse_compound_stmt(Node *p) {
+    return NULL;
+}
+
+
 
 Node *parse_expr_list(Node *p) {
     Node *n = addchild(p, EXPR_LIST, NULL, source.row);
@@ -260,18 +341,24 @@ Node *parse_atom(Node *p) {
 }
 
 Node *parse_trailer(Node *p) {
-    Node *n = addchild(p, TRAILER, NULL, source.row);
-    if (tag == '(') {
-        parse_token(n, '(', NULL);
-        parse_arglist(n);
-        parse_token(n, ')', NULL);
-    } else if (tag == '[') {
-        parse_token(n, '[', NULL);
-        parse_subscription(n);
-        parse_token(n, ']', NULL);
-    } else {
-        parse_token(n, '.', NULL);
-        parse_token(n, IDENT, lexeme);
+    Node *n = NULL;
+
+    while (tag == '(' || tag == '[' || tag == '.') {
+        if (n == NULL)
+            n = addchild(p, TRAILER, NULL, source.row);
+
+        if (tag == '(') {
+            parse_token(n, '(', NULL);
+            parse_arglist(n);
+            parse_token(n, ')', NULL);
+        } else if (tag == '[') {
+            parse_token(n, '[', NULL);
+            parse_subscription(n);
+            parse_token(n, ']', NULL);
+        } else if (tag == '.') {
+            parse_token(n, '.', NULL);
+            parse_token(n, IDENT, lexeme);
+        }
     }
     return n;
 }

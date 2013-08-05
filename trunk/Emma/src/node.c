@@ -94,7 +94,7 @@ static void printchildren(Node *n) {
     } else if (n->type >= TOKEN_BASE) {
         printf("%s(", token_types[n->type-TOKEN_BASE]);
     } else {
-        printf("%c(", n->type);
+        printf("%c", n->type);
     }
 
     if (nlevels == 1) {
@@ -109,7 +109,8 @@ static void printchildren(Node *n) {
         if (ii<n->nchildren-1)
             printf(",");
     }
-    printf(")");
+    if (n->type >= TOKEN_BASE)
+        printf(")");
 
     nlevels--;
 
