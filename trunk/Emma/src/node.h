@@ -11,6 +11,8 @@
 
 #include "allobject.h"
 
+extern char *node_types[];
+
 typedef struct _node {
     int type;
     char *lexeme;
@@ -22,5 +24,6 @@ typedef struct _node {
 Node *newparsetree(int type);
 Node *addchild(Node *parent, int type, char *lexeme, unsigned int row);
 void freetree(Node *ptree);
+void printtree(Node *ptree);
 
 #endif /* NODE_H_ */

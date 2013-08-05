@@ -77,3 +77,32 @@ void freetree(Node *ptree) {
     }
 }
 
+static void printchildren(Node *n) {
+    int ii;
+
+    if (n->type >= 1000) {
+        printf("%s(", node_types[n->type-1000]);
+    } else if (n->type > 255) {
+        printf("%d(", n->type);
+    } else {
+        printf("%c(", n->type);
+    }
+    if (n->lexeme) {
+        printf("%s", n->lexeme);
+    }
+    for (ii=0;ii<n->nchildren;ii++) {
+        printchildren(&n->child[ii]);
+        if (ii<n->nchildren-1) {
+            printf(",");
+        }
+    }
+    printf(")");
+}
+
+void printtree(Node *ptree) {
+    if (ptree != NULL) {
+        printchildren(ptree);
+        printf("\n");
+    }
+}
+

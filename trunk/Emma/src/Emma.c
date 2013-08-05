@@ -53,6 +53,8 @@ int main(int argc, char **argv) {
         ptree = parse_file_input();
     }
 
+    printtree(ptree);
+
     // release the tree
     freetree(ptree);
 

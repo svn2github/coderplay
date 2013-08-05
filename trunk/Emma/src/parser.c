@@ -103,8 +103,10 @@ Node *parse_statement(Node *p) {
     if (tag == IF || tag == WHILE || tag == FOR || tag == DEF
             || tag == CLASS || tag == TRY) {
         parse_compound_stmt(n);
+        match_token(EOL);
     } else {
         parse_simple_stmt(n);
+        match_token(EOL);
     }
     return n;
 }
@@ -114,7 +116,7 @@ Node *parse_simple_stmt(Node *p) {
     if (tag == PRINT) {
         parse_print_stmt(n);
     } else {
-
+        printf("here\n");
     }
 }
 
@@ -245,6 +247,7 @@ Node *parse_atom(Node *p) {
         parse_token(n, ')', NULL);
     } else if (is_literal()) {
         addchild(n, tag, lexeme, source.row);
+        match_token(tag);
     } else {
         parse_token(n, IDENT, lexeme);
     }
