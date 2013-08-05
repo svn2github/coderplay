@@ -598,7 +598,7 @@ can only appear once at the end of the line or not present at all.}
 
 <try_stmt> ::= `try' <suite> (<catch_stmt>)$^{+}$ [<finally_stmt>]
 
-<catch_stmt> ::= `catch' `(' "IDENT" "IDENT" `)' <suite>
+<catch_stmt> ::= `catch' `(' "IDENT" `,' "IDENT" `)' <suite>
 
 <finally_stmt> ::= `finally' <suite>
 

@@ -19,6 +19,7 @@ char *token_types[] = {
         "CLASS",
         "AND",
         "OR",
+        "XOR",
         "NOT",
         "IMPORT",
         "PACKAGE",
