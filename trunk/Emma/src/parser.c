@@ -68,23 +68,29 @@ static Node * parse_token(Node *, int, char *);
 
 Node *parse_file_input() {
     Node *ptree = newparsetree(FILE_INPUT);
-    do {
+    tag = get_token();
+    while (tag != ENDMARK) {
         parse_statement(ptree);
-    } while (tag != ENDMARK);
+    };
     return ptree;
 }
 
 Node *parse_prompt_input() {
     Node *ptree = newparsetree(PROMPT_INPUT);
+    tag = get_token();
+    /*
+     * TODO: We can process magic command here
+     */
     parse_statement(ptree);
     return ptree;
 }
 
 Node *parse_string_input() {
-    Node *ptree = newparsetree(STRING_INPUT);
-    do {
+    Node *ptree = newparsetree(FILE_INPUT);
+    tag = get_token();
+    while (tag != ENDMARK) {
         parse_statement(ptree);
-    } while (tag != ENDMARK);
+    };
     return ptree;
 }
 
@@ -95,9 +101,9 @@ Node *parse_string_input() {
 Node *parse_statement(Node *p) {
     Node * n;
 
-    do {
+    while (tag == EOL) {
         tag = get_token();
-    } while (tag == EOL);
+    };
     n = addchild(p, STATEMENT, NULL, source.row);
 
     if (tag == IF || tag == WHILE || tag == FOR || tag == DEF
@@ -246,8 +252,7 @@ Node *parse_atom(Node *p) {
         parse_expr(n);
         parse_token(n, ')', NULL);
     } else if (is_literal()) {
-        addchild(n, tag, lexeme, source.row);
-        match_token(tag);
+        parse_token(n, tag, lexeme);
     } else {
         parse_token(n, IDENT, lexeme);
     }

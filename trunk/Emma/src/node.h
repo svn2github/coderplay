@@ -10,6 +10,7 @@
 #define NODE_H_
 
 #include "allobject.h"
+#include "token.h"
 
 extern char *node_types[];
 

@@ -1,3 +1,38 @@
+char *token_types[] = {
+        "DSTAR",
+        "LE",
+        "EQ",
+        "GE",
+        "NE",
+        "PRINT",
+        "READ",
+        "IF",
+        "ELIF",
+        "ELSE",
+        "WHILE",
+        "FOR",
+        "CONTINUE",
+        "BREAK",
+        "DEF",
+        "RETURN",
+        "NUL",
+        "CLASS",
+        "AND",
+        "OR",
+        "NOT",
+        "IMPORT",
+        "PACKAGE",
+        "TRY",
+        "RAISE",
+        "CATCH",
+        "FINALLY",
+        "SELF",
+        "INTEGER",
+        "FLOAT",
+        "STRING",
+        "IDENT"
+};
+
 int match_keyword() {
     if (strcmp(lexeme, "print") == 0)
         return PRINT;

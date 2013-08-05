@@ -605,6 +605,8 @@ can only appear once at the end of the line or not present at all.}
 <suite> ::= <simple_stmt> | <stmt_block>
 
 <stmt_block> ::= `{' "EOL" <statement>* `}'
+	\alt `{' `}'\footnote(The empty pair of curly brackets is a syntax sugar
+to define an empty stmt_block. It is similar to python's pass statement.)
 
 
 <expr_list> ::= <expr> (`,' <expr>)*

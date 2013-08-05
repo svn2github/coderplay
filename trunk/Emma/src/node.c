@@ -6,6 +6,10 @@
  */
 #include "node.h"
 
+#define TOKEN_BASE      256
+#define NODE_BASE       1000
+
+
 Node *newparsetree(int type) {
     Node *n;
     if ((n = (Node *) malloc(sizeof(Node))) == NULL) {
@@ -77,30 +81,47 @@ void freetree(Node *ptree) {
     }
 }
 
+static int nlevels;
+
 static void printchildren(Node *n) {
+
     int ii;
 
-    if (n->type >= 1000) {
-        printf("%s(", node_types[n->type-1000]);
-    } else if (n->type > 255) {
-        printf("%d(", n->type);
+    nlevels++;
+
+    if (n->type >= NODE_BASE) {
+        printf("%s(", node_types[n->type-NODE_BASE]);
+    } else if (n->type >= TOKEN_BASE) {
+        printf("%s(", token_types[n->type-TOKEN_BASE]);
     } else {
         printf("%c(", n->type);
     }
-    if (n->lexeme) {
-        printf("%s", n->lexeme);
+
+    if (nlevels == 1) {
+        printf("\n");
     }
+
+    if (n->lexeme)
+        printf("%s", n->lexeme);
+
     for (ii=0;ii<n->nchildren;ii++) {
         printchildren(&n->child[ii]);
-        if (ii<n->nchildren-1) {
+        if (ii<n->nchildren-1)
             printf(",");
-        }
     }
     printf(")");
+
+    nlevels--;
+
+    if (nlevels == 1) {
+        printf("\n");
+    }
+
 }
 
 void printtree(Node *ptree) {
     if (ptree != NULL) {
+        nlevels = 0;
         printchildren(ptree);
         printf("\n");
     }
