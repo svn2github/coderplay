@@ -42,7 +42,6 @@ EmSource source = {
         NULL,                   // current line
         ' ',                    // peek
         ' ',                    // lastPeek
-        CHAR_LF,                // lastTag
         0,                      // nulcb
         0,                      // isContinue
         0,                      // row

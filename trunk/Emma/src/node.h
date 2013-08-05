@@ -1,6 +1,6 @@
 /*
  * node.h
- * The syntax tree node.
+ * The parse tree node.
  *
  *  Created on: 04/08/2013
  *      Author: ywangd
@@ -13,12 +13,14 @@
 
 typedef struct _node {
     int type;
+    char *lexeme;
     int row;
     int nchildren;
     struct _node *child;
 } Node;
 
-Node *newstringobject(int type);
-
+Node *newparsetree(int type);
+Node *addchild(Node *parent, int type, char *lexeme, unsigned int row);
+void freetree(Node *ptree);
 
 #endif /* NODE_H_ */

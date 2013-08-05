@@ -4,15 +4,16 @@ CFLAGS=-g
 LIBS=-lm
 DEPS = Makefile lexer.h token.h lexer.i hashobject.h errorobject.h \
        stringobject.h object.h Emma.h intobject.h floatobject.h \
-       listobject.h source.h
+       listobject.h source.h token.h parser.h parser.hi parser.i \
+       node.h
        
 SRC = lexer.c parser.c Emma.c hashobject.c errobject.c stringobject.c \
       object.c typeobject.c intobject.c floatobject.c listobject.c \
-      source.c
+      source.c parser.c node.c
       
 OBJ = lexer.o parser.o Emma.o hashobject.o errorobject.o stringobject.o \
       object.o typeobject.o intobject.o floatobject.o listobject.o \
-      source.o
+      source.o parser.o node.o
 
 all: Emma
 

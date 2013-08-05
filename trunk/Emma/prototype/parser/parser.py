@@ -1,3 +1,5 @@
+from utils.utils import filepath, srcdir
+
 # parse tree node types
 ptree_types = \
 """
@@ -5,10 +7,9 @@ file_input
 prompt_input
 string_input
 statement
-stmt
 simple_stmt
 compound_stmt
-expression
+expr
 assign_stmt
 print_stmt
 read_stmt
@@ -17,9 +18,6 @@ break_stmt
 return_stmt
 package_stmt
 import_stmt
-r_expr
-primary
-expression_list
 target
 trailer
 if_stmt
@@ -28,10 +26,11 @@ for_stmt
 funcdef
 classdef
 try_stmt
-catch
-finally
+catch_stmt
+finally_stmt
 suite
 stmt_block
+r_expr
 r_term
 r_factor
 l_expr
@@ -39,16 +38,46 @@ a_expr
 a_term
 factor
 power
+primary
 atom
-oparm
-oparm_list
-kvpair
+expr_list
 parmlist
-oarg
+oparm_list
+oparm
+kvpair
 arglist
-idxlist
-singleidx
-long_idxrange
-short_idxrange
+oarg
 subscription
+singleidx
+short_idxrange
+long_idxrange
+idxlist
 """
+
+def gen_c_code():
+
+    node_types = [str.upper(type) for type in ptree_types.split('\n') if type != '']
+
+    outs = open(filepath('parser.hi', root=srcdir), 'w')
+    for ii in range(len(node_types)):
+        outs.write('#define %-20s %d\n' % (node_types[ii], ii+1000))
+    outs.write('\n')
+    for t in node_types:
+        if t in ["FILE_INPUT", "PROMPT_INPUT", "STRING_INPUT"]:
+            param = ''
+        else:
+            param = 'Node *parent'
+        outs.write('Node *parse_%s(%s);\n' % (str.lower(t), param))
+    outs.write('\nextern char *node_types[];\n')
+    outs.close()
+
+    outs = open(filepath('parser.i', root=srcdir), 'w')
+    outs.write('\nchar *node_types[] = {\n')
+    outs.write('        "%s"' % node_types[0])
+    for t in node_types[1:]:
+        outs.write(',\n        "%s"' % t)
+    outs.write('\n};\n')
+    outs.close()
+
+gen_c_code()
+

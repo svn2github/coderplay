@@ -123,7 +123,7 @@ get_token() {
 
         if (source.peek == CHAR_LF) {
             source.peek = ' ';
-            return (source.lastTag = CHAR_LF);
+            return CHAR_LF;
         }
 
         // following line is to accommodate Linux end-of-line sequence
@@ -140,41 +140,32 @@ get_token() {
                     "illegal tokens after line continuation symbol");
         }
 
-
         if (source.peek == ENDMARK)
-            return (source.lastTag = ENDMARK); // end of INPUT
-
-        if (source.peek == ';') {
-            while (source.peek == ';') nextc();
-            if (source.lastTag != ';' && source.lastTag != CHAR_LF)
-                return (source.lastTag = ';');
-            else
-                continue;
-        }
+            return ENDMARK; // end of INPUT
 
         if (source.peek == '>') {
             if (matchc('='))
-                return (source.lastTag = GE);
+                return GE;
             else
-                return (source.lastTag = '>');
+                return '>';
         }
         else if (source.peek == '=') {
             if (matchc('='))
-                return (source.lastTag = EQ);
+                return EQ;
             else
-                return (source.lastTag = '=');
+                return '=';
         }
         else if (source.peek == '<') {
             if (matchc('='))
-                return (source.lastTag = LE);
+                return LE;
             else
-                return (source.lastTag = '<');
+                return '<';
         }
         else if (source.peek == '*') {
             if (matchc('*'))
-                return (source.lastTag = DSTAR);
+                return DSTAR;
             else
-                return (source.lastTag = '*');
+                return '*';
         }
 
         // Numbers
@@ -196,13 +187,13 @@ get_token() {
                             ob);
                 }
                 DECREF(ob);
-                return (source.lastTag = INTEGER);
+                return INTEGER;
             } else { // we have a float
                 if (source.peek == '.') {
                     lexeme[length++] = source.peek;
                     nextc();
                 }
-                return (source.lastTag = process_fraction(ival, length));
+                return process_fraction(ival, length);
             }
         }
 
@@ -212,9 +203,9 @@ get_token() {
             lexeme[length++] = source.peek;
             nextc();
             if (isdigit(source.peek)) {
-                return (source.lastTag = process_fraction(0, length));
+                return process_fraction(0, length);
             } else {
-                return (source.lastTag = '.');
+                return '.';
             }
         }
 
@@ -240,7 +231,7 @@ get_token() {
             DECREF(ob);
 
             nextc(); // read pass the ending quote
-            return (source.lastTag = STRING);
+            return STRING;
         }
 
         length = 0;
@@ -253,9 +244,9 @@ get_token() {
             lexeme[length] = '\0';
             tag = match_keyword();
             if (tag) // keywords
-                return (source.lastTag = tag);
+                return tag;
             else // identifier
-                return (source.lastTag = IDENT);
+                return IDENT;
         }
 
         // Any single character token
@@ -274,7 +265,7 @@ get_token() {
             continue;
         }
 
-        return (source.lastTag = tag);
+        return tag;
     }
 }
 

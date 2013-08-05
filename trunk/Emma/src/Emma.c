@@ -45,13 +45,16 @@ int main(int argc, char **argv) {
 
     init_all(argc, argv);
 
-
-    // parse the input and generate syntax tree
+    Node *ptree;
+    // parse the input and generate parse tree
     if (source.type == SOURCE_TYPE_PROMPT) {
-        parse_prompt();
+        ptree = parse_prompt_input();
     } else if (source.type == SOURCE_TYPE_FILE) {
-        parse_file();
+        ptree = parse_file_input();
     }
+
+    // release the tree
+    freetree(ptree);
 
     // close the input file
     if (source.fp != stdin)

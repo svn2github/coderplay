@@ -20,10 +20,10 @@ void *log_error(int errorNumber, char *message) {
 
     errobj.errorNumber = errorNumber;
     errobj.message = message;
+    /*
     fprintf(stderr, "Error: %s near <row %d, col %d>\n", message,
             source.row + 1, source.pos);
-    if (source.type == SOURCE_TYPE_FILE)
-        exit(1);
+    */
     return NULL;
 }
 
