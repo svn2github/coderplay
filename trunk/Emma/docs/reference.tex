@@ -540,13 +540,11 @@ The BNF notations of the Emma language grammar are shown as follows:
 <string_input> ::= <statement>* "ENDMARK"
 
 <statement> ::= "EOL" 
-    \alt <stmt> "EOL"
+    \alt <simple_stmt> "EOL"
+    \alt <compound_stmt> "EOL"
 
-<stmt> ::= <simple_stmt> 
-    \alt <compound_stmt>
-    
 
-<simple_stmt> ::= <expression>
+<simple_stmt> ::= <expr>
 	\alt <assign_stmt>                    
 	\alt <print_stmt>
 	\alt <read_stmt>
@@ -556,15 +554,13 @@ The BNF notations of the Emma language grammar are shown as follows:
 	\alt <package_stmt>
 	\alt <import_stmt>
 
-<expression> ::= <r_expr>
+<expr> ::= <r_expr>
 	
-<print_stmt> ::= `print' [`>' <primary>] [<expression_list>]
+<print_stmt> ::= `print' [`>' <primary>] [<expr_list>]
 
-<read_stmt> ::= `read' [`<' <primary>] <expression_list>
+<read_stmt> ::= `read' [`<' <primary>] <expr_list>
 
-<expression_list> ::= <expression> (`,' <expression>)*
-
-<assign_stmt> ::= <target> `=' <expression>
+<assign_stmt> ::= <target> `=' <expr>
 
 <target> ::= "IDENT" <trailer>* \footnote{Additional rule is enforced for the
 assign_stmt by the interpreter that it cannot assign to function calls.}
@@ -573,7 +569,7 @@ assign_stmt by the interpreter that it cannot assign to function calls.}
 
 <break_stmt> ::= `break'
 
-<return_stmt> ::= `return' <expression>
+<return_stmt> ::= `return' <expr>
 
 <package_stmt> ::= `package' "IDENT"
 
@@ -588,13 +584,13 @@ can only appear once at the end of the line or not present at all.}
     \alt <classdef>
     \alt <try_stmt>
 
-<if_stmt> ::= `if' <expression> <suite> [`elif' <suite>] [`else' <suite>]
+<if_stmt> ::= `if' <expr> <suite> [`elif' <suite>] [`else' <suite>]
               
-<while_stmt> ::= `while' <expression> <suite>
+<while_stmt> ::= `while' <expr> <suite>
 
 <for_stmt> ::= `for' "IDENT" `=' <for_expr> <suite>
 
-<for_expr> ::= <expression> `,' <expression> [`,' <expression>]
+<for_expr> ::= <expr> `,' <expr> [`,' <expr>]
 
 <funcdef> ::= `def' "IDENT" `(' [<parmlist>] `)' <suite>
 
@@ -610,6 +606,8 @@ can only appear once at the end of the line or not present at all.}
 
 <stmt_block> ::= `{' "EOL" <statement>* `}'
 
+
+<expr_list> ::= <expr> (`,' <expr>)*
 
 <r_expr> ::= <r_term> (<r_orop> <r_term>)*
 
@@ -638,32 +636,32 @@ can only appear once at the end of the line or not present at all.}
 <literal> ::= "STRING" | "NUMBER" | "NULL"
 
 
-<oparm_list> ::= <oparm> (`,' <oparm>)*
-
-<oparm> ::= <kvpair> | "IDENT"
-
 <parmlist> ::= <oparm_list> [`,' `*' "IDENT"] [`,' `**' "IDENT"]
     \alt `*' "IDENT" [`,' `**' "IDENT"]
     \alt `**' "IDENT"
 
-<kvpair> ::= "IDENT" `=' <expression>
+<oparm_list> ::= <oparm> (`,' <oparm>)*
 
-<oarg> ::= <kvpair> | <expression>
+<oparm> ::= <kvpair> | "IDENT"
+
+<kvpair> ::= "IDENT" `=' <expr>
 
 <arglist> ::= <oarg> (`,' <oarg>)*
 
-<idxlist> ::= <singleidx> (`,' <expression>)*
-
-<long_idxrange> ::= <short_idxrange> `:' [<expression>]
-
-<short_idxrange> ::= <singleidx> `:' [<expression>] 
-
-<single_idx> ::= <expression>
+<oarg> ::= <kvpair> | <expr>
 
 <subscription> ::= single_idx 
 	\alt short_idxrange 
 	\alt long_idxrange 
 	\alt idxlist
+
+<single_idx> ::= <expr>
+
+<short_idxrange> ::= <singleidx> `:' [<expr>] 
+
+<long_idxrange> ::= <short_idxrange> `:' [<expr>]
+
+<idxlist> ::= <singleidx> (`,' <expr>)*
 
 <r_orop> ::= `or' | `xor'
 
