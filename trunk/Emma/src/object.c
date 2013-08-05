@@ -7,11 +7,11 @@ char asString[AS_STRING_LENGTH];
  * function pointers.
  */
 void object_print(EmObject *ob, FILE *fp) {
-    fprintf(fp, "<%s object at 0x%08x>\n", ob->type->tp_name, (unsigned int)ob);
+    fprintf(fp, "<%s object at 0x%08x>\n", ob->type->tp_name, (long)ob);
 }
 
 char *object_tostr(EmObject *ob) {
-    sprintf(asString, "<%s object at 0x%08x>", ob->type->tp_name, (unsigned int)ob);
+    sprintf(asString, "<%s object at 0x%08x>", ob->type->tp_name, (long)ob);
     return asString;
 }
 
