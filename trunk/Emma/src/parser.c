@@ -125,6 +125,9 @@ Node *parse_statement(Node *p) {
     while (tag == EOL) {
         tag = get_token();
     };
+    if (tag == ENDMARK)
+        return NULL;
+
     n = addchild(p, STATEMENT, NULL, source.row);
 
     if (tag == IF || tag == WHILE || tag == FOR || tag == DEF
