@@ -115,6 +115,7 @@ class WordsTable(object):
         self.reserve(Word('class', Tag.CLASS))
         self.reserve(Word('and', Tag.AND))
         self.reserve(Word('or', Tag.OR))
+        self.reserve(Word('xor', Tag.XOR))
         self.reserve(Word('not', Tag.NOT))
         self.reserve(Word('import', Tag.IMPORT))
         self.reserve(Word('package', Tag.PACKAGE))

@@ -27,6 +27,23 @@ void *log_error(int errorNumber, char *message) {
     return NULL;
 }
 
+static char *error_types[] = {
+        "NoError",
+        "MemoryError",
+        "SystemError",
+        "TypeError",
+        "KeyError",
+        "IndexError",
+        "SyntaxError",
+};
+
+void printerror() {
+    fprintf(stderr, "%s: %s near <row %d, col %d>\n",
+            error_types[errobj.errorNumber],
+            errobj.message,
+            source.row, source.pos);
+}
+
 void fatal(char *message) {
     fprintf(stderr, "Fatal error: %s near <row %d, col %d>\n", message,
             source.row + 1, source.pos);

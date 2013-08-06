@@ -65,6 +65,8 @@ int match_keyword() {
         return AND;
     else if (strcmp(lexeme, "or") == 0)
         return OR;
+    else if (strcmp(lexeme, "xor") == 0)
+        return XOR;
     else if (strcmp(lexeme, "not") == 0)
         return NOT;
     else if (strcmp(lexeme, "import") == 0)

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <setjmp.h>
 #include "allobject.h"
 #include "source.h"
 #include "lexer.h"
@@ -22,5 +23,6 @@
  */
 extern EmObject *constTable;
 
+extern jmp_buf __parse_buf;
 
 #endif /* EMMA_H_ */

@@ -26,6 +26,7 @@ typedef struct _errorobject {
 extern EmTypeObject Errortype;
 
 void* log_error(int errorNumber, char *message);
+void print_error();
 void fatal(char *message);
 
 #endif /* ERROROBJECT_H_ */

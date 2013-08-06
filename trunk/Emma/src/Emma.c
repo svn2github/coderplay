@@ -8,6 +8,7 @@
 #include "Emma.h"
 
 EmObject *constTable;
+jmp_buf __parse_buf;
 
 int init_all(int argc, char **argv) {
     // process command line arguments
@@ -46,17 +47,21 @@ int main(int argc, char **argv) {
     init_all(argc, argv);
 
     Node *ptree;
-    // parse the input and generate parse tree
-    if (source.type == SOURCE_TYPE_PROMPT) {
-        ptree = parse_prompt_input();
-    } else if (source.type == SOURCE_TYPE_FILE) {
-        ptree = parse_file_input();
+
+    if (setjmp(__parse_buf) == 0) {
+        // parse the input and generate parse tree
+        if (source.type == SOURCE_TYPE_PROMPT) {
+            ptree = parse_prompt_input();
+        } else if (source.type == SOURCE_TYPE_FILE) {
+            ptree = parse_file_input();
+        }
+        printtree(ptree);
+        // release the tree
+        freetree(ptree);
+    } else {
+        printerror();
     }
 
-    printtree(ptree);
-
-    // release the tree
-    freetree(ptree);
 
     // close the input file
     if (source.fp != stdin)

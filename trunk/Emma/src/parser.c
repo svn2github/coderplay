@@ -8,9 +8,8 @@ static int match_token(int t) {
         tag = get_token(); // get next token
         return 1;
     } else {
-        fprintf(stderr, "Unexpected token near %d, %d\n", source.row, source.pos);
         log_error(SYNTAX_ERROR, "Unexpected token");
-        return 0;
+        longjmp(__parse_buf, 1);
     }
 }
 
@@ -196,9 +195,9 @@ Node *parse_assign_stmt(Node *p) {
         if (t->nchildren > 1 && CHILD(t,1)->type == TRAILER) { // we have a trailer
             // Cannot assign to function calls
             if (RCHILD(CHILD(t,1), 0)->type == ')') {
-                printf("cannot assign to function calls\n");
+                log_error(SYNTAX_ERROR, "cannot assign to function calls");
+                longjmp(__parse_buf, 1);
             }
-            log_error(SYNTAX_ERROR, "cannot assign to function calls");
         }
         parse_token(n, '=', NULL);
         parse_expr(n);
