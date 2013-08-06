@@ -1,7 +1,9 @@
 #include "parser.h"
 #include "parser.i"
 
-int tag;
+static int tag;
+static Node *ptree;
+static jmp_buf __parse_buf;
 
 static int match_token(int t) {
     if (tag == t) {
@@ -63,11 +65,27 @@ static int is_literal() {
         return 0;
 }
 
+Node *parse() {
+    if (setjmp(__parse_buf) == 0) {
+        // parse the input and generate parse tree
+        if (source.type == SOURCE_TYPE_PROMPT) {
+            parse_prompt_input();
+        } else if (source.type == SOURCE_TYPE_FILE) {
+            parse_file_input();
+        }
+    } else {
+        printerror();
+        freetree(ptree);
+        ptree = NULL;
+    }
+    return ptree;
+}
+
 // Forward declaration
 static Node * parse_token(Node *, int, char *);
 
 Node *parse_file_input() {
-    Node *ptree = newparsetree(FILE_INPUT);
+    ptree = newparsetree(FILE_INPUT);
     tag = get_token();
     while (tag != ENDMARK) {
         parse_statement(ptree);
@@ -76,7 +94,7 @@ Node *parse_file_input() {
 }
 
 Node *parse_prompt_input() {
-    Node *ptree = newparsetree(PROMPT_INPUT);
+    ptree = newparsetree(PROMPT_INPUT);
     tag = get_token();
     /*
      * TODO: We can process magic command here
@@ -86,7 +104,7 @@ Node *parse_prompt_input() {
 }
 
 Node *parse_string_input() {
-    Node *ptree = newparsetree(FILE_INPUT);
+    ptree = newparsetree(FILE_INPUT);
     tag = get_token();
     while (tag != ENDMARK) {
         parse_statement(ptree);
@@ -383,86 +401,4 @@ parse_token(Node *p, int token, char *lexeme) {
     return n;
 }
 
-Node *
-parse() {
-
-    int tag, ii;
-
-    // Prompt for interactive input
-    if (source.type == SOURCE_TYPE_PROMPT)
-        fprintf(stdout, "%s ", source.PS1);
-
-    do {
-
-        // Get the next token
-        tag = get_token();
-
-        //
-        if (source.type == SOURCE_TYPE_PROMPT && tag == EOL) {
-            if (source.nulcb == 0 && source.isContinue == 0) {
-                fprintf(stdout, "%s ", source.PS1);
-            } else {
-                fprintf(stdout, "%s ", source.PS2);
-                for (ii = 0; ii < source.nulcb; ii++) {
-                    fprintf(stdout, "%s", "    ");
-                }
-            }
-            continue;
-        }
-
-        /*
-         if (tag == ENDMARK) {
-         fprintf(stdout, "%5d  %-20s\n", tag, "END");
-         } else if (tag == 10) {
-         fprintf(stdout, "%5d  %-20s at line %d\n", tag, "EOL", source.row+1);
-         } else if (tag < 256) {
-         fprintf(stdout, "%5d  %-20c\n", tag, tag);
-         } else if (tag == 256) {
-         fprintf(stdout, "%5d  %-20s\n", tag, "**");
-         } else if (tag == 257) {
-         fprintf(stdout, "%5d  %-20s\n", tag, "<=");
-         } else if (tag == 258) {
-         fprintf(stdout, "%5d  %-20s\n", tag, "==");
-         } else if (tag == 259) {
-         fprintf(stdout, "%5d  %-20s\n", tag, ">=");
-         } else if (tag == 260) {
-         fprintf(stdout, "%5d  %-20s\n", tag, "!=");
-         } else if (tag > 300) { // ID, numbers, strings
-         fprintf(stdout, "%5d  %-20s\n", tag, lexeme);
-         } else { // keywords
-         fprintf(stdout, "%5d  %-20s\n", tag, lexeme, strlen(lexeme));
-         }
-         */
-
-        /*
-         * Handle the prompt for interactive input. Blank
-         * lines do not counter for line numbers in interactive
-         * input.
-         */
-        if (source.type == SOURCE_TYPE_PROMPT && tag == EOL) {
-            if (source.nulcb == 0 && source.isContinue == 0) {
-                fprintf(stdout, "%s ", source.PS1);
-            } else {
-                fprintf(stdout, "%s ", source.PS2);
-                for (ii = 0; ii < source.nulcb; ii++) {
-                    fprintf(stdout, "%s", "    ");
-                }
-            }
-        }
-
-        if (tag == EOL) {
-            source.row++;
-            source.isContinue = 0;
-        }
-
-
-
-        /*
-         * Start parsing
-         */
-
-    } while (tag != ENDMARK);
-
-    return NULL;
-}
 

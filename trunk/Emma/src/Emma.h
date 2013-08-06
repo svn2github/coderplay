@@ -23,6 +23,4 @@
  */
 extern EmObject *constTable;
 
-extern jmp_buf __parse_buf;
-
 #endif /* EMMA_H_ */
