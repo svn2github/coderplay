@@ -434,7 +434,7 @@ completely cosmetic with no impact on the language.}:
 \begin{lstlisting}
 print    if      elif  else   while   for      break  def   
 continue return  null  class  import  package  try    raise
-catch    finally read  and   or     xor 
+catch    finally read  not    and     or       xor 
 \end{lstlisting}
 
 An identifier is a character sequence starts with a letter or an underscore 
@@ -658,8 +658,8 @@ to define an empty stmt_block. It is similar to python's pass statement.}
 
 <singleidx> ::= <expr>
 
-<idxrange> ::= <expr> `:' [<expr] [`:' [<expr]]
-    \alt `:' [<expr>] [`:' [<expr]]
+<idxrange> ::= <expr> `:' [<expr>] [`:' [<expr>]]
+    \alt `:' [<expr>] [`:' [<expr>]]
 
 <idxlist> ::= <expr> (`,' <expr>)*
 
