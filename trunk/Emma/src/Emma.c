@@ -47,6 +47,9 @@ int main(int argc, char **argv) {
 
     Node *ptree;
 
+    /*
+     * Parse the input
+     */
     ptree = parse();
 
     if (ptree)

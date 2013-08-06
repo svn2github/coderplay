@@ -129,7 +129,7 @@ __hashobject_lookup(EmHashObject *ho, EmObject *key, unsigned int *idx)
 EmObject *
 hashobject_lookup(EmObject *ob, EmObject *key) {
     if (!is_EmHashObject(ob)) {
-        log_error(TYPE_ERROR, "hash print on non-hash object");
+        log_error(TYPE_ERROR, "hash lookup on non-hash object");
         return NULL;
     }
     unsigned int idx;
@@ -141,6 +141,17 @@ hashobject_lookup(EmObject *ob, EmObject *key) {
         INCREF(ent->val);
         return ent->val;
     }
+}
+
+int
+hashobject_haskey(EmObject *ob, EmObject *key) {
+    unsigned int idx;
+    EmHashObject *ho = (EmHashObject *) ob;
+    EmHashEntry * ent = __hashobject_lookup(ho, key, &idx);
+    if (ent == NULL)
+        return 0;
+    else
+        return 1;
 }
 
 static EmHashObject *
@@ -236,6 +247,14 @@ hashobject_lookup_by_string(EmObject *ho, char *key) {
     EmObject *ob = hashobject_lookup(ho, obkey);
     DECREF(obkey); // release the key after use
     return ob;
+}
+
+int
+hashobject_haskey_by_string(EmObject *ho, char *key) {
+    EmObject *obkey = newstringobject(key);
+    int res = hashobject_haskey(ho, obkey);
+    DECREF(obkey); // release the key after use
+    return res;
 }
 
 EmObject *
