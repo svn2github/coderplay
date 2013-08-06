@@ -432,26 +432,24 @@ Node *parse_oparm_list(Node *p) {
 
 Node *parse_oparm(Node *p) {
     Node *n = addchild(p, OPARM, NULL, source.row);
-    // Try kvpair first
-    Node *t = parse_kvpair(n);
-    // kvpair has 3 children, otherwise it is an identifier
-    if (NCH(t) == 1) {
-        t->type = IDENT;
-        t->lexeme = CHILD(t,0)->lexeme;
-        CHILD(t,0)->lexeme = NULL;
-        free(CHILD(t,0));
-        t->nchildren = 0;
-        t->child = NULL;
-    }
+    // parse_kvpair can return an identifier instead
+    parse_kvpair(n);
     return n;
 }
 
 Node *parse_kvpair(Node *p) {
     Node *n = addchild(p, KVPAIR, NULL, source.row);
     parse_token(n, IDENT, lexeme);
-    if (tag == '=') {
+    if (tag == '=') { // it is a kvpair
         parse_token(n, '=', NULL);
         parse_expr(n);
+    } else { // it is just an expr
+        n->type = IDENT;
+        n->lexeme = CHILD(n,0)->lexeme;
+        CHILD(n,0)->lexeme = NULL;
+        free(CHILD(n,0));
+        n->nchildren = 0;
+        n->child = NULL;
     }
     return n;
 }
@@ -600,7 +598,8 @@ Node *parse_trailer(Node *p) {
 
         if (tag == '(') {
             parse_token(n, '(', NULL);
-            parse_arglist(n);
+            if (tag != ')')
+                parse_arglist(n);
             parse_token(n, ')', NULL);
         } else if (tag == '[') {
             parse_token(n, '[', NULL);
@@ -615,18 +614,81 @@ Node *parse_trailer(Node *p) {
 }
 
 
-
 Node *parse_arglist(Node *p) {
-    return NULL;
+    Node *n = addchild(p, ARGLIST, NULL, source.row);
+    parse_oarg(n);
+    while (tag == ',') {
+        parse_token(n, ',', NULL);
+        parse_oarg(n);
+    }
+    return n;
+}
+
+Node *parse_oarg(Node *p) {
+    Node *n = addchild(p, OARG, NULL, source.row);
+    if (tag == IDENT) {
+        parse_kvpair(n); // Can still return an expr
+    } else {
+        parse_expr(n);
+    }
+    return n;
+}
+
+void parse_idxrange_with_existing(Node *ex) {
+    parse_token(ex, ':', NULL);
+    if (tag != ':' && tag != ']')
+        parse_expr(ex);
+
+    if (tag == ':') {
+        parse_token(ex, ':', NULL);
+        if (tag != ':' && tag != ']')
+            parse_expr(ex);
+    }
+}
+
+void parse_idxlist_with_existing(Node *ex) {
+    parse_token(ex, ',', NULL);
+    parse_expr(ex);
+    while (tag == ',') {
+        parse_token(ex, ',', NULL);
+        parse_expr(ex);
+    }
 }
 
 Node *parse_subscription(Node *p) {
-    return NULL;
+    Node *n = addchild(p, SUBSCRIPTION, NULL, source.row);
+    Node *t;
+    if (tag == ':') {
+        parse_idxrange(n);
+    } else {
+        t = parse_singleidx(n);
+        if (tag == ':') {
+            t->type = IDXRANGE;
+            parse_idxrange_with_existing(t);
+        } else if (tag == ',') {
+            t->type = IDXLIST;
+            parse_idxlist_with_existing(n);
+        }
+    }
+    return n;
 }
 
+Node *parse_singleidx(Node *p) {
+    Node *n = addchild(p, SINGLEIDX, NULL, source.row);
+    parse_expr(n);
+    return n;
+}
 
+Node *parse_idxrange(Node *p) {
+    Node *n = addchild(p, IDXRANGE, NULL, source.row);
+    if (tag != ':')
+        parse_expr(n);
 
-
+    if (tag == ':') {
+        parse_idxrange_with_existing(n);
+    }
+    return n;
+}
 
 static Node *
 parse_token(Node *p, int token, char *lexeme) {

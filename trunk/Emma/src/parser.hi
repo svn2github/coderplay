@@ -45,9 +45,8 @@
 #define OARG                 1044
 #define SUBSCRIPTION         1045
 #define SINGLEIDX            1046
-#define SHORT_IDXRANGE       1047
-#define LONG_IDXRANGE        1048
-#define IDXLIST              1049
+#define IDXRANGE             1047
+#define IDXLIST              1048
 
 Node *parse_file_input();
 Node *parse_prompt_input();
@@ -96,8 +95,7 @@ Node *parse_arglist(Node *parent);
 Node *parse_oarg(Node *parent);
 Node *parse_subscription(Node *parent);
 Node *parse_singleidx(Node *parent);
-Node *parse_short_idxrange(Node *parent);
-Node *parse_long_idxrange(Node *parent);
+Node *parse_idxrange(Node *parent);
 Node *parse_idxlist(Node *parent);
 
 extern char *node_types[];

@@ -50,8 +50,7 @@ arglist
 oarg
 subscription
 singleidx
-short_idxrange
-long_idxrange
+idxrange
 idxlist
 """
 

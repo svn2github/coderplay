@@ -47,7 +47,6 @@ char *node_types[] = {
         "OARG",
         "SUBSCRIPTION",
         "SINGLEIDX",
-        "SHORT_IDXRANGE",
-        "LONG_IDXRANGE",
+        "IDXRANGE",
         "IDXLIST"
 };

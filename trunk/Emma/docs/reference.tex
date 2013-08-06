@@ -652,18 +652,16 @@ to define an empty stmt_block. It is similar to python's pass statement.}
 
 <oarg> ::= <kvpair> | <expr>
 
-<subscription> ::= single_idx 
-	\alt short_idxrange 
-	\alt long_idxrange 
-	\alt idxlist
+<subscription> ::= <singleidx>
+    \alt <idxrange>
+    \alt <idxlist>
 
-<single_idx> ::= <expr>
+<singleidx> ::= <expr>
 
-<short_idxrange> ::= <singleidx> `:' [<expr>] 
+<idxrange> ::= <expr> `:' [<expr] [`:' [<expr]]
+    \alt `:' [<expr>] [`:' [<expr]]
 
-<long_idxrange> ::= <short_idxrange> `:' [<expr>]
-
-<idxlist> ::= <singleidx> (`,' <expr>)*
+<idxlist> ::= <expr> (`,' <expr>)*
 
 <r_orop> ::= `or' | `xor'
 
