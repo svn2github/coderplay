@@ -30,9 +30,6 @@ source_balance() {
     }
     else if (source.peek == '}') {
         source.nulcb--;
-        if (source.nulcb < 0) {
-            log_error(SYNTAX_ERROR, "redundant right curly bracket");
-        }
     }
 }
 
@@ -123,7 +120,10 @@ get_token() {
 
         if (source.peek == CHAR_LF) {
             source.peek = ' ';
-            return CHAR_LF;
+            if (source.isContinue == 0)
+                return CHAR_LF;
+            else
+                continue;
         }
 
         // following line is to accommodate Linux end-of-line sequence
@@ -132,13 +132,17 @@ get_token() {
             continue;
         }
 
-        // Only comments and EOL are allowed after line continuation
-        // symbol. So if the code reaches here with continuation mode
-        // on, it is an error.
-        if (source.isContinue) {
-            log_error(SYNTAX_ERROR,
-                    "illegal tokens after line continuation symbol");
+        // line continuation
+        if (source.peek == '\\') {
+            source.isContinue = 1;
+            nextc();
+            continue;
         }
+
+        // Only comments and EOL are allowed after line continuation symbol.
+        // The first non-blank symbol invalidate the continue mode.
+        if (source.isContinue)
+            source.isContinue = 0;
 
         if (source.peek == ENDMARK)
             return ENDMARK; // end of INPUT
@@ -258,16 +262,28 @@ get_token() {
         // Important, source.peek is set to blank so next call can proceed.
         source.peek = ' ';
 
-
-        // line continuation
-        if (tag == '\\') {
-            source.isContinue = 1;
-            continue;
-        }
-
         return tag;
     }
 }
 
+
+int get_magic() {
+    int length = 0;
+    // Identifiers
+    if (isalpha(source.peek) || source.peek == '_') {
+        while (isalnum(source.peek) || source.peek == '_') {
+            lexeme[length++] = source.peek;
+            nextc();
+        }
+        lexeme[length] = '\0';
+        //printf("lexeme = %s\n", lexeme);
+        if (strcmp(lexeme, "exit") == 0) {
+            return MAGIC_EXIT;
+        } else {
+            return MAGIC_ERROR;
+        }
+    } else
+        return MAGIC_ERROR;
+}
 
 

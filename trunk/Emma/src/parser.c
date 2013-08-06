@@ -16,6 +16,15 @@ static int match_token(int t) {
     }
 }
 
+static int match_token_no_advance(int t) {
+    if (tag == t) {
+        return 1;
+    } else {
+        log_error(SYNTAX_ERROR, "unexpected token");
+        longjmp(__parse_buf, 1);
+    }
+}
+
 static int is_r_orop() {
     if (tag == OR)
         return 1;
@@ -97,11 +106,16 @@ Node *parse_file_input() {
 }
 
 Node *parse_prompt_input() {
+    int magicCmd;
     ptree = newparsetree(PROMPT_INPUT);
     tag = get_token();
     /*
-     * TODO: We can process magic command here
+     * Process magic commands
      */
+    if (tag == '.') {
+        source.promptStatus = get_magic();
+        return NULL;
+    }
     parse_statement(ptree);
     return ptree;
 }
@@ -133,10 +147,18 @@ Node *parse_statement(Node *p) {
     if (tag == IF || tag == WHILE || tag == FOR || tag == DEF
             || tag == CLASS || tag == TRY) {
         parse_compound_stmt(n);
-        match_token(EOL);
     } else {
         parse_simple_stmt(n);
+    }
+    if (source.type == SOURCE_TYPE_FILE)
         match_token(EOL);
+    else if (source.type == SOURCE_TYPE_PROMPT)
+        match_token_no_advance(EOL);
+    else {// SOURCE_TYPE_STRING
+        if (tag == EOL)
+            match_token(EOL);
+        else
+            match_token(ENDMARK);
     }
     return n;
 }

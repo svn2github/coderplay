@@ -14,7 +14,7 @@ void nextc() {
         source.peek = source.line[source.pos];
         source.pos++;
     } else {
-        if (source.type == SOURCE_TYPE_FILE || source.type == SOURCE_TYPE_PROMPT) {
+        if (source.type == SOURCE_TYPE_FILE) {
             if (fgets(source.line, BUFSIZ - 1, source.fp) == NULL) {
                 source.peek = ENDMARK;
             } else {
@@ -22,7 +22,17 @@ void nextc() {
                 source.row++;
                 source.pos = 0;
             }
-        } else {
+        } else if (source.type == SOURCE_TYPE_PROMPT) {
+            if (source.isContinue) {
+                fprintf(stdout, "%s", source.PS2);
+            } else {
+                fprintf(stdout, "%s", source.PS1);
+            }
+            fgets(source.line, BUFSIZ - 1, source.fp);
+            source.peek = ' ';
+            source.row++;
+            source.pos = 0;
+        } else { // SOURCE_TYPE_STRING
             source.peek = ENDMARK;
         }
     }
@@ -49,6 +59,7 @@ EmSource source = {
         0,                      // column
         "In>",                  // PS1
         "...",                  // PS2
+        0,                      // promptStatus
 
 };
 

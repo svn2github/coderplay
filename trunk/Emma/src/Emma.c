@@ -50,17 +50,34 @@ int main(int argc, char **argv) {
     /*
      * Parse the input
      */
-    ptree = parse();
-
-    if (ptree)
-        printtree(ptree);
-
-    // release the tree
-    freetree(ptree);
-
-    // close the input file
-    if (source.fp != stdin)
+    if (source.type == SOURCE_TYPE_FILE) {
+        ptree = parse();
+        if (ptree) {
+            printtree(ptree);
+            freetree(ptree);
+        }
         fclose(source.fp);
+    } else { // SOURCE_TYPE_PROMPT
+        while (1) {
+            ptree = parse();
+            if (source.promptStatus != MAGIC_NONE) {
+                freetree(ptree);
+                ptree = NULL;
+                if (source.promptStatus == MAGIC_EXIT) {
+                    break;
+                }
+                else if (source.promptStatus == MAGIC_ERROR) {
+                    fprintf(stderr, "Error: unknown magic command\n");
+                }
+                source.promptStatus = MAGIC_NONE;
+                source.pos = strlen(source.line);
+            }
+            if (ptree) {
+                printtree(ptree);
+                freetree(ptree);
+            }
+        }
+    }
 
     printobj(constTable, stdout);
     printf("constTable = %s\n", tostrobj(constTable));
