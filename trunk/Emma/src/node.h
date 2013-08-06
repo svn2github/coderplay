@@ -12,6 +12,7 @@
 #include "allobject.h"
 #include "token.h"
 
+#define NCH(n)          (n)->nchildren
 // The ith child from the left, zero based
 #define CHILD(n, i)     (&(n)->child[i])
 // The ith child from the right, zero based

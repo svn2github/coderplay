@@ -246,6 +246,7 @@ Node *parse_assign_stmt(Node *p) {
         parse_expr(n);
     } else { // it is actually an expression
         n->type = EXPR;
+        t->type = R_EXPR;
     }
     return n;
 }
@@ -271,7 +272,7 @@ Node *parse_compound_stmt(Node *p) {
     } else if (tag == FOR) {
         parse_for_stmt(n);
     } else if (tag == DEF) {
-        //parse_funcdef(n);
+        parse_funcdef(n);
     } else if (tag == CLASS) {
         //parse_classdef(n);
     } else { // tag == TRY
@@ -315,6 +316,20 @@ Node *parse_for_stmt(Node *p) {
     return n;
 }
 
+Node *parse_funcdef(Node *p) {
+    Node *n = addchild(p, FUNCDEF, NULL, source.row);
+    parse_token(n, DEF, NULL);
+    parse_token(n, IDENT, lexeme);
+    parse_token(n, '(', NULL);
+    if (tag != ')') {
+        parse_parmlist(n);
+    }
+    parse_token(n, ')', NULL);
+    parse_suite(n);
+    return n;
+}
+
+
 Node *parse_for_expr(Node *p) {
     Node *n = addchild(p, FOR_EXPR, NULL, source.row);
     parse_expr(n);
@@ -326,7 +341,6 @@ Node *parse_for_expr(Node *p) {
     }
     return n;
 }
-
 
 Node *parse_suite(Node *p) {
     Node *n = addchild(p, SUITE, NULL, source.row);
@@ -349,6 +363,67 @@ Node *parse_stmt_block(Node *p) {
             parse_statement(n);
         }
         parse_token(n, '}', NULL);
+    }
+    return n;
+}
+
+Node *parse_parmlist(Node *p) {
+    Node *n = addchild(p, PARMLIST, NULL, source.row);
+
+    if (tag != '*' && tag != DSTAR) {
+        parse_oparm_list(n);
+        if (tag == ')')
+            return n;
+    }
+
+    if (tag == '*') {
+        parse_token(n, '*', NULL);
+        parse_token(n, IDENT, lexeme);
+        if (tag != ',')
+            return n;
+        else
+            parse_token(n, ',', NULL);
+    }
+
+    parse_token(n, DSTAR, NULL);
+    parse_token(n, IDENT, lexeme);
+    return n;
+}
+
+Node *parse_oparm_list(Node *p) {
+    Node *n = addchild(p, OPARM_LIST, NULL, source.row);
+    parse_oparm(n);
+    while (tag == ',') {
+        parse_token(n, ',', NULL);
+        if (tag == '*' || tag == DSTAR)
+            return n;
+        parse_oparm(n);
+    }
+    return n;
+}
+
+Node *parse_oparm(Node *p) {
+    Node *n = addchild(p, OPARM, NULL, source.row);
+    // Try kvpair first
+    Node *t = parse_kvpair(n);
+    // kvpair has 3 children, otherwise it is an identifier
+    if (NCH(t) == 1) {
+        t->type = IDENT;
+        t->lexeme = CHILD(t,0)->lexeme;
+        CHILD(t,0)->lexeme = NULL;
+        free(CHILD(t,0));
+        t->nchildren = 0;
+        t->child = NULL;
+    }
+    return n;
+}
+
+Node *parse_kvpair(Node *p) {
+    Node *n = addchild(p, KVPAIR, NULL, source.row);
+    parse_token(n, IDENT, lexeme);
+    if (tag == '=') {
+        parse_token(n, '=', NULL);
+        parse_expr(n);
     }
     return n;
 }
