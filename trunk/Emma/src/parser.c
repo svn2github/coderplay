@@ -274,9 +274,9 @@ Node *parse_compound_stmt(Node *p) {
     } else if (tag == DEF) {
         parse_funcdef(n);
     } else if (tag == CLASS) {
-        //parse_classdef(n);
+        parse_classdef(n);
     } else { // tag == TRY
-        //parse_try_stmt(n);
+        parse_try_stmt(n);
     }
     return n;
 }
@@ -329,6 +329,32 @@ Node *parse_funcdef(Node *p) {
     return n;
 }
 
+Node *parse_classdef(Node *p) {
+    Node *n = addchild(p, CLASSDEF, NULL, source.row);
+    parse_token(n, CLASS, NULL);
+    parse_token(n, IDENT, lexeme);
+    parse_token(n, '(', NULL);
+    if (tag != ')') {
+        parse_token(n, IDENT, lexeme);
+    }
+    parse_token(n, ')', NULL);
+    parse_suite(n);
+    return n;
+}
+
+Node *parse_try_stmt(Node *p) {
+    Node *n = addchild(p, TRY_STMT, NULL, source.row);
+    parse_token(n, TRY, NULL);
+    parse_suite(n);
+    parse_catch_stmt(n);
+    while (tag == CATCH) {
+        parse_catch_stmt(n);
+    }
+    if (tag == FINALLY)
+        parse_finally_stmt(n);
+    return n;
+}
+
 
 Node *parse_for_expr(Node *p) {
     Node *n = addchild(p, FOR_EXPR, NULL, source.row);
@@ -358,7 +384,9 @@ Node *parse_stmt_block(Node *p) {
     if (tag == '}') { // So we can have an empty {} pair
         parse_token(n, '}', NULL);
     } else {
-        parse_token(n, EOL, NULL);
+        // Only match the EOL token here without adding it.
+        // EOL is not saved as part of the parse tree.
+        match_token(EOL);
         while (tag != '}') {
             parse_statement(n);
         }
@@ -438,6 +466,27 @@ Node *parse_expr_list(Node *p) {
     }
     return n;
 }
+
+Node *parse_catch_stmt(Node *p) {
+    Node *n = addchild(p, CATCH_STMT, NULL, source.row);
+    parse_token(n, CATCH, NULL);
+    parse_token(n, '(', NULL);
+    parse_token(n, IDENT, lexeme);
+    parse_token(n, ',', NULL);
+    parse_token(n, IDENT, lexeme);
+    parse_token(n, ')', NULL);
+    parse_suite(n);
+    return n;
+}
+
+Node *parse_finally_stmt(Node *p) {
+    Node *n = addchild(p, FINALLY_STMT, NULL, source.row);
+    parse_token(n, FINALLY, NULL);
+    parse_suite(n);
+    return n;
+}
+
+
 
 Node *parse_r_expr(Node *p) {
     Node *n = addchild(p, R_EXPR, NULL, source.row);
