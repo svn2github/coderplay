@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <setjmp.h>
+#include <string.h>
 #include "allobject.h"
 #include "source.h"
 #include "lexer.h"

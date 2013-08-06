@@ -30,6 +30,7 @@ catch_stmt
 finally_stmt
 suite
 stmt_block
+for_expr
 r_expr
 r_term
 r_factor

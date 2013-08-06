@@ -27,6 +27,7 @@ char *node_types[] = {
         "FINALLY_STMT",
         "SUITE",
         "STMT_BLOCK",
+        "FOR_EXPR",
         "R_EXPR",
         "R_TERM",
         "R_FACTOR",

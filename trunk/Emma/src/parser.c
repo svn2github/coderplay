@@ -4,13 +4,14 @@
 static int tag;
 static Node *ptree;
 static jmp_buf __parse_buf;
+static char savedLexeme[BUFSIZ];
 
 static int match_token(int t) {
     if (tag == t) {
         tag = get_token(); // get next token
         return 1;
     } else {
-        log_error(SYNTAX_ERROR, "Unexpected token");
+        log_error(SYNTAX_ERROR, "unexpected token");
         longjmp(__parse_buf, 1);
     }
 }
@@ -72,6 +73,8 @@ Node *parse() {
             parse_prompt_input();
         } else if (source.type == SOURCE_TYPE_FILE) {
             parse_file_input();
+        } else {
+            parse_string_input();
         }
     } else {
         printerror();
@@ -161,9 +164,9 @@ Node *parse_simple_stmt(Node *p) {
 
 Node *parse_print_stmt(Node *p) {
     Node *n = addchild(p, PRINT_STMT, NULL, source.row);
-    tag = get_token();
+    parse_token(n, PRINT, NULL);
     if (tag == '>') {
-        parse_token(n, tag, NULL);
+        parse_token(n, '>', NULL);
         parse_primary(n);
     }
     parse_expr_list(n);
@@ -172,37 +175,56 @@ Node *parse_print_stmt(Node *p) {
 
 Node *parse_read_stmt(Node *p) {
     Node *n = addchild(p, READ_STMT, NULL, source.row);
-
+    parse_token(n, READ, NULL);
+    if (tag == '<') {
+        parse_token(n, '<', NULL);
+        parse_primary(n);
+    }
+    parse_expr_list(n);
     return n;
 }
 
 Node *parse_continue_stmt(Node *p) {
     Node *n = addchild(p, CONTINUE_STMT, NULL, source.row);
-
+    parse_token(n, CONTINUE, NULL);
     return n;
 }
 
 Node *parse_break_stmt(Node *p) {
     Node *n = addchild(p, BREAK_STMT, NULL, source.row);
-
+    parse_token(n, BREAK, NULL);
     return n;
 }
 
 Node *parse_return_stmt(Node *p) {
     Node *n = addchild(p, RETURN_STMT, NULL, source.row);
-
+    parse_token(n, RETURN, NULL);
+    if (tag != EOL) { // optional return value
+        parse_expr(n);
+    }
     return n;
 }
 
 Node *parse_package_stmt(Node *p) {
     Node *n = addchild(p, PACKAGE_STMT, NULL, source.row);
-
+    parse_token(n, PACKAGE, NULL);
+    parse_token(n, IDENT, lexeme);
     return n;
 }
 
 Node *parse_import_stmt(Node *p) {
     Node *n = addchild(p, IMPORT_STMT, NULL, source.row);
-
+    parse_token(n, IMPORT, NULL);
+    parse_token(n, IDENT, lexeme);
+    while (tag == '.') {
+        parse_token(n, '.', NULL);
+        if (tag == '*') {
+            parse_token(n, '*', NULL);
+            break; // This ensure * is at the end of import
+        } else {
+            parse_token(n, IDENT, lexeme);
+        }
+    }
     return n;
 }
 
@@ -232,11 +254,101 @@ Node *parse_target(Node *p) {
     return n;
 }
 
-
-Node *parse_compound_stmt(Node *p) {
-    return NULL;
+Node *parse_expr(Node *p) {
+    Node *n = addchild(p, EXPR, NULL, source.row);
+    parse_r_expr(n);
 }
 
+Node *parse_compound_stmt(Node *p) {
+    Node *n = addchild(p, COMPOUND_STMT, NULL, source.row);
+    if (tag == IF) {
+        parse_if_stmt(n);
+    } else if (tag == WHILE) {
+        parse_while_stmt(n);
+    } else if (tag == FOR) {
+        parse_for_stmt(n);
+    } else if (tag == DEF) {
+        //parse_funcdef(n);
+    } else if (tag == CLASS) {
+        //parse_classdef(n);
+    } else { // tag == TRY
+        //parse_try_stmt(n);
+    }
+    return n;
+}
+
+Node *parse_if_stmt(Node *p) {
+    Node *n = addchild(p, IF_STMT, NULL, source.row);
+    parse_token(n, IF, NULL);
+    parse_expr(n);
+    parse_suite(n);
+    while (tag == ELIF) {
+        parse_token(n, ELIF, NULL);
+        parse_expr(n);
+        parse_suite(n);
+    }
+    if (tag == ELSE) {
+        parse_token(n, ELSE, NULL);
+        parse_suite(n);
+    }
+    return n;
+}
+
+Node *parse_while_stmt(Node *p) {
+    Node *n = addchild(p, WHILE_STMT, NULL, source.row);
+    parse_token(n, WHILE, NULL);
+    parse_expr(n);
+    parse_suite(n);
+    return n;
+}
+
+Node *parse_for_stmt(Node *p) {
+    Node *n = addchild(p, FOR_STMT, NULL, source.row);
+    parse_token(n, FOR, NULL);
+    parse_token(n, IDENT, lexeme);
+    parse_token(n, '=', NULL);
+    parse_for_expr(n);
+    parse_suite(n);
+    return n;
+}
+
+Node *parse_for_expr(Node *p) {
+    Node *n = addchild(p, FOR_EXPR, NULL, source.row);
+    parse_expr(n);
+    parse_token(n, ',', NULL);
+    parse_expr(n);
+    if (tag == ',') {
+        parse_token(n, ',', NULL);
+        parse_expr(n);
+    }
+    return n;
+}
+
+
+Node *parse_suite(Node *p) {
+    Node *n = addchild(p, SUITE, NULL, source.row);
+    if (tag == '{') {
+        parse_stmt_block(n);
+    } else {
+        parse_simple_stmt(n);
+    }
+    return n;
+}
+
+Node *parse_stmt_block(Node *p) {
+    Node *n = addchild(p, STMT_BLOCK, NULL, source.row);
+    parse_token(n, '{', NULL);
+    if (tag == '}') { // So we can have an empty {} pair
+        parse_token(n, '}', NULL);
+    } else {
+        parse_token(n, EOL, NULL);
+        while (tag != '}') {
+            parse_statement(n);
+        }
+        parse_token(n, '}', NULL);
+    }
+    return n;
+}
 
 
 Node *parse_expr_list(Node *p) {
@@ -247,11 +359,6 @@ Node *parse_expr_list(Node *p) {
         parse_expr(n);
     }
     return n;
-}
-
-Node *parse_expr(Node *p) {
-    Node *n = addchild(p, EXPR, NULL, source.row);
-    parse_r_expr(n);
 }
 
 Node *parse_r_expr(Node *p) {
@@ -396,8 +503,10 @@ Node *parse_subscription(Node *p) {
 
 static Node *
 parse_token(Node *p, int token, char *lexeme) {
+    // saved the lexeme since match_token changes it
+    char *thisLexeme = (lexeme)?strcpy(savedLexeme, lexeme):lexeme;
     match_token(token);
-    Node *n = addchild(p, token, lexeme, source.row);
+    Node *n = addchild(p, token, thisLexeme, source.row);
     return n;
 }
 
