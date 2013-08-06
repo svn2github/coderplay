@@ -24,9 +24,9 @@ void nextc() {
             }
         } else if (source.type == SOURCE_TYPE_PROMPT) {
             if (source.isContinue) {
-                fprintf(stdout, "%s", source.PS2);
+                fprintf(stdout, "%s ", source.PS2);
             } else {
-                fprintf(stdout, "%s", source.PS1);
+                fprintf(stdout, "%s ", source.PS1);
             }
             fgets(source.line, BUFSIZ - 1, source.fp);
             source.peek = ' ';

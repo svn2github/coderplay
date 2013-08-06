@@ -57,6 +57,7 @@ int main(int argc, char **argv) {
             freetree(ptree);
         }
         fclose(source.fp);
+
     } else { // SOURCE_TYPE_PROMPT
         while (1) {
             ptree = parse();
@@ -71,8 +72,7 @@ int main(int argc, char **argv) {
                 }
                 source.promptStatus = MAGIC_NONE;
                 source.pos = strlen(source.line);
-            }
-            if (ptree) {
+            } else if (ptree) {
                 printtree(ptree);
                 freetree(ptree);
             }

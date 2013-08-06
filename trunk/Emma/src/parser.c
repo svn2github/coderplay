@@ -150,10 +150,18 @@ Node *parse_statement(Node *p) {
     } else {
         parse_simple_stmt(n);
     }
-    if (source.type == SOURCE_TYPE_FILE)
+    /*
+     * For prompt input, we match the EOL without advance the input.
+     * So the prompt will show after the current parse tree is processed.
+     * When the current parse tree is processed, the next call to
+     * parse() will advance the prompt input.
+     */
+    if (source.type == SOURCE_TYPE_FILE) {
         match_token(EOL);
-    else if (source.type == SOURCE_TYPE_PROMPT)
+    }
+    else if (source.type == SOURCE_TYPE_PROMPT) {
         match_token_no_advance(EOL);
+    }
     else {// SOURCE_TYPE_STRING
         if (tag == EOL)
             match_token(EOL);
