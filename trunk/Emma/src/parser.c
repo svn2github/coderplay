@@ -554,16 +554,19 @@ Node *parse_r_term(Node *p) {
 
 Node *parse_r_factor(Node *p) {
     Node *n = addchild(p, R_FACTOR, NULL, source.row, source.pos);
-    if (tag == NOT)
+    if (tag == NOT) {
         parse_token(n, tag, NULL);
-    parse_l_expr(n);
+        parse_r_factor(n);
+    } else {
+        parse_l_expr(n);
+    }
     return n;
 }
 
 Node *parse_l_expr(Node *p) {
     Node *n = addchild(p, L_EXPR, NULL, source.row, source.pos);
     parse_a_expr(n);
-    if (is_l_op()) {
+    while (is_l_op()) {
         parse_token(n, tag, NULL);
         parse_a_expr(n);
     }
@@ -573,7 +576,7 @@ Node *parse_l_expr(Node *p) {
 Node *parse_a_expr(Node *p) {
     Node *n = addchild(p, A_EXPR, NULL, source.row, source.pos);
     parse_a_term(n);
-    if (is_addop()) {
+    while (is_addop()) {
         parse_token(n, tag, NULL);
         parse_a_term(n);
     }
@@ -583,12 +586,17 @@ Node *parse_a_expr(Node *p) {
 Node *parse_a_term(Node *p) {
     Node *n = addchild(p, A_TERM, NULL, source.row, source.pos);
     parse_factor(n);
-    if (is_mulop()) {
+    while (is_mulop()) {
         parse_token(n, tag, NULL);
         parse_factor(n);
     }
     return n;
 }
+
+/*
+ * The factor and power parsers call each other to ensure the right
+ * associative of the ** operator.
+ */
 
 Node *parse_factor(Node *p) {
     Node *n = addchild(p, FACTOR, NULL, source.row, source.pos);
