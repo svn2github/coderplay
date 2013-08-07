@@ -19,7 +19,7 @@ static match_token(int t) {
 }
 
 static int is_r_orop() {
-    if (tag == OR)
+    if (tag == OR || tag == XOR)
         return 1;
     else
         return 0;
