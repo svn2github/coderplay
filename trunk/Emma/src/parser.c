@@ -192,6 +192,8 @@ Node *parse_simple_stmt(Node *p) {
         parse_package_stmt(n);
     } else if (tag == IMPORT) {
         parse_import_stmt(n);
+    } else if (tag == RAISE) {
+        parse_raise_stmt(n);
     } else if (tag == IDENT) {
         parse_assign_stmt(n); // an expr can be returned instead of an assign_stmt
     } else {
@@ -263,6 +265,14 @@ Node *parse_import_stmt(Node *p) {
             parse_token(n, IDENT, lexeme);
         }
     }
+    return n;
+}
+
+Node *parse_raise_stmt(Node *p) {
+    Node *n = addchild(p, RAISE_STMT, NULL, source.row, source.pos);
+    parse_token(n, RAISE, NULL);
+    if (tag != EOL)
+        parse_primary(n);
     return n;
 }
 

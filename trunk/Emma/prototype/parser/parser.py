@@ -18,6 +18,7 @@ break_stmt
 return_stmt
 package_stmt
 import_stmt
+raise_stmt
 target
 trailer
 if_stmt

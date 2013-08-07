@@ -553,6 +553,7 @@ The BNF notations of the Emma language grammar are shown as follows:
 	\alt <return_stmt>
 	\alt <package_stmt>
 	\alt <import_stmt>
+    \alt <raise_stmt>
 
 <expr> ::= <r_expr>
 	
@@ -576,6 +577,8 @@ assign_stmt by the interpreter that it cannot assign to function calls.}
 <import_stmt> ::= `import' "IDENT" (`.' "IDENT" | `*')*\footnote{
 Additional rule is enforced by the interpreter to make sure the asterisk
 can only appear once at the end of the line or not present at all.}
+
+<raise_stmt> ::= `raise' [<primary>]
 
 <compound_stmt> ::= <if_stmt>
 	\alt <while_stmt>

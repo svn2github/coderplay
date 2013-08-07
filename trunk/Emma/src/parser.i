@@ -15,6 +15,7 @@ char *node_types[] = {
         "RETURN_STMT",
         "PACKAGE_STMT",
         "IMPORT_STMT",
+        "RAISE_STMT",
         "TARGET",
         "TRAILER",
         "IF_STMT",
