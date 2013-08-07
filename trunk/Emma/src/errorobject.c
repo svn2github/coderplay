@@ -39,6 +39,8 @@ static char *error_types[] = {
 };
 
 void printerror() {
+    fprintf(stderr, "---> %-80s\n", source.line);
+    fprintf(stderr, "     %*c\n", source.pos-1, '^');
     fprintf(stderr, "%s: %s near <row %d, col %d>\n",
             error_types[errobj.errorNumber],
             errobj.message,
