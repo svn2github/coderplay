@@ -30,7 +30,6 @@ typedef struct _source {
     unsigned int pos;       // The current column number of the input line
     char PS1[10];           // prompt 1
     char PS2[10];           // prompt 2
-    int promptStatus;       // for magic command
 } EmSource;
 
 void nextc();

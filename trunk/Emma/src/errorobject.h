@@ -15,6 +15,7 @@
 #define KEY_ERROR       4
 #define INDEX_ERROR     5
 #define SYNTAX_ERROR    6
+#define MAGIC_ERROR     7
 
 typedef struct _errorobject {
     OB_HEAD;

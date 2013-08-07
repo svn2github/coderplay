@@ -77,7 +77,6 @@ void freetree(Node *ptree) {
     if (ptree != NULL) {
         freechildren(ptree);
         free(ptree);
-        ptree = NULL;
     }
 }
 

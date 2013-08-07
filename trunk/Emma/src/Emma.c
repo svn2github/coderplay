@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
     /*
      * Parse the input
      */
+    source.type = SOURCE_TYPE_PROMPT;
     if (source.type == SOURCE_TYPE_FILE) {
         ptree = parse();
         if (ptree) {
@@ -61,20 +62,17 @@ int main(int argc, char **argv) {
     } else { // SOURCE_TYPE_PROMPT
         while (1) {
             ptree = parse();
-            if (source.promptStatus != MAGIC_NONE) {
-                freetree(ptree);
-                ptree = NULL;
-                if (source.promptStatus == MAGIC_EXIT) {
-                    break;
+            if (ptree) {
+                if (ptree->type != MAGIC_COMMAND) {
+                    printtree(ptree);
+                    freetree(ptree);
+                } else { // MAGIC_COMMAND
+                    printf("got magic command %d\n", CHILD(ptree,0)->type);
+                    if (NCH(ptree) == 2)
+                        printf("magic command arg = %s\n", CHILD(ptree,1)->lexeme);
+                    if (CHILD(ptree,0)->type == MCA_EXIT)
+                        break;
                 }
-                else if (source.promptStatus == MAGIC_ERROR) {
-                    fprintf(stderr, "Error: unknown magic command\n");
-                }
-                source.promptStatus = MAGIC_NONE;
-                source.pos = strlen(source.line);
-            } else if (ptree) {
-                printtree(ptree);
-                freetree(ptree);
             }
         }
     }

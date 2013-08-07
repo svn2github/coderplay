@@ -6,14 +6,16 @@
 #include "source.h"
 
 
-#define MAGIC_NONE      0
-#define MAGIC_ERROR     1
-#define MAGIC_EXIT      2
+#define MC_ERROR     1
+#define MCA_EXIT      2
+#define MCA_RUN       3
+#define MC_ARG        100
 
 extern char *lexeme;
 
 void lexer_init();
 int get_token();
-int get_magic();
+int get_magic_action();
+int get_magic_arg();
 void lexer_free();
 

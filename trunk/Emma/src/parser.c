@@ -6,23 +6,17 @@ static Node *ptree;
 static jmp_buf __parse_buf;
 static char savedLexeme[BUFSIZ];
 
-static int match_token(int t) {
-    if (tag == t) {
-        tag = get_token(); // get next token
-        return 1;
-    } else {
+
+static match_token_no_advance(int t) {
+    if (tag != t) {
         log_error(SYNTAX_ERROR, "unexpected token");
         longjmp(__parse_buf, 1);
     }
 }
 
-static int match_token_no_advance(int t) {
-    if (tag == t) {
-        return 1;
-    } else {
-        log_error(SYNTAX_ERROR, "unexpected token");
-        longjmp(__parse_buf, 1);
-    }
+static match_token(int t) {
+    match_token_no_advance(t);
+    tag = get_token(); // get next token
 }
 
 static int is_r_orop() {
@@ -89,6 +83,9 @@ Node *parse() {
         printerror();
         freetree(ptree);
         ptree = NULL;
+        // Make sure this line won't be used again in next call
+        source.line[0] = '\0';
+        source.peek = ' ';
     }
     return ptree;
 }
@@ -105,6 +102,8 @@ Node *parse_file_input() {
     return ptree;
 }
 
+static Node *parse_magic_command(Node *p);
+
 Node *parse_prompt_input() {
     int magicCmd;
     ptree = newparsetree(PROMPT_INPUT);
@@ -113,10 +112,10 @@ Node *parse_prompt_input() {
      * Process magic commands
      */
     if (tag == '.') {
-        source.promptStatus = get_magic();
-        return NULL;
+        ptree = parse_magic_command(ptree);
+    } else {
+        parse_statement(ptree);
     }
-    parse_statement(ptree);
     return ptree;
 }
 
@@ -162,7 +161,7 @@ Node *parse_statement(Node *p) {
     else if (source.type == SOURCE_TYPE_PROMPT) {
         match_token_no_advance(EOL);
     }
-    else {// SOURCE_TYPE_STRING
+    else { // SOURCE_TYPE_STRING
         if (tag == EOL)
             match_token(EOL);
         else
@@ -175,7 +174,7 @@ Node *parse_simple_stmt(Node *p) {
     Node * n = addchild(p, SIMPLE_STMT, NULL, source.row);
     if (tag == PRINT) {
         parse_print_stmt(n);
-    } else if (tag == READ){
+    } else if (tag == READ) {
         parse_read_stmt(n);
     } else if (tag == CONTINUE) {
         parse_continue_stmt(n);
@@ -385,7 +384,6 @@ Node *parse_try_stmt(Node *p) {
     return n;
 }
 
-
 Node *parse_for_expr(Node *p) {
     Node *n = addchild(p, FOR_EXPR, NULL, source.row);
     parse_expr(n);
@@ -484,7 +482,6 @@ Node *parse_kvpair(Node *p) {
     return n;
 }
 
-
 Node *parse_expr_list(Node *p) {
     Node *n = addchild(p, EXPR_LIST, NULL, source.row);
     parse_expr(n);
@@ -513,8 +510,6 @@ Node *parse_finally_stmt(Node *p) {
     parse_suite(n);
     return n;
 }
-
-
 
 Node *parse_r_expr(Node *p) {
     Node *n = addchild(p, R_EXPR, NULL, source.row);
@@ -643,7 +638,6 @@ Node *parse_trailer(Node *p) {
     return n;
 }
 
-
 Node *parse_arglist(Node *p) {
     Node *n = addchild(p, ARGLIST, NULL, source.row);
     parse_oarg(n);
@@ -723,10 +717,29 @@ Node *parse_idxrange(Node *p) {
 static Node *
 parse_token(Node *p, int token, char *lexeme) {
     // saved the lexeme since match_token changes it
-    char *thisLexeme = (lexeme)?strcpy(savedLexeme, lexeme):lexeme;
+    char *thisLexeme = (lexeme) ? strcpy(savedLexeme, lexeme) : lexeme;
     match_token(token);
     Node *n = addchild(p, token, thisLexeme, source.row);
     return n;
 }
 
+static Node *parse_magic_command(Node *p) {
+    int mctag;
+    if ((mctag = get_magic_action()) == MC_ERROR) {
+        log_error(MAGIC_ERROR, "unknown magic command");
+        longjmp(__parse_buf, 1);
+    }
+    addchild(p, mctag, NULL, source.row);
+    if (mctag == MCA_RUN) {
+        if ((mctag = get_magic_arg()) == MC_ERROR) {
+            log_error(MAGIC_ERROR, "bad argument of magic command");
+            longjmp(__parse_buf, 1);
+        }
+        addchild(p, mctag, lexeme, source.row);
+    }
+    tag = get_token();
+    match_token_no_advance(EOL);
+    p->type = MAGIC_COMMAND;
+    return p;
+}
 

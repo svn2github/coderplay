@@ -267,23 +267,37 @@ get_token() {
 }
 
 
-int get_magic() {
+int get_magic_action() {
+    if (get_magic_arg() == MC_ERROR) {
+        return MC_ERROR;
+    } else {
+        if (!strcmp(lexeme, "exit"))
+            return MCA_EXIT;
+        else if (!strcmp(lexeme, "run"))
+            return MCA_RUN;
+        else
+            return MC_ERROR;
+    }
+}
+
+int get_magic_arg() {
     int length = 0;
-    // Identifiers
-    if (isalpha(source.peek) || source.peek == '_') {
-        while (isalnum(source.peek) || source.peek == '_') {
+    if (isprint(source.peek) && !isspace(source.peek)) {
+        while (isprint(source.peek) && !isspace(source.peek)) {
             lexeme[length++] = source.peek;
             nextc();
         }
         lexeme[length] = '\0';
-        //printf("lexeme = %s\n", lexeme);
-        if (strcmp(lexeme, "exit") == 0) {
-            return MAGIC_EXIT;
-        } else {
-            return MAGIC_ERROR;
-        }
-    } else
-        return MAGIC_ERROR;
+    }
+    // consume all whites
+    while (source.peek == ' ' || source.peek == '\t' || source.peek == CHAR_CR)
+        nextc();
+    if (length == 0) {
+        return MC_ERROR;
+    } else {
+        return MC_ARG;
+    }
+
 }
 
 

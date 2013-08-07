@@ -59,8 +59,6 @@ EmSource source = {
         0,                      // column
         "In>",                  // PS1
         "...",                  // PS2
-        0,                      // promptStatus
-
 };
 
 
