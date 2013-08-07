@@ -20,10 +20,6 @@ void *log_error(int errorNumber, char *message) {
 
     errobj.errorNumber = errorNumber;
     errobj.message = message;
-    /*
-    fprintf(stderr, "Error: %s near <row %d, col %d>\n", message,
-            source.row + 1, source.pos);
-    */
     return NULL;
 }
 
@@ -40,11 +36,11 @@ static char *error_types[] = {
 
 void printerror() {
     fprintf(stderr, "---> %s\n", source.line);
-    fprintf(stderr, "     %*c\n", source.pos-1, '^');
+    fprintf(stderr, "     %*c\n", source.pos, '^');
     fprintf(stderr, "%s: %s near <row %d, col %d>\n",
             error_types[errobj.errorNumber],
             errobj.message,
-            source.row, source.pos-1);
+            source.row, source.pos);
 }
 
 void fatal(char *message) {

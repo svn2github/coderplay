@@ -467,28 +467,21 @@ Node *parse_oparm_list(Node *p) {
 
 Node *parse_oparm(Node *p) {
     Node *n = addchild(p, OPARM, NULL, source.row, source.pos);
-    // parse_kvpair can return an identifier instead
-    parse_kvpair(n);
+    Node *t = parse_expr(n);
+    if (tag == '=') {
+        n->child = 0;
+        n->nchildren = 0;
+        parse_kvpair(n, t);
+    }
     return n;
 }
 
-Node *parse_kvpair(Node *p) {
+Node *parse_kvpair(Node *p, Node *t) {
     Node *n = addchild(p, KVPAIR, NULL, source.row, source.pos);
-    parse_token(n, IDENT, lexeme);
-    if (tag == '=') { // it is a kvpair
-        parse_token(n, '=', NULL);
-        parse_expr(n);
-    } else { // it is just an expr
-        // XXX: This is NOT correct!
-        // It could be a full blown expression instead of
-        // just an identifier
-        n->type = IDENT;
-        n->lexeme = CHILD(n,0)->lexeme;
-        CHILD(n,0)->lexeme = NULL;
-        free(CHILD(n,0));
-        n->nchildren = 0;
-        n->child = NULL;
-    }
+    n->child = t;
+    n->nchildren = 1;
+    parse_token(n, '=', NULL);
+    parse_expr(n);
     return n;
 }
 
@@ -667,10 +660,16 @@ Node *parse_arglist(Node *p) {
 
 Node *parse_oarg(Node *p) {
     Node *n = addchild(p, OARG, NULL, source.row, source.pos);
-    if (tag == IDENT) {
-        parse_kvpair(n); // Can still return an expr
-    } else {
-        parse_expr(n);
+    Node *t = parse_expr(n);
+    if (tag == '=') {
+        /*
+         * We have a kvpair, reset the OARG so it can be parent
+         * of kvpair. The expr t will be the first child of the
+         * kvpair.
+         */
+        n->child = 0;
+        n->nchildren = 0;
+        parse_kvpair(n, t);
     }
     return n;
 }
