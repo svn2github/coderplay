@@ -23,7 +23,7 @@ void nextc() {
                 source.pos = 0;
             }
         } else if (source.type == SOURCE_TYPE_PROMPT) {
-            if (source.isContinue) {
+            if (source.isContinue || source.nulcb > 0) {
                 fprintf(stdout, "%s ", source.PS2);
             } else {
                 fprintf(stdout, "%s ", source.PS1);

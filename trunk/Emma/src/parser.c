@@ -80,12 +80,19 @@ Node *parse() {
             parse_string_input();
         }
     } else {
+        /*
+         * Error handling
+         */
         printerror();
         freetree(ptree);
         ptree = NULL;
         // Make sure this line won't be used again in next call
         source.line[0] = '\0';
         source.peek = ' ';
+        // reset the bracket count
+        source.nulcb = 0;
+        // reset the continue mode if any
+        source.isContinue = 0;
     }
     return ptree;
 }
@@ -155,18 +162,16 @@ Node *parse_statement(Node *p) {
      * So the prompt will show after the current parse tree is processed.
      * When the current parse tree is processed, the next call to
      * parse() will advance the prompt input.
+     * Note that above behaviour is only for when all left and right
+     * curly brackets are balanced. If there are unbalanced brackets,
+     * i.e. the statement is not ready for parsing (return). We advance
+     * the input to read the next token.
      */
-    if (source.type == SOURCE_TYPE_FILE) {
-        match_token(EOL);
-    }
-    else if (source.type == SOURCE_TYPE_PROMPT) {
+   if (source.type == SOURCE_TYPE_PROMPT && source.nulcb == 0) {
         match_token_no_advance(EOL);
     }
-    else { // SOURCE_TYPE_STRING
-        if (tag == EOL)
-            match_token(EOL);
-        else
-            match_token(ENDMARK);
+    else {
+        match_token(EOL);
     }
     return n;
 }
@@ -418,7 +423,10 @@ Node *parse_stmt_block(Node *p) {
         match_token(EOL);
         while (tag != '}') {
             parse_statement(n);
+            printf("here\n");
+            printf("tag is %d\n", tag);
         }
+        printf("tag is %d\n", tag);
         parse_token(n, '}', NULL);
     }
     return n;
