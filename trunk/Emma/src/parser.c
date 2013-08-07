@@ -83,6 +83,13 @@ Node *parse() {
         } else {
             parse_string_input();
         }
+        /*
+         * If empty tree, free it for fast path
+         */
+        if (NCH(ptree) == 0) {
+            freetree(ptree);
+            ptree = NULL;
+        }
     } else {
         /*
          * Error handling
@@ -147,18 +154,12 @@ Node *parse_string_input() {
 Node *parse_statement(Node *p) {
     Node * n;
 
-    // Blank line
-    if (tag == EOL) {
-        match_token(EOL);
-        return NULL;
-    }
-
-    n = addchild(p, STATEMENT, NULL, source.row, source.pos);
-
     if (tag == IF || tag == WHILE || tag == FOR || tag == DEF || tag == CLASS
             || tag == TRY) {
+        n = addchild(p, STATEMENT, NULL, source.row, source.pos);
         parse_compound_stmt(n);
-    } else {
+    } else if (tag != EOL) {
+        n = addchild(p, STATEMENT, NULL, source.row, source.pos);
         parse_simple_stmt(n);
     }
     /*
