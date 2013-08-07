@@ -164,6 +164,11 @@ get_token() {
                 return LE;
             else
                 return '<';
+        } else if (source.peek == '!') {
+            if (matchc('='))
+                return NE;
+            else
+                return '!';
         }
         else if (source.peek == '*') {
             if (matchc('*'))
