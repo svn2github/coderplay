@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     /*
      * Parse the input
      */
-    source.type = SOURCE_TYPE_PROMPT;
+    // source.type = SOURCE_TYPE_PROMPT;
     if (source.type == SOURCE_TYPE_FILE) {
         ptree = parse();
         if (ptree) {

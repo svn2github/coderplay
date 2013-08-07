@@ -122,9 +122,10 @@ Node *parse_prompt_input() {
 Node *parse_string_input() {
     ptree = newparsetree(FILE_INPUT);
     tag = get_token();
-    while (tag != ENDMARK) {
-        parse_statement(ptree);
+    if (tag != ENDMARK) {
+        parse_simple_stmt(ptree);
     };
+    match_token_no_advance(ENDMARK);
     return ptree;
 }
 

@@ -537,7 +537,7 @@ The BNF notations of the Emma language grammar are shown as follows:
 
 <prompt_input> ::= <statement>
 
-<string_input> ::= <statement>* "ENDMARK"
+<string_input> ::= [<simple_stmt>] "ENDMARK"
 
 <statement> ::= "EOL" 
     \alt <simple_stmt> "EOL"
