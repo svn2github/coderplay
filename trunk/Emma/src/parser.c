@@ -142,11 +142,11 @@ Node *parse_string_input() {
 Node *parse_statement(Node *p) {
     Node * n;
 
-    while (tag == EOL) {
-        tag = get_token();
-    };
-    if (tag == ENDMARK)
+    // Blank line
+    if (tag == EOL) {
+        match_token(EOL);
         return NULL;
+    }
 
     n = addchild(p, STATEMENT, NULL, source.row, source.pos);
 
