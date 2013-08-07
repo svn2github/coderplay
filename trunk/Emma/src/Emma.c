@@ -9,7 +9,7 @@
 
 EmObject *constTable;
 
-int init_all(int argc, char **argv) {
+void init_all(int argc, char **argv) {
     // process command line arguments
     char *filename = NULL;
     FILE *fp = stdin;
@@ -36,7 +36,7 @@ int init_all(int argc, char **argv) {
     lexer_init();
 }
 
-int cleanup() {
+void cleanup() {
     lexer_free();
     freeobj(constTable);
 }
@@ -67,7 +67,6 @@ int main(int argc, char **argv) {
                 if (ptree->type != MAGIC_COMMAND) {
                     printtree(ptree);
 
-
                 } else { // MAGIC_COMMAND
                     printf("got magic command %d\n", CHILD(ptree,0)->type);
                     if (NCH(ptree) == 2)
@@ -83,8 +82,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    printobj(constTable, stdout);
-    printf("constTable = %s\n", tostrobj(constTable));
+    //printobj(constTable, stdout);
+    //printf("constTable = %s\n", tostrobj(constTable));
 
     cleanup();
 

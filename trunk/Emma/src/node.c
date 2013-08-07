@@ -18,12 +18,13 @@ Node *newparsetree(int type) {
     n->type = type;
     n->lexeme = NULL;
     n->row = 0;
+    n->col = 0;
     n->nchildren = 0;
     n->child = NULL;
     return n;
 }
 
-Node *addchild(Node *p, int type, char *lexeme, unsigned int row) {
+Node *addchild(Node *p, int type, char *lexeme, unsigned int row, unsigned int col) {
     Node *c; // child node
 
     // parent node
@@ -54,6 +55,7 @@ Node *addchild(Node *p, int type, char *lexeme, unsigned int row) {
         c->lexeme = NULL;
     }
     c->row = row;
+    c->col = col;
     c->nchildren = 0;
     c->child = NULL;
     return c;

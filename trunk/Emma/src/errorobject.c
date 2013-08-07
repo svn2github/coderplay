@@ -44,12 +44,12 @@ void printerror() {
     fprintf(stderr, "%s: %s near <row %d, col %d>\n",
             error_types[errobj.errorNumber],
             errobj.message,
-            source.row, source.pos);
+            source.row, source.pos-1);
 }
 
 void fatal(char *message) {
     fprintf(stderr, "Fatal error: %s near <row %d, col %d>\n", message,
-            source.row + 1, source.pos);
+            source.row, source.pos-1);
     exit(1);
 }
 

@@ -149,7 +149,7 @@ Node *parse_statement(Node *p) {
     if (tag == ENDMARK)
         return NULL;
 
-    n = addchild(p, STATEMENT, NULL, source.row);
+    n = addchild(p, STATEMENT, NULL, source.row, source.pos);
 
     if (tag == IF || tag == WHILE || tag == FOR || tag == DEF
             || tag == CLASS || tag == TRY) {
@@ -177,7 +177,7 @@ Node *parse_statement(Node *p) {
 }
 
 Node *parse_simple_stmt(Node *p) {
-    Node * n = addchild(p, SIMPLE_STMT, NULL, source.row);
+    Node * n = addchild(p, SIMPLE_STMT, NULL, source.row, source.pos);
     if (tag == PRINT) {
         parse_print_stmt(n);
     } else if (tag == READ) {
@@ -201,7 +201,7 @@ Node *parse_simple_stmt(Node *p) {
 }
 
 Node *parse_print_stmt(Node *p) {
-    Node *n = addchild(p, PRINT_STMT, NULL, source.row);
+    Node *n = addchild(p, PRINT_STMT, NULL, source.row, source.pos);
     parse_token(n, PRINT, NULL);
     if (tag == '>') {
         parse_token(n, '>', NULL);
@@ -212,7 +212,7 @@ Node *parse_print_stmt(Node *p) {
 }
 
 Node *parse_read_stmt(Node *p) {
-    Node *n = addchild(p, READ_STMT, NULL, source.row);
+    Node *n = addchild(p, READ_STMT, NULL, source.row, source.pos);
     parse_token(n, READ, NULL);
     if (tag == '<') {
         parse_token(n, '<', NULL);
@@ -223,19 +223,19 @@ Node *parse_read_stmt(Node *p) {
 }
 
 Node *parse_continue_stmt(Node *p) {
-    Node *n = addchild(p, CONTINUE_STMT, NULL, source.row);
+    Node *n = addchild(p, CONTINUE_STMT, NULL, source.row, source.pos);
     parse_token(n, CONTINUE, NULL);
     return n;
 }
 
 Node *parse_break_stmt(Node *p) {
-    Node *n = addchild(p, BREAK_STMT, NULL, source.row);
+    Node *n = addchild(p, BREAK_STMT, NULL, source.row, source.pos);
     parse_token(n, BREAK, NULL);
     return n;
 }
 
 Node *parse_return_stmt(Node *p) {
-    Node *n = addchild(p, RETURN_STMT, NULL, source.row);
+    Node *n = addchild(p, RETURN_STMT, NULL, source.row, source.pos);
     parse_token(n, RETURN, NULL);
     if (tag != EOL) { // optional return value
         parse_expr(n);
@@ -244,14 +244,14 @@ Node *parse_return_stmt(Node *p) {
 }
 
 Node *parse_package_stmt(Node *p) {
-    Node *n = addchild(p, PACKAGE_STMT, NULL, source.row);
+    Node *n = addchild(p, PACKAGE_STMT, NULL, source.row, source.pos);
     parse_token(n, PACKAGE, NULL);
     parse_token(n, IDENT, lexeme);
     return n;
 }
 
 Node *parse_import_stmt(Node *p) {
-    Node *n = addchild(p, IMPORT_STMT, NULL, source.row);
+    Node *n = addchild(p, IMPORT_STMT, NULL, source.row, source.pos);
     parse_token(n, IMPORT, NULL);
     parse_token(n, IDENT, lexeme);
     while (tag == '.') {
@@ -267,7 +267,7 @@ Node *parse_import_stmt(Node *p) {
 }
 
 Node *parse_assign_stmt(Node *p) {
-    Node *n = addchild(p, ASSIGN_STMT, NULL, source.row);
+    Node *n = addchild(p, ASSIGN_STMT, NULL, source.row, source.pos);
     Node *t = parse_target(n);
     if (tag == '=') { // we have an assignment
         if (t->nchildren > 1 && CHILD(t,1)->type == TRAILER) { // we have a trailer
@@ -287,19 +287,20 @@ Node *parse_assign_stmt(Node *p) {
 }
 
 Node *parse_target(Node *p) {
-    Node *n = addchild(p, TARGET, NULL, source.row);
+    Node *n = addchild(p, TARGET, NULL, source.row, source.pos);
     parse_token(n, IDENT, lexeme);
     parse_trailer(n);
     return n;
 }
 
 Node *parse_expr(Node *p) {
-    Node *n = addchild(p, EXPR, NULL, source.row);
+    Node *n = addchild(p, EXPR, NULL, source.row, source.pos);
     parse_r_expr(n);
+    return n;
 }
 
 Node *parse_compound_stmt(Node *p) {
-    Node *n = addchild(p, COMPOUND_STMT, NULL, source.row);
+    Node *n = addchild(p, COMPOUND_STMT, NULL, source.row, source.pos);
     if (tag == IF) {
         parse_if_stmt(n);
     } else if (tag == WHILE) {
@@ -317,7 +318,7 @@ Node *parse_compound_stmt(Node *p) {
 }
 
 Node *parse_if_stmt(Node *p) {
-    Node *n = addchild(p, IF_STMT, NULL, source.row);
+    Node *n = addchild(p, IF_STMT, NULL, source.row, source.pos);
     parse_token(n, IF, NULL);
     parse_expr(n);
     parse_suite(n);
@@ -334,7 +335,7 @@ Node *parse_if_stmt(Node *p) {
 }
 
 Node *parse_while_stmt(Node *p) {
-    Node *n = addchild(p, WHILE_STMT, NULL, source.row);
+    Node *n = addchild(p, WHILE_STMT, NULL, source.row, source.pos);
     parse_token(n, WHILE, NULL);
     parse_expr(n);
     parse_suite(n);
@@ -342,7 +343,7 @@ Node *parse_while_stmt(Node *p) {
 }
 
 Node *parse_for_stmt(Node *p) {
-    Node *n = addchild(p, FOR_STMT, NULL, source.row);
+    Node *n = addchild(p, FOR_STMT, NULL, source.row, source.pos);
     parse_token(n, FOR, NULL);
     parse_token(n, IDENT, lexeme);
     parse_token(n, '=', NULL);
@@ -352,7 +353,7 @@ Node *parse_for_stmt(Node *p) {
 }
 
 Node *parse_funcdef(Node *p) {
-    Node *n = addchild(p, FUNCDEF, NULL, source.row);
+    Node *n = addchild(p, FUNCDEF, NULL, source.row, source.pos);
     parse_token(n, DEF, NULL);
     parse_token(n, IDENT, lexeme);
     parse_token(n, '(', NULL);
@@ -365,7 +366,7 @@ Node *parse_funcdef(Node *p) {
 }
 
 Node *parse_classdef(Node *p) {
-    Node *n = addchild(p, CLASSDEF, NULL, source.row);
+    Node *n = addchild(p, CLASSDEF, NULL, source.row, source.pos);
     parse_token(n, CLASS, NULL);
     parse_token(n, IDENT, lexeme);
     parse_token(n, '(', NULL);
@@ -378,7 +379,7 @@ Node *parse_classdef(Node *p) {
 }
 
 Node *parse_try_stmt(Node *p) {
-    Node *n = addchild(p, TRY_STMT, NULL, source.row);
+    Node *n = addchild(p, TRY_STMT, NULL, source.row, source.pos);
     parse_token(n, TRY, NULL);
     parse_suite(n);
     parse_catch_stmt(n);
@@ -391,7 +392,7 @@ Node *parse_try_stmt(Node *p) {
 }
 
 Node *parse_for_expr(Node *p) {
-    Node *n = addchild(p, FOR_EXPR, NULL, source.row);
+    Node *n = addchild(p, FOR_EXPR, NULL, source.row, source.pos);
     parse_expr(n);
     parse_token(n, ',', NULL);
     parse_expr(n);
@@ -403,7 +404,7 @@ Node *parse_for_expr(Node *p) {
 }
 
 Node *parse_suite(Node *p) {
-    Node *n = addchild(p, SUITE, NULL, source.row);
+    Node *n = addchild(p, SUITE, NULL, source.row, source.pos);
     if (tag == '{') {
         parse_stmt_block(n);
     } else {
@@ -413,7 +414,7 @@ Node *parse_suite(Node *p) {
 }
 
 Node *parse_stmt_block(Node *p) {
-    Node *n = addchild(p, STMT_BLOCK, NULL, source.row);
+    Node *n = addchild(p, STMT_BLOCK, NULL, source.row, source.pos);
     parse_token(n, '{', NULL);
     if (tag == '}') { // So we can have an empty {} pair
         parse_token(n, '}', NULL);
@@ -423,17 +424,14 @@ Node *parse_stmt_block(Node *p) {
         match_token(EOL);
         while (tag != '}') {
             parse_statement(n);
-            printf("here\n");
-            printf("tag is %d\n", tag);
         }
-        printf("tag is %d\n", tag);
         parse_token(n, '}', NULL);
     }
     return n;
 }
 
 Node *parse_parmlist(Node *p) {
-    Node *n = addchild(p, PARMLIST, NULL, source.row);
+    Node *n = addchild(p, PARMLIST, NULL, source.row, source.pos);
 
     if (tag != '*' && tag != DSTAR) {
         parse_oparm_list(n);
@@ -456,7 +454,7 @@ Node *parse_parmlist(Node *p) {
 }
 
 Node *parse_oparm_list(Node *p) {
-    Node *n = addchild(p, OPARM_LIST, NULL, source.row);
+    Node *n = addchild(p, OPARM_LIST, NULL, source.row, source.pos);
     parse_oparm(n);
     while (tag == ',') {
         parse_token(n, ',', NULL);
@@ -468,14 +466,14 @@ Node *parse_oparm_list(Node *p) {
 }
 
 Node *parse_oparm(Node *p) {
-    Node *n = addchild(p, OPARM, NULL, source.row);
+    Node *n = addchild(p, OPARM, NULL, source.row, source.pos);
     // parse_kvpair can return an identifier instead
     parse_kvpair(n);
     return n;
 }
 
 Node *parse_kvpair(Node *p) {
-    Node *n = addchild(p, KVPAIR, NULL, source.row);
+    Node *n = addchild(p, KVPAIR, NULL, source.row, source.pos);
     parse_token(n, IDENT, lexeme);
     if (tag == '=') { // it is a kvpair
         parse_token(n, '=', NULL);
@@ -492,7 +490,7 @@ Node *parse_kvpair(Node *p) {
 }
 
 Node *parse_expr_list(Node *p) {
-    Node *n = addchild(p, EXPR_LIST, NULL, source.row);
+    Node *n = addchild(p, EXPR_LIST, NULL, source.row, source.pos);
     parse_expr(n);
     while (tag == ',') {
         parse_token(n, tag, NULL);
@@ -502,7 +500,7 @@ Node *parse_expr_list(Node *p) {
 }
 
 Node *parse_catch_stmt(Node *p) {
-    Node *n = addchild(p, CATCH_STMT, NULL, source.row);
+    Node *n = addchild(p, CATCH_STMT, NULL, source.row, source.pos);
     parse_token(n, CATCH, NULL);
     parse_token(n, '(', NULL);
     parse_token(n, IDENT, lexeme);
@@ -514,14 +512,14 @@ Node *parse_catch_stmt(Node *p) {
 }
 
 Node *parse_finally_stmt(Node *p) {
-    Node *n = addchild(p, FINALLY_STMT, NULL, source.row);
+    Node *n = addchild(p, FINALLY_STMT, NULL, source.row, source.pos);
     parse_token(n, FINALLY, NULL);
     parse_suite(n);
     return n;
 }
 
 Node *parse_r_expr(Node *p) {
-    Node *n = addchild(p, R_EXPR, NULL, source.row);
+    Node *n = addchild(p, R_EXPR, NULL, source.row, source.pos);
     parse_r_term(n);
     while (is_r_orop()) {
         parse_token(n, tag, NULL);
@@ -531,7 +529,7 @@ Node *parse_r_expr(Node *p) {
 }
 
 Node *parse_r_term(Node *p) {
-    Node *n = addchild(p, R_TERM, NULL, source.row);
+    Node *n = addchild(p, R_TERM, NULL, source.row, source.pos);
     parse_r_factor(n);
     while (is_r_andop()) {
         parse_token(n, tag, NULL);
@@ -541,7 +539,7 @@ Node *parse_r_term(Node *p) {
 }
 
 Node *parse_r_factor(Node *p) {
-    Node *n = addchild(p, R_FACTOR, NULL, source.row);
+    Node *n = addchild(p, R_FACTOR, NULL, source.row, source.pos);
     if (tag == NOT)
         parse_token(n, tag, NULL);
     parse_l_expr(n);
@@ -549,7 +547,7 @@ Node *parse_r_factor(Node *p) {
 }
 
 Node *parse_l_expr(Node *p) {
-    Node *n = addchild(p, L_EXPR, NULL, source.row);
+    Node *n = addchild(p, L_EXPR, NULL, source.row, source.pos);
     parse_a_expr(n);
     if (is_l_op()) {
         parse_token(n, tag, NULL);
@@ -559,7 +557,7 @@ Node *parse_l_expr(Node *p) {
 }
 
 Node *parse_a_expr(Node *p) {
-    Node *n = addchild(p, A_EXPR, NULL, source.row);
+    Node *n = addchild(p, A_EXPR, NULL, source.row, source.pos);
     parse_a_term(n);
     if (is_addop()) {
         parse_token(n, tag, NULL);
@@ -569,7 +567,7 @@ Node *parse_a_expr(Node *p) {
 }
 
 Node *parse_a_term(Node *p) {
-    Node *n = addchild(p, A_TERM, NULL, source.row);
+    Node *n = addchild(p, A_TERM, NULL, source.row, source.pos);
     parse_factor(n);
     if (is_mulop()) {
         parse_token(n, tag, NULL);
@@ -579,7 +577,7 @@ Node *parse_a_term(Node *p) {
 }
 
 Node *parse_factor(Node *p) {
-    Node *n = addchild(p, FACTOR, NULL, source.row);
+    Node *n = addchild(p, FACTOR, NULL, source.row, source.pos);
     if (is_unary_op()) {
         parse_token(n, tag, NULL);
         parse_factor(n);
@@ -591,7 +589,7 @@ Node *parse_factor(Node *p) {
 }
 
 Node *parse_power(Node *p) {
-    Node *n = addchild(p, POWER, NULL, source.row);
+    Node *n = addchild(p, POWER, NULL, source.row, source.pos);
     parse_primary(n);
     if (tag == DSTAR) {
         parse_token(n, tag, NULL);
@@ -601,7 +599,7 @@ Node *parse_power(Node *p) {
 }
 
 Node *parse_primary(Node *p) {
-    Node *n = addchild(p, PRIMARY, NULL, source.row);
+    Node *n = addchild(p, PRIMARY, NULL, source.row, source.pos);
     parse_atom(n);
     while (tag == '(' || tag == '[' || tag == '.') {
         parse_trailer(n);
@@ -610,7 +608,7 @@ Node *parse_primary(Node *p) {
 }
 
 Node *parse_atom(Node *p) {
-    Node *n = addchild(p, ATOM, NULL, source.row);
+    Node *n = addchild(p, ATOM, NULL, source.row, source.pos);
     if (tag == '(') {
         parse_token(n, tag, NULL);
         parse_expr(n);
@@ -628,7 +626,7 @@ Node *parse_trailer(Node *p) {
 
     while (tag == '(' || tag == '[' || tag == '.') {
         if (n == NULL)
-            n = addchild(p, TRAILER, NULL, source.row);
+            n = addchild(p, TRAILER, NULL, source.row, source.pos);
 
         if (tag == '(') {
             parse_token(n, '(', NULL);
@@ -648,7 +646,7 @@ Node *parse_trailer(Node *p) {
 }
 
 Node *parse_arglist(Node *p) {
-    Node *n = addchild(p, ARGLIST, NULL, source.row);
+    Node *n = addchild(p, ARGLIST, NULL, source.row, source.pos);
     parse_oarg(n);
     while (tag == ',') {
         parse_token(n, ',', NULL);
@@ -658,7 +656,7 @@ Node *parse_arglist(Node *p) {
 }
 
 Node *parse_oarg(Node *p) {
-    Node *n = addchild(p, OARG, NULL, source.row);
+    Node *n = addchild(p, OARG, NULL, source.row, source.pos);
     if (tag == IDENT) {
         parse_kvpair(n); // Can still return an expr
     } else {
@@ -689,7 +687,7 @@ void parse_idxlist_with_existing(Node *ex) {
 }
 
 Node *parse_subscription(Node *p) {
-    Node *n = addchild(p, SUBSCRIPTION, NULL, source.row);
+    Node *n = addchild(p, SUBSCRIPTION, NULL, source.row, source.pos);
     Node *t;
     if (tag == ':') {
         parse_idxrange(n);
@@ -707,13 +705,13 @@ Node *parse_subscription(Node *p) {
 }
 
 Node *parse_singleidx(Node *p) {
-    Node *n = addchild(p, SINGLEIDX, NULL, source.row);
+    Node *n = addchild(p, SINGLEIDX, NULL, source.row, source.pos);
     parse_expr(n);
     return n;
 }
 
 Node *parse_idxrange(Node *p) {
-    Node *n = addchild(p, IDXRANGE, NULL, source.row);
+    Node *n = addchild(p, IDXRANGE, NULL, source.row, source.pos);
     if (tag != ':')
         parse_expr(n);
 
@@ -728,7 +726,7 @@ parse_token(Node *p, int token, char *lexeme) {
     // saved the lexeme since match_token changes it
     char *thisLexeme = (lexeme) ? strcpy(savedLexeme, lexeme) : lexeme;
     match_token(token);
-    Node *n = addchild(p, token, thisLexeme, source.row);
+    Node *n = addchild(p, token, thisLexeme, source.row, source.pos);
     return n;
 }
 
@@ -738,13 +736,13 @@ static Node *parse_magic_command(Node *p) {
         log_error(MAGIC_ERROR, "unknown magic command");
         longjmp(__parse_buf, 1);
     }
-    addchild(p, mctag, NULL, source.row);
+    addchild(p, mctag, NULL, source.row, source.pos);
     if (mctag == MCA_RUN) {
         if ((mctag = get_magic_arg()) == MC_ERROR) {
             log_error(MAGIC_ERROR, "bad argument of magic command");
             longjmp(__parse_buf, 1);
         }
-        addchild(p, mctag, lexeme, source.row);
+        addchild(p, mctag, lexeme, source.row, source.pos);
     }
     tag = get_token();
     match_token_no_advance(EOL);

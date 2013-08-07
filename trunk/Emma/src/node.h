@@ -24,12 +24,13 @@ typedef struct _node {
     int type;
     char *lexeme;
     int row;
+    int col;
     int nchildren;
     struct _node *child;
 } Node;
 
 Node *newparsetree(int type);
-Node *addchild(Node *parent, int type, char *lexeme, unsigned int row);
+Node *addchild(Node *parent, int type, char *lexeme, unsigned int row, unsigned int col);
 void freetree(Node *ptree);
 void printtree(Node *ptree);
 
