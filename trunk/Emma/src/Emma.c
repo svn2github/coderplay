@@ -63,16 +63,22 @@ int main(int argc, char **argv) {
         while (1) {
             ptree = parse();
             if (ptree) {
+
                 if (ptree->type != MAGIC_COMMAND) {
                     printtree(ptree);
-                    freetree(ptree);
+
+
                 } else { // MAGIC_COMMAND
                     printf("got magic command %d\n", CHILD(ptree,0)->type);
                     if (NCH(ptree) == 2)
                         printf("magic command arg = %s\n", CHILD(ptree,1)->lexeme);
-                    if (CHILD(ptree,0)->type == MCA_EXIT)
+                    if (CHILD(ptree,0)->type == MCA_EXIT) {
+                        freetree(ptree); // release memory before exit
                         break;
+                    }
                 }
+                // Always release memory
+                freetree(ptree);
             }
         }
     }
