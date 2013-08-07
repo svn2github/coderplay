@@ -299,7 +299,8 @@ Node *parse_assign_stmt(Node *p) {
 Node *parse_target(Node *p) {
     Node *n = addchild(p, TARGET, NULL, source.row, source.pos);
     parse_token(n, IDENT, lexeme);
-    parse_trailer(n);
+    if (tag == '(' || tag == '[' || tag == '.')
+        parse_trailer(n);
     return n;
 }
 
@@ -489,6 +490,9 @@ Node *parse_kvpair(Node *p) {
         parse_token(n, '=', NULL);
         parse_expr(n);
     } else { // it is just an expr
+        // XXX: This is NOT correct!
+        // It could be a full blown expression instead of
+        // just an identifier
         n->type = IDENT;
         n->lexeme = CHILD(n,0)->lexeme;
         CHILD(n,0)->lexeme = NULL;
@@ -611,7 +615,7 @@ Node *parse_power(Node *p) {
 Node *parse_primary(Node *p) {
     Node *n = addchild(p, PRIMARY, NULL, source.row, source.pos);
     parse_atom(n);
-    while (tag == '(' || tag == '[' || tag == '.') {
+    if (tag == '(' || tag == '[' || tag == '.') {
         parse_trailer(n);
     }
     return n;
