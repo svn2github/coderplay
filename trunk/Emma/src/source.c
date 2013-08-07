@@ -24,7 +24,7 @@ void nextc() {
             }
         } else if (source.type == SOURCE_TYPE_PROMPT) {
             if (source.isContinue || source.nulcb > 0) {
-                fprintf(stdout, "%s ", source.PS2);
+                fprintf(stdout, "%*s ", (source.nulcb+1)*3, source.PS2);
             } else {
                 fprintf(stdout, "%s ", source.PS1);
             }
