@@ -66,6 +66,8 @@ def gen_c_code():
     for t in node_types:
         if t in ["FILE_INPUT", "PROMPT_INPUT", "STRING_INPUT"]:
             param = ''
+        elif t in ['ASSIGN_STMT', 'KVPAIR']:
+            param = 'Node *parent, Node *first'
         else:
             param = 'Node *parent'
         outs.write('Node *parse_%s(%s);\n' % (str.lower(t), param))

@@ -526,6 +526,8 @@ FOLLOW($A$) are disjoint sets.
 \end{itemize}
 
 The BNF notations of the Emma language grammar are shown as follows:
+\footnote{Note that left factoring is needed to properly parse 
+following grammar as LL(1).}
 
 \setlength{\grammarparsep}{10pt plus 1pt minus 1pt} % increase separation between rules
 \setlength{\grammarindent}{12em} % increase separation between LHS/RHS 
@@ -561,10 +563,7 @@ The BNF notations of the Emma language grammar are shown as follows:
 
 <read_stmt> ::= `read' [`<' <primary>] <expr_list>
 
-<assign_stmt> ::= <target> `=' <expr>
-
-<target> ::= "IDENT" <trailer>* \footnote{Additional rule is enforced for the
-assign_stmt by the interpreter that it cannot assign to function calls.}
+<assign_stmt> ::= <expr> `=' <expr>\footnote{Additional rules are enforced for the assign_stmt by the interpreter so that only expressions that have valid left values can be used on the left side of the = symbol.}
 
 <continue_stmt> ::= `continue'
 
@@ -618,7 +617,7 @@ to define an empty stmt_block. It is similar to python's pass statement.}
 
 <r_term> ::= <r_factor> (<r_andop> <r_factor>)*
 
-<r_factor> ::= [`not'] <l_expr>
+<r_factor> ::= [`not'] <r_factor>
 
 <l_expr> ::= <a_expr> (<l_op> <a_expr>)*
 
@@ -649,7 +648,8 @@ to define an empty stmt_block. It is similar to python's pass statement.}
 
 <oparm> ::= <kvpair> | "IDENT"
 
-<kvpair> ::= "IDENT" `=' <expr>
+<kvpair> ::= <expr> `=' <expr>\footnote{Similar to the assign_stmt, additional
+rules are enforced to ensure the left expr has valid left value.}
 
 <arglist> ::= <oarg> (`,' <oarg>)*
 

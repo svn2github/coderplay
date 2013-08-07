@@ -5,6 +5,11 @@ static int tag;
 static Node *ptree;
 static jmp_buf __parse_buf;
 static char savedLexeme[BUFSIZ];
+/*
+ * Following variable is to keep track of the expr state, so we can know
+ * whether it can be used on the left side of the '=' symbol.
+ */
+static int isAssignable;
 
 static match_token_no_advance(int t) {
     if (tag != t) {
@@ -196,12 +201,16 @@ Node *parse_simple_stmt(Node *p) {
     } else {
         t = parse_expr(n);
         /*
-         * If the next token is '=', we are having an assign_stmt
+         * If the next token is '=', we are having an assign_stmt.
          */
         if (tag == '=') {
             // reset the simple_stmt node so it can be parent of
             // assign_stmt. The expr is passed so it will be set
             // as the first child of assign_stmt.
+            if (isAssignable == 0) {
+                log_error(SYNTAX_ERROR, "cannot assign to expression");
+                longjmp(__parse_buf, 1);
+            }
             n->child = 0;
             n->nchildren = 0;
             parse_assign_stmt(n, t);
@@ -295,6 +304,7 @@ Node *parse_assign_stmt(Node *p, Node *t) {
 
 Node *parse_expr(Node *p) {
     Node *n = addchild(p, EXPR, NULL, source.row, source.pos);
+    isAssignable = 1;
     parse_r_expr(n);
     return n;
 }
@@ -518,6 +528,7 @@ Node *parse_r_expr(Node *p) {
     Node *n = addchild(p, R_EXPR, NULL, source.row, source.pos);
     parse_r_term(n);
     while (is_r_orop()) {
+        isAssignable = 0;
         parse_token(n, tag, NULL);
         parse_r_term(n);
     }
@@ -528,6 +539,7 @@ Node *parse_r_term(Node *p) {
     Node *n = addchild(p, R_TERM, NULL, source.row, source.pos);
     parse_r_factor(n);
     while (is_r_andop()) {
+        isAssignable = 0;
         parse_token(n, tag, NULL);
         parse_r_factor(n);
     }
@@ -537,6 +549,7 @@ Node *parse_r_term(Node *p) {
 Node *parse_r_factor(Node *p) {
     Node *n = addchild(p, R_FACTOR, NULL, source.row, source.pos);
     if (tag == NOT) {
+        isAssignable = 0;
         parse_token(n, tag, NULL);
         parse_r_factor(n);
     } else {
@@ -549,6 +562,7 @@ Node *parse_l_expr(Node *p) {
     Node *n = addchild(p, L_EXPR, NULL, source.row, source.pos);
     parse_a_expr(n);
     while (is_l_op()) {
+        isAssignable = 0;
         parse_token(n, tag, NULL);
         parse_a_expr(n);
     }
@@ -559,6 +573,7 @@ Node *parse_a_expr(Node *p) {
     Node *n = addchild(p, A_EXPR, NULL, source.row, source.pos);
     parse_a_term(n);
     while (is_addop()) {
+        isAssignable = 0;
         parse_token(n, tag, NULL);
         parse_a_term(n);
     }
@@ -569,6 +584,7 @@ Node *parse_a_term(Node *p) {
     Node *n = addchild(p, A_TERM, NULL, source.row, source.pos);
     parse_factor(n);
     while (is_mulop()) {
+        isAssignable = 0;
         parse_token(n, tag, NULL);
         parse_factor(n);
     }
@@ -583,6 +599,7 @@ Node *parse_a_term(Node *p) {
 Node *parse_factor(Node *p) {
     Node *n = addchild(p, FACTOR, NULL, source.row, source.pos);
     if (is_unary_op()) {
+        isAssignable = 0;
         parse_token(n, tag, NULL);
         parse_factor(n);
     } else {
@@ -595,6 +612,7 @@ Node *parse_power(Node *p) {
     Node *n = addchild(p, POWER, NULL, source.row, source.pos);
     parse_primary(n);
     if (tag == DSTAR) {
+        isAssignable = 0;
         parse_token(n, tag, NULL);
         parse_factor(n);
     }
@@ -636,13 +654,16 @@ Node *parse_trailer(Node *p) {
             if (tag != ')')
                 parse_arglist(n);
             parse_token(n, ')', NULL);
+            isAssignable = 0;
         } else if (tag == '[') {
             parse_token(n, '[', NULL);
             parse_subscription(n);
             parse_token(n, ']', NULL);
+            isAssignable = 1;
         } else if (tag == '.') {
             parse_token(n, '.', NULL);
             parse_token(n, IDENT, lexeme);
+            isAssignable = 1;
         }
     }
     return n;
