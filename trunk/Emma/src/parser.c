@@ -6,7 +6,6 @@ static Node *ptree;
 static jmp_buf __parse_buf;
 static char savedLexeme[BUFSIZ];
 
-
 static match_token_no_advance(int t) {
     if (tag != t) {
         log_error(SYNTAX_ERROR, "unexpected token");
@@ -34,8 +33,8 @@ static int is_r_andop() {
 }
 
 static int is_l_op() {
-    if (tag == '>' || tag == '<' || tag == GE || tag == LE || tag == EQ
-            || tag == NE)
+    if (tag == '>'|| tag == '<' || tag == GE || tag == LE || tag == EQ
+    || tag == NE)
         return 1;
     else
         return 0;
@@ -151,8 +150,8 @@ Node *parse_statement(Node *p) {
 
     n = addchild(p, STATEMENT, NULL, source.row, source.pos);
 
-    if (tag == IF || tag == WHILE || tag == FOR || tag == DEF
-            || tag == CLASS || tag == TRY) {
+    if (tag == IF || tag == WHILE || tag == FOR || tag == DEF || tag == CLASS
+            || tag == TRY) {
         parse_compound_stmt(n);
     } else {
         parse_simple_stmt(n);
@@ -167,10 +166,9 @@ Node *parse_statement(Node *p) {
      * i.e. the statement is not ready for parsing (return). We advance
      * the input to read the next token.
      */
-   if (source.type == SOURCE_TYPE_PROMPT && source.nulcb == 0) {
+    if (source.type == SOURCE_TYPE_PROMPT && source.nulcb == 0) {
         match_token_no_advance(EOL);
-    }
-    else {
+    } else {
         match_token(EOL);
     }
     return n;
@@ -178,6 +176,7 @@ Node *parse_statement(Node *p) {
 
 Node *parse_simple_stmt(Node *p) {
     Node * n = addchild(p, SIMPLE_STMT, NULL, source.row, source.pos);
+    Node *t;
     if (tag == PRINT) {
         parse_print_stmt(n);
     } else if (tag == READ) {
@@ -194,10 +193,19 @@ Node *parse_simple_stmt(Node *p) {
         parse_import_stmt(n);
     } else if (tag == RAISE) {
         parse_raise_stmt(n);
-    } else if (tag == IDENT) {
-        parse_assign_stmt(n); // an expr can be returned instead of an assign_stmt
     } else {
-        parse_expr(n);
+        t = parse_expr(n);
+        /*
+         * If the next token is '=', we are having an assign_stmt
+         */
+        if (tag == '=') {
+            // reset the simple_stmt node so it can be parent of
+            // assign_stmt. The expr is passed so it will be set
+            // as the first child of assign_stmt.
+            n->child = 0;
+            n->nchildren = 0;
+            parse_assign_stmt(n, t);
+        }
     }
     return n;
 }
@@ -276,31 +284,12 @@ Node *parse_raise_stmt(Node *p) {
     return n;
 }
 
-Node *parse_assign_stmt(Node *p) {
+Node *parse_assign_stmt(Node *p, Node *t) {
     Node *n = addchild(p, ASSIGN_STMT, NULL, source.row, source.pos);
-    Node *t = parse_target(n);
-    if (tag == '=') { // we have an assignment
-        if (t->nchildren > 1 && CHILD(t,1)->type == TRAILER) { // we have a trailer
-            // Cannot assign to function calls
-            if (RCHILD(CHILD(t,1), 0)->type == ')') {
-                log_error(SYNTAX_ERROR, "cannot assign to function calls");
-                longjmp(__parse_buf, 1);
-            }
-        }
-        parse_token(n, '=', NULL);
-        parse_expr(n);
-    } else { // it is actually an expression
-        n->type = EXPR;
-        t->type = R_EXPR;
-    }
-    return n;
-}
-
-Node *parse_target(Node *p) {
-    Node *n = addchild(p, TARGET, NULL, source.row, source.pos);
-    parse_token(n, IDENT, lexeme);
-    if (tag == '(' || tag == '[' || tag == '.')
-        parse_trailer(n);
+    n->child = t;
+    n->nchildren = 1;
+    parse_token(n, '=', NULL);
+    parse_expr(n);
     return n;
 }
 
@@ -603,8 +592,7 @@ Node *parse_factor(Node *p) {
     if (is_unary_op()) {
         parse_token(n, tag, NULL);
         parse_factor(n);
-    }
-    else {
+    } else {
         parse_power(n);
     }
     return n;

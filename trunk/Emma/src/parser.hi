@@ -56,7 +56,7 @@ Node *parse_statement(Node *parent);
 Node *parse_simple_stmt(Node *parent);
 Node *parse_compound_stmt(Node *parent);
 Node *parse_expr(Node *parent);
-Node *parse_assign_stmt(Node *parent);
+Node *parse_assign_stmt(Node *parent, Node *target);
 Node *parse_print_stmt(Node *parent);
 Node *parse_read_stmt(Node *parent);
 Node *parse_continue_stmt(Node *parent);
