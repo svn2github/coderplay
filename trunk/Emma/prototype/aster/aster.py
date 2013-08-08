@@ -6,7 +6,6 @@ stree_types = \
 """
 seq
 assign
-expr
 binop
 unaryop
 call
@@ -16,19 +15,16 @@ slice
 slist
 field
 ident
-int
-float
-str
-nul
+literal
 
 print
 read
-continue
-break
 return
 package
 import
 raise
+continue
+break
 if
 while
 for

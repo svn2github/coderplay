@@ -7,15 +7,15 @@
 
 #include "ast.h"
 
-AstNode *
-newastnode(int type, int size) {
-    AstNode *n;
-    if ((n = (AstNode *) malloc(sizeof(AstNode))) == NULL) {
+AstBase *
+newastnode(int kind, int size) {
+    AstBase *n;
+    if ((n = (AstBase *) malloc(sizeof(AstBase))) == NULL) {
         log_error(MEMORY_ERROR, "not enough memory for new AST node");
         return NULL;
     }
     if (size > 0) {
-        if ((n->child = (AstNode *) malloc(sizeof(AstNode) * size)) == NULL) {
+        if ((n->child = (AstBase *) malloc(sizeof(AstBase) * size)) == NULL) {
             log_error(MEMORY_ERROR, "not enough memory for AST node subtree");
             return NULL;
         }
@@ -26,32 +26,32 @@ newastnode(int type, int size) {
     return n;
 }
 
-void print_snodes(AstNode *sn) {
-    int ii;
-    printf("(");
-    if (sn->size == 0) {
-        printf("%d", sn->type);
-    } else if (sn->size == 1) {
-        printf("%s", (char *)sn->child);
-    } else {
-        for (ii = 0; ii < sn->size; ii++) {
-            print_snodes(AST_GET_CHILD(sn, ii));
-            if (ii < sn->size - 1)
-                printf(",");
-        }
-    }
-    printf(")");
-}
+//void print_snodes(AstBase *sn) {
+//    int ii;
+//    printf("(");
+//    if (sn->size == 0) {
+//        printf("%d", sn->type);
+//    } else if (sn->size == 1) {
+//        printf("%s", (char *)sn->child);
+//    } else {
+//        for (ii = 0; ii < sn->size; ii++) {
+//            print_snodes(AST_GET_CHILD(sn, ii));
+//            if (ii < sn->size - 1)
+//                printf(",");
+//        }
+//    }
+//    printf(")");
+//}
 
-void print_stree(AstNode *stree) {
+void print_stree(AstBase *stree) {
     if (stree != NULL) {
         print_snodes(stree);
         printf("\n");
     }
 }
 
-AstNode *ast_from_pnode(Node *pn) {
-    AstNode *sn = NULL;
+AstBase *ast_from_pnode(Node *pn) {
+    AstBase *sn = NULL;
     int ii;
     if (NCH(pn) == 1) {
         return ast_from_pnode(CHILD(pn,0));
@@ -83,11 +83,11 @@ AstNode *ast_from_pnode(Node *pn) {
     }
 }
 
-AstNode *ast_from_ptree(Node *ptree) {
-    //AstNode *stree = newastnode(AST_SEQ, NCH(ptree));
+AstBase *ast_from_ptree(Node *ptree) {
+    AstSeq *stree = NEW_AST_NODE(AstSeq);
     int ii;
     for (ii = 0; ii < NCH(ptree); ii++) {
         //AST_SET_CHILD(stree, ii, ast_from_pnode(CHILD(ptree, ii)));
     }
-    return NULL; //stree;
+    return stree;
 }
