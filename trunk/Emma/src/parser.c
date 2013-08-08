@@ -1,6 +1,14 @@
 #include "parser.h"
 #include "parser.i"
 
+/*
+ * XXX: Need error handling for possible memory allocation
+ * failure when creating parse tree nodes. Currently, the
+ * errors are logged but not dealt with. So the error can
+ * causes the program to crash when trying to use an falied
+ * to allocated node.
+ */
+
 static int tag;
 static Node *ptree;
 static jmp_buf __parse_buf;
@@ -84,6 +92,13 @@ Node *parse() {
             parse_string_input();
         }
         /*
+         * Error checking for any possible error generated
+         * along the parsing, e.g. memory errors
+         */
+        if (has_error()) {
+            longjmp(__parse_buf, 1);
+        }
+        /*
          * If empty tree, free it for fast path
          */
         if (NCH(ptree) == 0) {
@@ -95,6 +110,7 @@ Node *parse() {
          * Error handling
          */
         printerror();
+        reset_error();
         freetree(ptree);
         ptree = NULL;
         // Make sure this line won't be used again in next call
@@ -152,7 +168,7 @@ Node *parse_string_input() {
  * of next language struct.
  */
 Node *parse_statement(Node *p) {
-    Node * n;
+    Node * n = NULL;
 
     if (tag == IF || tag == WHILE || tag == FOR || tag == DEF || tag == CLASS
             || tag == TRY) {
@@ -212,7 +228,7 @@ Node *parse_simple_stmt(Node *p) {
                 log_error(SYNTAX_ERROR, "cannot assign to expression");
                 longjmp(__parse_buf, 1);
             }
-            n->child = 0;
+            n->child = NULL;
             n->nchildren = 0;
             parse_assign_stmt(n, t);
         }
@@ -480,7 +496,7 @@ Node *parse_oparm(Node *p) {
     Node *n = addchild(p, OPARM, NULL, source.row, source.pos);
     Node *t = parse_expr(n);
     if (tag == '=') {
-        n->child = 0;
+        n->child = NULL;
         n->nchildren = 0;
         parse_kvpair(n, t);
     }
@@ -644,12 +660,9 @@ Node *parse_atom(Node *p) {
 }
 
 Node *parse_trailer(Node *p) {
-    Node *n = NULL;
+    Node *n = addchild(p, TRAILER, NULL, source.row, source.pos);
 
     while (tag == '(' || tag == '[' || tag == '.') {
-        if (n == NULL)
-            n = addchild(p, TRAILER, NULL, source.row, source.pos);
-
         if (tag == '(') {
             parse_token(n, '(', NULL);
             if (tag != ')')
@@ -689,7 +702,7 @@ Node *parse_oarg(Node *p) {
          * of kvpair. The expr t will be the first child of the
          * kvpair.
          */
-        n->child = 0;
+        n->child = NULL;
         n->nchildren = 0;
         parse_kvpair(n, t);
     }

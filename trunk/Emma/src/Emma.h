@@ -17,6 +17,7 @@
 #include "source.h"
 #include "lexer.h"
 #include "parser.h"
+#include "ast.h"
 
 /*
  * Constant table (hashobject) that stores all constants

@@ -16,6 +16,18 @@ EmErrorObject errobj = {
         NULL,       // message
 };
 
+int has_error() {
+    if (errobj.errorNumber == NO_ERROR)
+        return 0;
+    else
+        return 1;
+}
+
+void reset_error() {
+    errobj.errorNumber = NO_ERROR;
+    errobj.message = NULL;
+}
+
 void *log_error(int errorNumber, char *message) {
 
     errobj.errorNumber = errorNumber;

@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
     init_all(argc, argv);
 
     Node *ptree;
+    AstNode *stree;
 
     /*
      * Parse the input
@@ -55,6 +56,11 @@ int main(int argc, char **argv) {
         ptree = parse();
         if (ptree) {
             printtree(ptree);
+
+            stree = ast_from_ptree(ptree);
+            print_stree(stree);
+
+
             freetree(ptree);
         }
         fclose(source.fp);

@@ -26,6 +26,8 @@ typedef struct _errorobject {
 // The singleton error object
 extern EmTypeObject Errortype;
 
+int has_error();
+void reset_error();
 void* log_error(int errorNumber, char *message);
 void print_error();
 void fatal(char *message);
