@@ -8,9 +8,9 @@ seq
 assign
 call
 list
-sub
+index
 slice
-slist
+idxlist
 field
 ident
 literal
@@ -20,6 +20,8 @@ plus
 minus
 not
 
+add
+sub
 and
 or
 xor

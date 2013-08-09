@@ -8,7 +8,16 @@
 #include "ast.h"
 #include "ast.i"
 
-#define AST_TYPE_OF_R_EXPR(t, n, i)      if (CHILD(n,i)->type == OR) t=AST_OR; else t=AST_XOR
+#define AST_TYPE_OF_R_EXPR(t,n,i)   t=CHILD(n,i)->type==OR?AST_OR:AST_XOR
+
+#define AST_TYPE_OF_L_EXPR(t,n,i)   if (CHILD(n,i)->type=='>') t=AST_GT; \
+                                        else if (CHILD(n,i)->type==GE) t=AST_GE; \
+                                        else if (CHILD(n,i)->type=='<') t=AST_LT; \
+                                        else if (CHILD(n,i)->type==LE) t=AST_LE; \
+                                        else if (CHILD(n,i)->type==EQ) t=AST_EQ; \
+                                        else t=AST_NE;
+
+#define AST_TYPE_OF_A_EXPR(t,n,i)   t=CHILD(n,i)->type=='+'?AST_ADD:AST_SUB
 
 
 static AstNode *
@@ -193,21 +202,61 @@ ast_from_pnode(Node *pn) {
     case R_TERM:
         if (NCH(pn) == 1)
             sn = ast_from_pnode(CHILD(pn, 0));
+        else {
+            for (ii = 1; ii < NCH(pn) - 1; ii += 2) {
+                sn_temp = sn;
+                sn = newastnode(AST_AND, 2, CHILD(pn,ii)->row,
+                        CHILD(pn,ii)->col);
+                if (sn_temp == NULL)
+                    AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,ii-1)));
+                else
+                    AST_SET_MEMBER(sn, 0, sn_temp);
+                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
+            }
+        }
         break;
 
     case R_FACTOR:
         if (NCH(pn) == 1)
             sn = ast_from_pnode(CHILD(pn, 0));
+        else {
+            sn = newastnode(AST_NOT, 1, pn->row, pn->col);
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
+        }
         break;
 
     case L_EXPR:
         if (NCH(pn) == 1)
             sn = ast_from_pnode(CHILD(pn, 0));
+        else {
+            for (ii = 1; ii < NCH(pn) - 1; ii += 2) {
+                sn_temp = sn;
+                AST_TYPE_OF_L_EXPR(stype, pn, ii);
+                sn = newastnode(stype, 2, CHILD(pn,ii)->row, CHILD(pn,ii)->col);
+                if (sn_temp == NULL)
+                    AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,ii-1)));
+                else
+                    AST_SET_MEMBER(sn, 0, sn_temp);
+                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
+            }
+        }
         break;
 
     case A_EXPR:
         if (NCH(pn) == 1)
             sn = ast_from_pnode(CHILD(pn, 0));
+        else {
+            for (ii = 1; ii < NCH(pn) - 1; ii += 2) {
+                sn_temp = sn;
+                AST_TYPE_OF_A_EXPR(stype, pn, ii);
+                sn = newastnode(stype, 2, CHILD(pn,ii)->row, CHILD(pn,ii)->col);
+                if (sn_temp == NULL)
+                    AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,ii-1)));
+                else
+                    AST_SET_MEMBER(sn, 0, sn_temp);
+                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
+            }
+        }
         break;
 
     case A_TERM:
@@ -278,14 +327,16 @@ ast_from_pnode(Node *pn) {
 
     case IDENT:
         sn = newastnode(AST_IDENT, 0, pn->row, pn->col);
-        AST_SET_LEXEME(sn, pn->lexeme);
+        AST_SET_LEXEME(sn, pn->lexeme)
+        ;
         break;
 
     case INTEGER:
     case FLOAT:
     case STRING:
         sn = newastnode(AST_LITERAL, 0, pn->row, pn->col);
-        AST_SET_LEXEME(sn, pn->lexeme);
+        AST_SET_LEXEME(sn, pn->lexeme)
+        ;
         break;
 
     case NUL:

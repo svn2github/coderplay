@@ -617,7 +617,7 @@ to define an empty stmt_block. It is similar to python's pass statement.}
 
 <r_term> ::= <r_factor> (<r_andop> <r_factor>)*
 
-<r_factor> ::= [`not'] <r_factor>
+<r_factor> ::= [`not'] <r_factor> | <l_expr>
 
 <l_expr> ::= <a_expr> (<l_op> <a_expr>)*
 
