@@ -15,11 +15,12 @@
 #define AST_GET_MEMBER(n,i)         ((n)->v.members[i])
 
 #define AST_GET_LEXEME(n)           (n)->v.lexeme
+#define AST_SET_LEXEME(n,s)    (n)->v.lexeme = s; s = NULL
 
 typedef struct _ast_node {
     int type;
-    int row;
-    int col;
+    unsigned int row;
+    unsigned int col;
     int size;
 
     /*
@@ -30,7 +31,7 @@ typedef struct _ast_node {
      */
     union {
         struct _ast_node **members;
-        char *lexeme;
+        char *lexeme; // literal and ident
     } v;
 
 } AstNode;

@@ -43,3 +43,4 @@
 #define AST_EXTRAP           42
 #define AST_EXTRAK           43
 
+extern char *snode_types[];

@@ -19,7 +19,6 @@ return_stmt
 package_stmt
 import_stmt
 raise_stmt
-target
 trailer
 if_stmt
 while_stmt
@@ -73,6 +72,10 @@ def gen_c_code():
         outs.write('Node *parse_%s(%s);\n' % (str.lower(t), param))
     outs.write('\nextern char *node_types[];\n')
     outs.close()
+
+    for t in node_types[3:]:
+        print 'case %s:' % t
+        print '    break;\n'
 
     outs = open(filepath('parser.i', root=srcdir), 'w')
     outs.write('\nchar *node_types[] = {\n')

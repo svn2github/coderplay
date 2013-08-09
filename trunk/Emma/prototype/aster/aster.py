@@ -61,10 +61,18 @@ def gen_c_code():
     for ii in range(len(ast_types)):
         outs.write('#define %-20s %d\n' % (ast_types[ii], ii))
     outs.write('\n') 
-
+    outs.write('extern char *snode_types[];\n')
     outs.close();
 
 
+    ast_types = [str.upper(t) for t in stree_types.split('\n') if t != '']
+    outs = open(filepath('ast.i', root=srcdir), 'w')
+    outs.write('char *snode_types[] = {\n')
+    outs.write('        "%s"' % ast_types[0])
+    for t in ast_types[1:]:
+        outs.write(',\n        "%s"' % t)
+    outs.write('\n};\n')
+    outs.close()
 
 
 

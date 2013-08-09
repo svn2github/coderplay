@@ -16,7 +16,6 @@ char *node_types[] = {
         "PACKAGE_STMT",
         "IMPORT_STMT",
         "RAISE_STMT",
-        "TARGET",
         "TRAILER",
         "IF_STMT",
         "WHILE_STMT",

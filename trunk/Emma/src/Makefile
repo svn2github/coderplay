@@ -5,7 +5,7 @@ LIBS=-lm
 DEPS = Makefile lexer.h token.h lexer.i hashobject.h errorobject.h \
        stringobject.h object.h Emma.h intobject.h floatobject.h \
        listobject.h source.h token.h parser.h parser.hi parser.i \
-       node.h ast.h ast.hi
+       node.h ast.h ast.hi ast.i
        
 SRC = lexer.c parser.c Emma.c hashobject.c errobject.c stringobject.c \
       object.c typeobject.c intobject.c floatobject.c listobject.c \
