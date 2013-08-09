@@ -12,7 +12,7 @@
 #include "ast.hi"
 
 #define AST_SET_MEMBER(n,i,c)       (n)->members[i] = c
-#define AST_GET_MEMBER(n,i)         (n)->members[i]
+#define AST_GET_MEMBER(n,i)         ((n)->members[i])
 
 
 #define AST_NODE_HEAD       int kind; int row; int col

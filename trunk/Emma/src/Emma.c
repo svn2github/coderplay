@@ -58,14 +58,14 @@ int main(int argc, char **argv) {
             printtree(ptree);
 
             stree = ast_from_ptree(ptree);
-
+            freetree(ptree);
 
 
 
             printstree(stree);
 
 
-            freetree(ptree);
+
             freestree(stree);
 
 
