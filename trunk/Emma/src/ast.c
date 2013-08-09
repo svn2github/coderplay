@@ -15,14 +15,14 @@ newastnode(int type, int size) {
         return NULL;
     }
     if (size > 0) {
-        printf("member\n");
         if ((n->members = (AstNode **) malloc(sizeof(AstNode *) * size)) == NULL) {
             log_error(MEMORY_ERROR, "not enough memory for AST node subtree");
             return NULL;
         }
     } else {
-        n->lexeme = NULL;
+        n->members = NULL;
     }
+    n->lexeme = NULL;
     n->size = size;
     n->type = type;
     return n;
@@ -66,6 +66,7 @@ static void freemembers(AstNode *sn) {
     if (sn->size > 0) {
         for (ii = sn->size - 1; ii >= 0; ii--) {
             freemembers(AST_GET_MEMBER(sn,ii));
+            free(AST_GET_MEMBER(sn,ii));
         }
         free(sn->members);
     } else {
@@ -94,7 +95,6 @@ ast_from_pnode(Node *pn) {
         return ast_from_pnode(CHILD(pn, 0));
 
     } else if (NCH(pn) == 0) { // only literals have no child
-        printf("only here once\n");
         sn = newastnode(AST_LITERAL, 0);
         sn->row = pn->row;
         sn->col = pn->col;
@@ -102,7 +102,6 @@ ast_from_pnode(Node *pn) {
         pn->lexeme = NULL;
 
     } else {
-        printf("here\n");
         sn->row = pn->row;
         sn->col = pn->col;
         switch (pn->type) {
@@ -130,9 +129,8 @@ AstNode *ast_from_ptree(Node *ptree) {
     stree->row = ptree->row;
     stree->col = ptree->col;
     int ii;
-    AstNode *temp;
     for (ii = 0; ii < NCH(ptree); ii++) {
-        ast_from_pnode(CHILD(ptree, ii));
+        AST_SET_MEMBER(stree, ii, ast_from_pnode(CHILD(ptree, ii)));
     }
     return stree;
 }
