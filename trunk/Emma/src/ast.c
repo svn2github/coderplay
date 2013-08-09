@@ -15,14 +15,14 @@ newastnode(int type, int size) {
         return NULL;
     }
     if (size > 0) {
-        if ((n->members = (AstNode **) malloc(sizeof(AstNode *) * size)) == NULL) {
+        if ((n->v.members = (AstNode **) malloc(sizeof(AstNode *) * size)) == NULL) {
             log_error(MEMORY_ERROR, "not enough memory for AST node subtree");
             return NULL;
         }
     } else {
-        n->members = NULL;
+        n->v.lexeme = NULL;
     }
-    n->lexeme = NULL;
+
     n->size = size;
     n->type = type;
     return n;
@@ -37,14 +37,14 @@ newastnode_literal(char *lexeme) {
     }
     n->type = AST_LITERAL;
     n->size = 0;
-    n->lexeme = lexeme;
+    n->v.lexeme = lexeme;
     return n;
 }
 
 static void printsnodes(AstNode *sn) {
     int ii;
     if (sn->size == 0) {
-        printf("(literal %s)", sn->lexeme);
+        printf("(literal %s)", AST_GET_LEXEME(sn));
     } else {
         printf("(%d ", sn->type);
         for (ii = 0; ii < sn->size; ii++) {
@@ -68,9 +68,9 @@ static void freemembers(AstNode *sn) {
             freemembers(AST_GET_MEMBER(sn,ii));
             free(AST_GET_MEMBER(sn,ii));
         }
-        free(sn->members);
+        free(sn->v.members);
     } else {
-        free(sn->lexeme);
+        free(sn->v.lexeme);
     }
 }
 
@@ -95,15 +95,12 @@ ast_from_pnode(Node *pn) {
         return ast_from_pnode(CHILD(pn, 0));
 
     } else if (NCH(pn) == 0) { // only literals have no child
-        sn = newastnode(AST_LITERAL, 0);
+        sn = newastnode_literal(pn->lexeme);
+        pn->lexeme = NULL;
         sn->row = pn->row;
         sn->col = pn->col;
-        sn->lexeme = pn->lexeme;
-        pn->lexeme = NULL;
 
     } else {
-        sn->row = pn->row;
-        sn->col = pn->col;
         switch (pn->type) {
         case EXPR:
             break;
@@ -120,6 +117,8 @@ ast_from_pnode(Node *pn) {
         default:
             break;
         }
+        sn->row = pn->row;
+        sn->col = pn->col;
     }
     return sn;
 }

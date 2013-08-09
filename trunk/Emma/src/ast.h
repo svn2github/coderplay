@@ -11,10 +11,10 @@
 #include "Emma.h"
 #include "ast.hi"
 
-#define AST_SET_MEMBER(n,i,c)       (n)->members[i] = c
-#define AST_GET_MEMBER(n,i)         ((n)->members[i])
+#define AST_SET_MEMBER(n,i,c)       (n)->v.members[i] = c
+#define AST_GET_MEMBER(n,i)         ((n)->v.members[i])
 
-#define AST_NODE_HEAD       int kind; int row; int col
+#define AST_GET_LEXEME(n)           (n)->v.lexeme
 
 typedef struct _ast_node {
     int type;
@@ -22,8 +22,16 @@ typedef struct _ast_node {
     int col;
     int size;
 
-    struct _ast_node **members;
-    char *lexeme;
+    /*
+     * It is not necessary to use union for two pointer type variables.
+     * A void pointer is good enough to represent both of them. However,
+     * It is more readale to use union and have two different variable
+     * names.
+     */
+    union {
+        struct _ast_node **members;
+        char *lexeme;
+    } v;
 
 } AstNode;
 
