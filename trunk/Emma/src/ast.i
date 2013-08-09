@@ -9,6 +9,7 @@ char *snode_types[] = {
         "FIELD",
         "IDENT",
         "LITERAL",
+        "SYMBOL",
         "PLUS",
         "MINUS",
         "NOT",

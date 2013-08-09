@@ -15,7 +15,10 @@
 #define AST_GET_MEMBER(n,i)         ((n)->v.members[i])
 
 #define AST_GET_LEXEME(n)           (n)->v.lexeme
-#define AST_SET_LEXEME(n,s)    (n)->v.lexeme = s; s = NULL
+#define AST_SET_LEXEME(n,s)         (n)->v.lexeme = s; s = NULL
+
+#define AST_GET_SYMBOL(n)           (n)->v.symbol
+#define AST_SET_SYMBOL(n,s)         (n)->v.symbol = s
 
 typedef struct _ast_node {
     int type;
@@ -32,6 +35,7 @@ typedef struct _ast_node {
     union {
         struct _ast_node **members;
         char *lexeme; // literal and ident
+        int symbol;
     } v;
 
 } AstNode;

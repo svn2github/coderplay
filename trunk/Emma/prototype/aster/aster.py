@@ -14,6 +14,7 @@ slist
 field
 ident
 literal
+symbol
 
 plus
 minus

@@ -8,6 +8,9 @@
 #include "ast.h"
 #include "ast.i"
 
+#define AST_TYPE_OF_R_EXPR(t, n, i)      if (CHILD(n,i)->type == OR) t=AST_OR; else t=AST_XOR
+
+
 static AstNode *
 newastnode(int type, int size, unsigned int row, unsigned int col) {
     AstNode *n;
@@ -23,6 +26,7 @@ newastnode(int type, int size, unsigned int row, unsigned int col) {
         }
     } else {
         n->v.lexeme = NULL;
+        n->v.symbol = '\0';
     }
 
     n->size = size;
@@ -34,9 +38,13 @@ newastnode(int type, int size, unsigned int row, unsigned int col) {
 
 static void printsnodes(AstNode *sn) {
     int ii;
-    if (sn->size == 0) {
+    if (sn->size == 0 && sn->type != AST_SYMBOL) {
         printf("(%s %s)", snode_types[sn->type],
         AST_GET_LEXEME(sn) ? AST_GET_LEXEME(sn) : "null");
+
+    } else if (sn->type == AST_SYMBOL) {
+        printf("(%s %c)", snode_types[sn->type], AST_GET_SYMBOL(sn));
+
     } else {
         printf("(%s ", snode_types[sn->type]);
         for (ii = 0; ii < sn->size; ii++) {
@@ -76,8 +84,8 @@ void freestree(AstNode *stree) {
 static AstNode *
 ast_from_pnode(Node *pn) {
 
-    AstNode *sn = NULL;
-    int ii;
+    AstNode *sn = NULL, *sn_temp = NULL;
+    int ii, jj, stype;
 
     switch (pn->type) {
 
@@ -98,9 +106,11 @@ ast_from_pnode(Node *pn) {
         break;
 
     case CONTINUE_STMT:
+        sn = newastnode(AST_CONTINUE, 0, pn->row, pn->col);
         break;
 
     case BREAK_STMT:
+        sn = newastnode(AST_BREAK, 0, pn->row, pn->col);
         break;
 
     case RETURN_STMT:
@@ -113,9 +123,15 @@ ast_from_pnode(Node *pn) {
         break;
 
     case PACKAGE_STMT:
+        sn = newastnode(AST_PACKAGE, 1, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
         break;
 
     case IMPORT_STMT:
+        sn = newastnode(AST_IMPORT, NCH(pn) / 2, pn->row, pn->col);
+        for (ii = 1, jj = 0; ii < NCH(pn) && jj < sn->size; ii += 2, jj++) {
+            AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+        }
         break;
 
     case RAISE_STMT:
@@ -160,6 +176,18 @@ ast_from_pnode(Node *pn) {
     case R_EXPR:
         if (NCH(pn) == 1)
             sn = ast_from_pnode(CHILD(pn, 0));
+        else {
+            for (ii = 1; ii < NCH(pn) - 1; ii += 2) {
+                sn_temp = sn;
+                AST_TYPE_OF_R_EXPR(stype, pn, ii);
+                sn = newastnode(stype, 2, CHILD(pn,ii)->row, CHILD(pn,ii)->col);
+                if (sn_temp == NULL)
+                    AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,ii-1)));
+                else
+                    AST_SET_MEMBER(sn, 0, sn_temp);
+                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
+            }
+        }
         break;
 
     case R_TERM:
@@ -205,6 +233,9 @@ ast_from_pnode(Node *pn) {
     case ATOM:
         if (NCH(pn) == 1)
             sn = ast_from_pnode(CHILD(pn, 0));
+        else { // (...) expr
+            sn = ast_from_pnode(CHILD(pn, 1));
+        }
         break;
 
     case EXPR_LIST:
@@ -240,25 +271,32 @@ ast_from_pnode(Node *pn) {
     case IDXLIST:
         break;
 
-    default:
-        /*
-         * Anything left here should be literals and indentifier
-         */
-        if (pn->type == IDENT) {
-            sn = newastnode(AST_IDENT, 0, pn->row, pn->col);
-            AST_SET_LEXEME(sn, pn->lexeme);
-        } else if (pn->type == INTEGER || pn->type == FLOAT
-                || pn->type == STRING) {
-            sn = newastnode(AST_LITERAL, 0, pn->row, pn->col);
-            AST_SET_LEXEME(sn, pn->lexeme);
-        } else if (pn->type == NUL) {
-            sn = newastnode(AST_LITERAL, 0, pn->row, pn->col);
-        } else {
-            printf("something is wrong\n");
-            exit(1);
-        }
-
+    case '*':
+        sn = newastnode(AST_SYMBOL, 0, pn->row, pn->col);
+        AST_SET_SYMBOL(sn, '*');
         break;
+
+    case IDENT:
+        sn = newastnode(AST_IDENT, 0, pn->row, pn->col);
+        AST_SET_LEXEME(sn, pn->lexeme);
+        break;
+
+    case INTEGER:
+    case FLOAT:
+    case STRING:
+        sn = newastnode(AST_LITERAL, 0, pn->row, pn->col);
+        AST_SET_LEXEME(sn, pn->lexeme);
+        break;
+
+    case NUL:
+        sn = newastnode(AST_LITERAL, 0, pn->row, pn->col);
+        break;
+
+    default:
+        fprintf(stderr, "something wrong!\n");
+        exit(1);
+        break;
+
     }
     return sn;
 }
