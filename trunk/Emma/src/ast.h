@@ -14,21 +14,18 @@
 #define AST_SET_MEMBER(n,i,c)       (n)->members[i] = c
 #define AST_GET_MEMBER(n,i)         ((n)->members[i])
 
-
 #define AST_NODE_HEAD       int kind; int row; int col
-
 
 typedef struct _ast_node {
     int type;
     int row;
     int col;
     int size;
-    union {
-        struct _ast_node **members;
-        char *lexeme;
-    };
-} AstNode;
 
+    struct _ast_node **members;
+    char *lexeme;
+
+} AstNode;
 
 AstNode *ast_from_ptree(Node *ptree);
 void freestree(AstNode *stree);

@@ -80,9 +80,10 @@ void freestree(AstNode *stree) {
     }
 }
 
-static void
-set_snode_from_pnode(AstNode *sn, int idx, Node *pn) {
+static AstNode *
+ast_from_pnode(Node *pn) {
 
+    AstNode *sn = NULL;
     int ii;
 
     if (NCH(pn) == 1) {
@@ -90,14 +91,14 @@ set_snode_from_pnode(AstNode *sn, int idx, Node *pn) {
          * If the parse node has only 1 child, we skip it and directly process
          * the child node.
          */
-        set_snode_from_pnode(sn, idx, CHILD(pn,0));
+        return ast_from_pnode(CHILD(pn, 0));
 
     } else if (NCH(pn) == 0) { // only literals have no child
         printf("only here once\n");
-        AST_GET_MEMBER(sn, idx) = newastnode(AST_LITERAL, 0);
-        AST_GET_MEMBER(sn, idx)->row = pn->row;
-        AST_GET_MEMBER(sn, idx)->col = pn->col;
-        AST_GET_MEMBER(sn, idx)->lexeme = pn->lexeme;
+        sn = newastnode(AST_LITERAL, 0);
+        sn->row = pn->row;
+        sn->col = pn->col;
+        sn->lexeme = pn->lexeme;
         pn->lexeme = NULL;
 
     } else {
@@ -121,6 +122,7 @@ set_snode_from_pnode(AstNode *sn, int idx, Node *pn) {
             break;
         }
     }
+    return sn;
 }
 
 AstNode *ast_from_ptree(Node *ptree) {
@@ -130,7 +132,7 @@ AstNode *ast_from_ptree(Node *ptree) {
     int ii;
     AstNode *temp;
     for (ii = 0; ii < NCH(ptree); ii++) {
-        set_snode_from_pnode(stree, ii, CHILD(ptree, ii));
+        ast_from_pnode(CHILD(ptree, ii));
     }
     return stree;
 }
