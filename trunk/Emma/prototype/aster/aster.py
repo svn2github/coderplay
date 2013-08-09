@@ -6,8 +6,6 @@ stree_types = \
 """
 seq
 assign
-binop
-unaryop
 call
 list
 sub
@@ -16,6 +14,23 @@ slist
 field
 ident
 literal
+
+plus
+minus
+not
+
+and
+or
+xor
+gt
+lt
+ge
+le
+eq
+ne
+mul
+div
+mod
 
 print
 read

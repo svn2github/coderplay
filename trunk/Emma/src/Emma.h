@@ -14,6 +14,7 @@
 #include <setjmp.h>
 #include <string.h>
 #include "allobject.h"
+#include "node.h"
 #include "source.h"
 #include "lexer.h"
 #include "parser.h"
