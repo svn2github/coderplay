@@ -109,9 +109,9 @@ ast_from_pnode(Node *pn) {
         case RETURN_STMT:
             sn = newastnode(AST_RETURN, 1);
             if (NCH(pn) == 0) {
-                //AST_SET_MEMBER(sn, 0, newastnode_literal("null"));
+                AST_SET_MEMBER(sn, 0, newastnode_literal(NULL));
             } else {
-               //AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
+                AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
             }
             break;
         default:

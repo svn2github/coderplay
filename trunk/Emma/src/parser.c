@@ -75,7 +75,7 @@ static int is_unary_op() {
 }
 
 static int is_literal() {
-    if (tag == STRING || tag == INTEGER || tag == FLOAT || tag == NUL)
+    if (tag == STRING || tag == INTEGER || tag == FLOAT)
         return 1;
     else
         return 0;
@@ -653,6 +653,8 @@ Node *parse_atom(Node *p) {
         parse_token(n, ')', NULL);
     } else if (is_literal()) {
         parse_token(n, tag, lexeme);
+    } else if (tag == NUL) {
+        parse_token(n, NUL, NULL);
     } else {
         parse_token(n, IDENT, lexeme);
     }
