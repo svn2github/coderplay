@@ -485,6 +485,10 @@ Node *parse_oparm_list(Node *p) {
     parse_oparm(n);
     while (tag == ',') {
         parse_token(n, ',', NULL);
+        /*
+         * Note that the comma immediately before * or ** is in the oparm_list.
+         * This needs to be taken care of when constructing AST in later stage.
+         */
         if (tag == '*' || tag == DSTAR)
             return n;
         parse_oparm(n);

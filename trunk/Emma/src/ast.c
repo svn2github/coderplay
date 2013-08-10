@@ -121,8 +121,8 @@ void freestree(AstNode *stree) {
 static AstNode *
 ast_from_pnode(Node *pn) {
 
-    AstNode *sn = NULL, *sn_left = NULL;
-    int ii, jj, stype;
+    AstNode *sn = NULL, *sn_left = NULL, *sn_temp = NULL;
+    int ii, jj, stype, size;
 
     switch (pn->type) {
 
@@ -184,6 +184,16 @@ ast_from_pnode(Node *pn) {
         break;
 
     case FUNCDEF:
+        sn = newastnode(AST_FUNCDEF, 3, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
+        if (CHILD(pn,3)->type == ')') { // empty parameter list
+            AST_SET_MEMBER(sn, 1,
+                    newastnode(AST_LIST, 0, CHILD(pn,2)->row, CHILD(pn,2)->col));
+            AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,4)));
+        } else {
+            AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,3)));
+            AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,5)));
+        }
         break;
 
     case CLASSDEF:
@@ -199,6 +209,12 @@ ast_from_pnode(Node *pn) {
         break;
 
     case SUITE:
+        if (CHILD(pn,0)->type == SIMPLE_STMT) {
+            sn = newastnode(AST_SEQ, 1, pn->row, pn->col);
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(CHILD(pn,0),0)));
+        } else {
+
+        }
         break;
 
     case STMT_BLOCK:
@@ -286,15 +302,84 @@ ast_from_pnode(Node *pn) {
         break;
 
     case EXPR_LIST:
+        sn = newastnode(AST_LIST, NCH(pn)/2+1, pn->row, pn->col);
+        for (ii = jj = 0; jj < sn->size; ii += 2, jj++) {
+            AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+        }
         break;
 
     case PARMLIST:
+        size = 0;
+        if (CHILD(pn,0)->type == DSTAR) { // only extra keywords **c
+            sn = newastnode(AST_LIST, 1, pn->row, pn->col);
+            sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,0)->row,
+            CHILD(pn,0)->col);
+            AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,1)));
+            AST_SET_MEMBER(sn, 0, sn_temp);
+        } else if (CHILD(pn,0)->type == '*') { // no regular params
+            if (NCH(pn) > 2) { // *b, **c
+                sn = newastnode(AST_LIST, 2, pn->row, pn->col);
+                sn_temp = newastnode(AST_EXTRAP, 1, CHILD(pn,0)->row,
+                CHILD(pn,0)->col); // *b
+                AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,1)));
+                AST_SET_MEMBER(sn, 0, sn_temp);
+                sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,3)->row,
+                CHILD(pn,3)->col); // **c
+                AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,4)));
+                AST_SET_MEMBER(sn, 1, sn_temp);
+            } else {
+                sn = newastnode(AST_LIST, 1, pn->row, pn->col);
+                sn_temp = newastnode(AST_EXTRAP, 1, CHILD(pn,0)->row,
+                CHILD(pn,0)->col); // *b
+                AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,1)));
+                AST_SET_MEMBER(sn, 0, sn_temp);
+            }
+        } else { // start with regular params
+            if (NCH(pn) == 1) { // a only
+                sn = newastnode(AST_LIST, 1, pn->row, pn->col);
+                AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
+            } else if (NCH(pn) > 3) { // a, *b, **c
+                sn = newastnode(AST_LIST, 3, pn->row, pn->col);
+                AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0))); // a
+                sn_temp = newastnode(AST_EXTRAP, 1, CHILD(pn,1)->row,
+                        CHILD(pn,1)->col); // *b
+                AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,2)));
+                AST_SET_MEMBER(sn, 1, sn_temp);
+                sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,3)->row,
+                        CHILD(pn,3)->col);
+                AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,4)));
+                AST_SET_MEMBER(sn, 2, sn_temp);
+            } else { //
+                sn = newastnode(AST_LIST, 2, pn->row, pn->col);
+                AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0))); // a
+                if (CHILD(pn,1)->type == '*') { // *b
+                    sn_temp = newastnode(AST_EXTRAP, 1, CHILD(pn,1)->row,
+                            CHILD(pn,1)->col); // *b
+                    AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,2)));
+                    AST_SET_MEMBER(sn, 1, sn_temp);
+                } else { // **c
+                    sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,1)->row,
+                            CHILD(pn,1)->col); // *b
+                    AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,2)));
+                    AST_SET_MEMBER(sn, 1, sn_temp);
+                }
+            }
+        }
         break;
 
     case OPARM_LIST:
+        if (RCHILD(pn,0)->type == ',') {
+            sn = newastnode(AST_LIST, NCH(pn) / 2, pn->row, pn->col);
+        } else {
+            sn = newastnode(AST_LIST, NCH(pn) / 2 + 1, pn->row, pn->col);
+        }
+        for (ii = jj = 0; jj < sn->size; ii += 2, jj++) {
+            AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+        }
         break;
 
     case OPARM:
+        sn = ast_from_pnode(CHILD(pn,0));
         break;
 
     case KVPAIR:
@@ -302,7 +387,6 @@ ast_from_pnode(Node *pn) {
 
     case ARGLIST:
         sn = newastnode(AST_LIST, NCH(pn) / 2 + 1, pn->row, pn->col);
-        ii = jj = 0;
         for (ii = jj = 0; jj < sn->size; ii += 2, jj++) {
             AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
         }
