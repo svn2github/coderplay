@@ -73,8 +73,11 @@ newastnode(int type, int size, unsigned int row, unsigned int col) {
     return n;
 }
 
+static int level;
+
 static void printsnodes(AstNode *sn) {
     int ii;
+    level++;
     if (sn->type == AST_LITERAL || sn->type == AST_IDENT) {
         printf("(%s %s)", snode_types[sn->type],
         AST_GET_LEXEME(sn) ? AST_GET_LEXEME(sn) : "null");
@@ -89,10 +92,14 @@ static void printsnodes(AstNode *sn) {
         }
         printf(")");
     }
+    level--;
+    if (level == 1)
+        printf("\n");
 }
 
 void printstree(AstNode *stree) {
     if (stree != NULL) {
+        level = 0;
         printsnodes(stree);
         printf("\n");
     }
@@ -128,10 +135,24 @@ ast_from_pnode(Node *pn) {
     switch (pn->type) {
 
     case STATEMENT:
-    case SIMPLE_STMT:
     case COMPOUND_STMT:
     case EXPR:
         sn = ast_from_pnode(CHILD(pn, 0));
+        break;
+
+    case SIMPLE_STMT:
+        if (CHILD(pn,0)->type == EXPR) {
+            /*
+             * Always assign stand alone expression value to special
+             * variable "_".
+             */
+            sn = newastnode(AST_ASSIGN, 2, pn->row, pn->col);
+            AST_SET_MEMBER(sn, 0, newastnode(AST_IDENT, 0, pn->row, pn->col));
+            AST_GET_MEMBER(sn,0)->v.lexeme = get_strp("_");
+            AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn, 0)));
+        } else {
+            sn = ast_from_pnode(CHILD(pn, 0));
+        }
         break;
 
     case ASSIGN_STMT:
@@ -201,12 +222,56 @@ ast_from_pnode(Node *pn) {
         break;
 
     case IF_STMT:
+        /*
+         * Every IF ast has 3 members: test, true body and false body.
+         * if ... elif ... elif ... else
+         * is split'd into multiple tier of IF ast.
+         */
+        sn = newastnode(AST_IF, 3, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1))); // test
+        AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,2))); // true
+        if (NCH(pn) == 3) { // absent false body
+            AST_SET_MEMBER(sn, 2, newastnode(AST_SEQ, 0, pn->row, pn->col));
+        } else {
+            ii = 3; // elif or else
+            sn_left = sn;
+            while (1) {
+                if (CHILD(pn,ii)->type == ELIF) {
+                    sn_temp = newastnode(AST_IF, 3, CHILD(pn,ii)->row,
+                    CHILD(pn,ii)->col);
+                    AST_SET_MEMBER(sn_left, 2, sn_temp);
+                    AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,ii+1)));
+                    AST_SET_MEMBER(sn_temp, 1, ast_from_pnode(CHILD(pn,ii+2)));
+                    ii += 3;
+                    if (ii >= NCH(pn)) { // empty false body
+                        AST_SET_MEMBER(sn_temp, 2,
+                                newastnode(AST_SEQ, 0, pn->row, pn->col));
+                        break;
+                    }
+                    sn_left = sn_temp;
+                } else {
+                    /*
+                     * else must be the last clause
+                     */
+                    AST_SET_MEMBER(sn_left, 2, ast_from_pnode(CHILD(pn,ii+1)));
+                    ii += 2;
+                    break;
+                }
+            }
+        }
         break;
 
     case WHILE_STMT:
+        sn = newastnode(AST_WHILE, 2, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn, 1))); // test
+        AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn, 2))); // body
         break;
 
     case FOR_STMT:
+        sn = newastnode(AST_FOR, 3, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1))); // counter
+        AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,3))); // start, end, step
+        AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,4)));
         break;
 
     case FUNCDEF:
@@ -244,18 +309,36 @@ ast_from_pnode(Node *pn) {
         break;
 
     case TRY_STMT:
+        if (RCHILD(pn,0)->type == FINALLY_STMT) { // user supplied finally
+            sn = newastnode(AST_TRY, NCH(pn) - 1, pn->row, pn->col);
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1))); // try body
+            for (ii = 2, jj = 1; ii < NCH(pn); ii++, jj++) // catch and finally
+                AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+        } else {
+            sn = newastnode(AST_TRY, NCH(pn), pn->row, pn->col);
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1))); // try body
+            for (ii = 2, jj = 1; ii < NCH(pn); ii++, jj++) // catch
+                AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+            AST_SET_MEMBER(sn, jj, newastnode(AST_FINALLY, 0, pn->row, pn->col));
+        }
         break;
 
     case CATCH_STMT:
+        sn = newastnode(AST_CATCH, 3, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,2)));
+        AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,4)));
+        AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,6)));
         break;
 
     case FINALLY_STMT:
+        sn = newastnode(AST_FINALLY, 1, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
         break;
 
     case SUITE:
         if (CHILD(pn,0)->type == SIMPLE_STMT) {
             sn = newastnode(AST_SEQ, 1, pn->row, pn->col);
-            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(CHILD(pn,0),0)));
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
         } else {
             sn = ast_from_pnode(CHILD(pn,0));
         }
@@ -529,16 +612,14 @@ ast_from_pnode(Node *pn) {
 
     case IDENT:
         sn = newastnode(AST_IDENT, 0, pn->row, pn->col);
-        AST_SET_LEXEME(sn, pn->lexeme)
-        ;
+        AST_SET_LEXEME(sn, pn->lexeme);
         break;
 
     case INTEGER:
     case FLOAT:
     case STRING:
         sn = newastnode(AST_LITERAL, 0, pn->row, pn->col);
-        AST_SET_LEXEME(sn, pn->lexeme)
-        ;
+        AST_SET_LEXEME(sn, pn->lexeme);
         break;
 
     case NUL:
