@@ -8,16 +8,46 @@
 #include "ast.h"
 #include "ast.i"
 
-#define AST_TYPE_OF_R_EXPR(t,n,i)   t=CHILD(n,i)->type==OR?AST_OR:AST_XOR
-
-#define AST_TYPE_OF_L_EXPR(t,n,i)   if (CHILD(n,i)->type=='>') t=AST_GT; \
+#define AST_TYPE_OF_BINOP(t,n,i)    if (CHILD(n,i)->type==OR) t=AST_OR; \
+                                        else if (CHILD(n,i)->type==XOR) t=AST_XOR; \
+                                        else if (CHILD(n,i)->type==AND) t=AST_AND; \
+                                        else if (CHILD(n,i)->type=='>') t=AST_GT; \
                                         else if (CHILD(n,i)->type==GE) t=AST_GE; \
                                         else if (CHILD(n,i)->type=='<') t=AST_LT; \
                                         else if (CHILD(n,i)->type==LE) t=AST_LE; \
                                         else if (CHILD(n,i)->type==EQ) t=AST_EQ; \
-                                        else t=AST_NE;
+                                        else if (CHILD(n,i)->type==NE) t=AST_NE; \
+                                        else if (CHILD(n,i)->type=='+') t=AST_ADD; \
+                                        else if (CHILD(n,i)->type=='-') t=AST_SUB; \
+                                        else if (CHILD(n,i)->type=='*') t=AST_MUL; \
+                                        else if (CHILD(n,i)->type=='/') t=AST_DIV; \
+                                        else if (CHILD(n,i)->type=='%') t=AST_MOD; \
+                                        else if (CHILD(n,i)->type==DSTAR) t=AST_POW; \
+                                        else fatal("unrecognized binary operator");
 
-#define AST_TYPE_OF_A_EXPR(t,n,i)   t=CHILD(n,i)->type=='+'?AST_ADD:AST_SUB
+#define AST_TYPE_OF_UNARYOP(t,n,i)  if (CHILD(n,i)->type==NOT) t=AST_NOT; \
+                                        else if (CHILD(n,i)->type=='+') t=AST_PLUS; \
+                                        else if (CHILD(n,i)->type=='-') t=AST_MINUS; \
+                                        else fatal("unrecognized unary operator");
+
+#define AST_TYPE_OF_TRAILER(t,n,i) if (CHILD(n,i)->type=='(') t=AST_CALL; \
+                                        else if (CHILD(n,i)->type=='.') t=AST_FIELD; \
+                                        else { \
+                                            if (CHILD(CHILD(pn,i+1),0)->type == SINGLEIDX) t=AST_INDEX; \
+                                            else if (CHILD(CHILD(pn,i+1),0)->type == IDXRANGE) t=AST_SLICE; \
+                                            else if (CHILD(CHILD(pn,i+1),0)->type == IDXLIST) t=AST_IDXLIST; \
+                                            else fatal("unrecognized trailer"); \
+                                        }
+
+
+static char *
+get_strp(char *s) {
+    char *copys;
+    copys = (char*) malloc(sizeof(char)*(strlen(s) + 1));
+    if (copys == NULL)
+        return log_error(MEMORY_ERROR, "Not enough memory for string copy");
+    return strcpy(copys, s);
+}
 
 
 static AstNode *
@@ -47,7 +77,7 @@ newastnode(int type, int size, unsigned int row, unsigned int col) {
 
 static void printsnodes(AstNode *sn) {
     int ii;
-    if (sn->size == 0 && sn->type != AST_SYMBOL) {
+    if (sn->type == AST_LITERAL || sn->type == AST_IDENT) {
         printf("(%s %s)", snode_types[sn->type],
         AST_GET_LEXEME(sn) ? AST_GET_LEXEME(sn) : "null");
 
@@ -93,7 +123,7 @@ void freestree(AstNode *stree) {
 static AstNode *
 ast_from_pnode(Node *pn) {
 
-    AstNode *sn = NULL, *sn_temp = NULL;
+    AstNode *sn = NULL, *sn_left = NULL;
     int ii, jj, stype;
 
     switch (pn->type) {
@@ -146,9 +176,6 @@ ast_from_pnode(Node *pn) {
     case RAISE_STMT:
         break;
 
-    case TRAILER:
-        break;
-
     case IF_STMT:
         break;
 
@@ -182,101 +209,88 @@ ast_from_pnode(Node *pn) {
     case FOR_EXPR:
         break;
 
+        /*
+         * Binary operators
+         */
     case R_EXPR:
-        if (NCH(pn) == 1)
-            sn = ast_from_pnode(CHILD(pn, 0));
-        else {
-            for (ii = 1; ii < NCH(pn) - 1; ii += 2) {
-                sn_temp = sn;
-                AST_TYPE_OF_R_EXPR(stype, pn, ii);
-                sn = newastnode(stype, 2, CHILD(pn,ii)->row, CHILD(pn,ii)->col);
-                if (sn_temp == NULL)
-                    AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,ii-1)));
-                else
-                    AST_SET_MEMBER(sn, 0, sn_temp);
-                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
-            }
-        }
-        break;
 
     case R_TERM:
-        if (NCH(pn) == 1)
+
+    case L_EXPR:
+
+    case A_EXPR:
+
+    case A_TERM:
+
+    case POWER:
+
+        if (NCH(pn) == 1) {
             sn = ast_from_pnode(CHILD(pn, 0));
-        else {
+        } else {
             for (ii = 1; ii < NCH(pn) - 1; ii += 2) {
-                sn_temp = sn;
-                sn = newastnode(AST_AND, 2, CHILD(pn,ii)->row,
-                        CHILD(pn,ii)->col);
-                if (sn_temp == NULL)
+                sn_left = sn;
+                AST_TYPE_OF_BINOP(stype, pn, ii);
+                sn = newastnode(stype, 2, CHILD(pn,ii)->row, CHILD(pn,ii)->col);
+                if (sn_left == NULL)
                     AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,ii-1)));
                 else
-                    AST_SET_MEMBER(sn, 0, sn_temp);
+                    AST_SET_MEMBER(sn, 0, sn_left);
                 AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
             }
         }
         break;
 
+        /*
+         * Unary operators
+         */
     case R_FACTOR:
-        if (NCH(pn) == 1)
+        if (NCH(pn) == 1) {
             sn = ast_from_pnode(CHILD(pn, 0));
-        else {
+        } else {
             sn = newastnode(AST_NOT, 1, pn->row, pn->col);
             AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
         }
         break;
 
-    case L_EXPR:
-        if (NCH(pn) == 1)
-            sn = ast_from_pnode(CHILD(pn, 0));
-        else {
-            for (ii = 1; ii < NCH(pn) - 1; ii += 2) {
-                sn_temp = sn;
-                AST_TYPE_OF_L_EXPR(stype, pn, ii);
-                sn = newastnode(stype, 2, CHILD(pn,ii)->row, CHILD(pn,ii)->col);
-                if (sn_temp == NULL)
-                    AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,ii-1)));
-                else
-                    AST_SET_MEMBER(sn, 0, sn_temp);
-                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
-            }
-        }
-        break;
-
-    case A_EXPR:
-        if (NCH(pn) == 1)
-            sn = ast_from_pnode(CHILD(pn, 0));
-        else {
-            for (ii = 1; ii < NCH(pn) - 1; ii += 2) {
-                sn_temp = sn;
-                AST_TYPE_OF_A_EXPR(stype, pn, ii);
-                sn = newastnode(stype, 2, CHILD(pn,ii)->row, CHILD(pn,ii)->col);
-                if (sn_temp == NULL)
-                    AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,ii-1)));
-                else
-                    AST_SET_MEMBER(sn, 0, sn_temp);
-                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
-            }
-        }
-        break;
-
-    case A_TERM:
-        if (NCH(pn) == 1)
-            sn = ast_from_pnode(CHILD(pn, 0));
-        break;
-
     case FACTOR:
-        if (NCH(pn) == 1)
+        if (NCH(pn) == 1) {
             sn = ast_from_pnode(CHILD(pn, 0));
-        break;
-
-    case POWER:
-        if (NCH(pn) == 1)
-            sn = ast_from_pnode(CHILD(pn, 0));
+        } else {
+            AST_TYPE_OF_UNARYOP(stype, pn, 0);
+            sn = newastnode(stype, 1, pn->row, pn->col);
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
+        }
         break;
 
     case PRIMARY:
-        if (NCH(pn) == 1)
+        if (NCH(pn) == 1) {
             sn = ast_from_pnode(CHILD(pn, 0));
+        } else {
+            sn = ast_from_pnode(CHILD(pn,0)); // the func/array/object
+            pn = CHILD(pn, 1); // trailer
+            ii = 0;
+            while (ii < NCH(pn)) {
+                sn_left = sn;
+                AST_TYPE_OF_TRAILER(stype, pn, ii);
+                sn = newastnode(stype, 2, CHILD(pn,ii)->row, CHILD(pn,ii)->col);
+                AST_SET_MEMBER(sn, 0, sn_left);
+                if (stype == AST_CALL && CHILD(pn,ii+1)->type == ')') { // no argument func
+                    AST_SET_MEMBER(sn, 1,
+                            newastnode(AST_LIST, 0, CHILD(pn,ii+2)->row, CHILD(pn,ii+2)->col));
+                    ii += 2;
+                } else {
+                    AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii+1)));
+                    if (stype == AST_FIELD)
+                        ii += 2;
+                    else
+                        ii += 3;
+                }
+            }
+        }
+        break;
+
+    case TRAILER:
+        fatal("cannot be here");
         break;
 
     case ATOM:
@@ -303,18 +317,70 @@ ast_from_pnode(Node *pn) {
         break;
 
     case ARGLIST:
+        sn = newastnode(AST_LIST, NCH(pn) / 2 + 1, pn->row, pn->col);
+        ii = jj = 0;
+        for (ii = jj = 0; jj < sn->size; ii += 2, jj++) {
+            AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+        }
         break;
 
     case OARG:
+        if (CHILD(pn,0)->type != KVPAIR) {
+            sn = ast_from_pnode(CHILD(pn,0));
+        } else {
+            // XXX kvpair
+        }
         break;
 
     case SUBSCRIPTION:
+        sn = ast_from_pnode(CHILD(pn,0));
         break;
 
     case SINGLEIDX:
+        sn = ast_from_pnode(CHILD(pn,0));
         break;
 
     case IDXRANGE:
+        sn = newastnode(AST_LIST, 3, pn->row, pn->col);
+        // start
+        if (CHILD(pn,0)->type == ':') {
+            AST_SET_MEMBER(sn, 0,
+                    newastnode(AST_LITERAL, 0, CHILD(pn,0)->row, CHILD(pn,0)->col));
+            AST_GET_MEMBER(sn, 0)->v.lexeme = get_strp("0");
+            ii = 1;
+        } else {
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
+            ii = 2;
+        }
+        // end
+        if (ii >= NCH(pn)) {
+            AST_SET_MEMBER(sn, 1,
+                    newastnode(AST_LITERAL, 0, CHILD(pn,0)->row, CHILD(pn,0)->col));
+            AST_GET_MEMBER(sn, 1)->v.lexeme = get_strp("-1");
+            // step
+            AST_SET_MEMBER(sn, 2,
+                    newastnode(AST_LITERAL, 0, CHILD(pn,0)->row, CHILD(pn,0)->col));
+            AST_GET_MEMBER(sn, 2)->v.lexeme = get_strp("1");
+        } else {
+            // end
+            if (CHILD(pn,ii)->type == ':') {
+                AST_SET_MEMBER(sn, 1,
+                        newastnode(AST_LITERAL, 0, CHILD(pn,0)->row, CHILD(pn,0)->col));
+                AST_GET_MEMBER(sn, 1)->v.lexeme = get_strp("-1");
+                ii += 1;
+            } else {
+                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,ii)));
+                ii += 2;
+            }
+            // step
+            if (ii >= NCH(pn)) {
+                AST_SET_MEMBER(sn, 2,
+                        newastnode(AST_LITERAL, 0, CHILD(pn,0)->row, CHILD(pn,0)->col));
+                AST_GET_MEMBER(sn, 2)->v.lexeme = get_strp("1");
+            } else {
+                AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,ii)));
+            }
+        }
         break;
 
     case IDXLIST:
@@ -335,8 +401,7 @@ ast_from_pnode(Node *pn) {
     case FLOAT:
     case STRING:
         sn = newastnode(AST_LITERAL, 0, pn->row, pn->col);
-        AST_SET_LEXEME(sn, pn->lexeme)
-        ;
+        AST_SET_LEXEME(sn, pn->lexeme);
         break;
 
     case NUL:
@@ -344,8 +409,7 @@ ast_from_pnode(Node *pn) {
         break;
 
     default:
-        fprintf(stderr, "something wrong!\n");
-        exit(1);
+        fatal("error when constructing AST");
         break;
 
     }

@@ -57,7 +57,7 @@ void printerror() {
 
 void fatal(char *message) {
     fprintf(stderr, "Fatal error: %s near <row %d, col %d>\n", message,
-            source.row, source.pos-1);
+            source.row, source.pos);
     exit(1);
 }
 

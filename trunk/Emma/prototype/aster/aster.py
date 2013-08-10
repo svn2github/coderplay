@@ -34,6 +34,7 @@ ne
 mul
 div
 mod
+pow
 
 print
 read

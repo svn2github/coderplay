@@ -27,6 +27,7 @@ char *snode_types[] = {
         "MUL",
         "DIV",
         "MOD",
+        "POW",
         "PRINT",
         "READ",
         "RETURN",
