@@ -71,16 +71,8 @@ int main(int argc, char **argv) {
 
             stree = ast_from_ptree(ptree);
             freetree(ptree);
-
-
-
             printstree(stree);
-
-
-
             freestree(stree);
-
-
 
         }
         fclose(source.fp);
@@ -92,18 +84,24 @@ int main(int argc, char **argv) {
 
                 if (ptree->type != MAGIC_COMMAND) {
                     printtree(ptree);
+                    stree = ast_from_ptree(ptree);
+                    freetree(ptree);
+                    printstree(stree);
+                    freestree(stree);
 
                 } else { // MAGIC_COMMAND
                     printf("got magic command %d\n", CHILD(ptree,0)->type);
-                    if (NCH(ptree) == 2)
-                        printf("magic command arg = %s\n", CHILD(ptree,1)->lexeme);
+                    if (NCH(ptree) == 2) {
+                        printf("magic command arg = %s\n",
+                                CHILD(ptree,1)->lexeme);
+                    }
                     if (CHILD(ptree,0)->type == MCA_EXIT) {
                         freetree(ptree); // release memory before exit
                         break;
                     }
+                    // Always release memory of parse tree
+                    freetree(ptree);
                 }
-                // Always release memory
-                freetree(ptree);
             }
         }
     }
