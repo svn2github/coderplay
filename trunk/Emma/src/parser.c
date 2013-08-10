@@ -494,7 +494,7 @@ Node *parse_oparm_list(Node *p) {
 
 Node *parse_oparm(Node *p) {
     Node *n = addchild(p, OPARM, NULL, source.row, source.pos);
-    Node *t = parse_expr(n);
+    Node *t = parse_token(n, IDENT, lexeme); //            parse_expr(n);
     if (tag == '=') {
         n->child = NULL;
         n->nchildren = 0;

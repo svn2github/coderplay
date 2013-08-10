@@ -211,17 +211,11 @@ ast_from_pnode(Node *pn) {
          * Binary operators
          */
     case R_EXPR:
-
     case R_TERM:
-
     case L_EXPR:
-
     case A_EXPR:
-
     case A_TERM:
-
     case POWER:
-
         if (NCH(pn) == 1) {
             sn = ast_from_pnode(CHILD(pn, 0));
         } else {
@@ -242,14 +236,6 @@ ast_from_pnode(Node *pn) {
          * Unary operators
          */
     case R_FACTOR:
-        if (NCH(pn) == 1) {
-            sn = ast_from_pnode(CHILD(pn, 0));
-        } else {
-            sn = newastnode(AST_NOT, 1, pn->row, pn->col);
-            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
-        }
-        break;
-
     case FACTOR:
         if (NCH(pn) == 1) {
             sn = ast_from_pnode(CHILD(pn, 0));
