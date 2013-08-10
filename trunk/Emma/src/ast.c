@@ -39,16 +39,14 @@
                                             else fatal("unrecognized trailer"); \
                                         }
 
-
 static char *
 get_strp(char *s) {
     char *copys;
-    copys = (char*) malloc(sizeof(char)*(strlen(s) + 1));
+    copys = (char*) malloc(sizeof(char) * (strlen(s) + 1));
     if (copys == NULL)
         return log_error(MEMORY_ERROR, "Not enough memory for string copy");
     return strcpy(copys, s);
 }
-
 
 static AstNode *
 newastnode(int type, int size, unsigned int row, unsigned int col) {
@@ -384,6 +382,10 @@ ast_from_pnode(Node *pn) {
         break;
 
     case IDXLIST:
+        sn = newastnode(AST_LIST, NCH(pn) / 2 + 1, pn->row, pn->col);
+        for (ii = jj = 0; jj < sn->size; ii += 2, jj++) {
+            AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+        }
         break;
 
     case '*':
@@ -401,7 +403,8 @@ ast_from_pnode(Node *pn) {
     case FLOAT:
     case STRING:
         sn = newastnode(AST_LITERAL, 0, pn->row, pn->col);
-        AST_SET_LEXEME(sn, pn->lexeme);
+        AST_SET_LEXEME(sn, pn->lexeme)
+        ;
         break;
 
     case NUL:

@@ -744,7 +744,7 @@ Node *parse_subscription(Node *p) {
             parse_idxrange_with_existing(t);
         } else if (tag == ',') {
             t->type = IDXLIST;
-            parse_idxlist_with_existing(n);
+            parse_idxlist_with_existing(t);
         }
     }
     return n;
