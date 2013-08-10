@@ -13,6 +13,7 @@ void init_all(int argc, char **argv) {
     // process command line arguments
     char *filename = NULL;
     FILE *fp = stdin;
+    EmObject *ob;
 
     if (argc > 1)
         filename = argv[1];
@@ -31,6 +32,16 @@ void init_all(int argc, char **argv) {
 
     // Constant hash table
     constTable = newhashobject();
+    // Add commonly used literals
+    ob = newintobject(1);
+    hashobject_insert_by_string(constTable, "1", ob);
+    DECREF(ob);
+    ob = newintobject(-1);
+    hashobject_insert_by_string(constTable, "-1", ob);
+    DECREF(ob);
+    ob = newintobject(0);
+    hashobject_insert_by_string(constTable, "0", ob);
+    DECREF(ob);
 
     // initialize the lexer
     lexer_init();

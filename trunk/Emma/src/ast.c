@@ -107,7 +107,8 @@ static void freemembers(AstNode *sn) {
         }
         free(sn->v.members);
     } else {
-        free(sn->v.lexeme);
+        if (sn->type == AST_IDENT || sn->type == AST_LITERAL)
+            free(sn->v.lexeme);
     }
 }
 
@@ -122,7 +123,7 @@ static AstNode *
 ast_from_pnode(Node *pn) {
 
     AstNode *sn = NULL, *sn_left = NULL, *sn_temp = NULL;
-    int ii, jj, stype, size;
+    int ii, jj, stype;
 
     switch (pn->type) {
 
@@ -134,12 +135,33 @@ ast_from_pnode(Node *pn) {
         break;
 
     case ASSIGN_STMT:
+        sn = newastnode(AST_ASSIGN, 2, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
+        AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,2)));
         break;
 
     case PRINT_STMT:
+        sn = newastnode(AST_PRINT, 2, pn->row, pn->col);
+        if (NCH(pn) == 2) { // default stdout
+            AST_SET_MEMBER(sn, 0, newastnode(AST_IDENT, 0, pn->row, pn->col));
+            AST_GET_MEMBER(sn, 0)->v.lexeme = get_strp("stdout");
+            AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,1)));
+        } else {
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,2)));
+            AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,3)));
+        }
         break;
 
     case READ_STMT:
+        sn = newastnode(AST_READ, 2, pn->row, pn->col);
+        if (NCH(pn) == 2) { // default stdout
+            AST_SET_MEMBER(sn, 0, newastnode(AST_IDENT, 0, pn->row, pn->col));
+            AST_GET_MEMBER(sn, 0)->v.lexeme = get_strp("stdin");
+            AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,1)));
+        } else {
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,2)));
+            AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,3)));
+        }
         break;
 
     case CONTINUE_STMT:
@@ -172,6 +194,10 @@ ast_from_pnode(Node *pn) {
         break;
 
     case RAISE_STMT:
+        sn = newastnode(AST_RAISE, NCH(pn)-1, pn->row, pn->col);
+        if (NCH(pn) == 2) {
+            AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
+        }
         break;
 
     case IF_STMT:
@@ -189,14 +215,32 @@ ast_from_pnode(Node *pn) {
         if (CHILD(pn,3)->type == ')') { // empty parameter list
             AST_SET_MEMBER(sn, 1,
                     newastnode(AST_LIST, 0, CHILD(pn,2)->row, CHILD(pn,2)->col));
+            // body
             AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,4)));
         } else {
+            // non empty parameter list is always consisted of
+            // 3 members. see details in PARMLIST case.
             AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,3)));
+            // body
             AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,5)));
         }
         break;
 
     case CLASSDEF:
+        sn = newastnode(AST_CLASSDEF, 3, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
+        if (CHILD(pn,3)->type == ')') { // empty super list
+            AST_SET_MEMBER(sn, 1,
+                    newastnode(AST_IDENT, 0, CHILD(pn,2)->row, CHILD(pn,2)->col));
+            AST_GET_MEMBER(sn, 1)->v.lexeme = get_strp("Object");
+            // body
+            AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,4)));
+        } else {
+            // non empty super list
+            AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,3)));
+            // body
+            AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,5)));
+        }
         break;
 
     case TRY_STMT:
@@ -213,14 +257,27 @@ ast_from_pnode(Node *pn) {
             sn = newastnode(AST_SEQ, 1, pn->row, pn->col);
             AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(CHILD(pn,0),0)));
         } else {
-
+            sn = ast_from_pnode(CHILD(pn,0));
         }
         break;
 
     case STMT_BLOCK:
+        sn = newastnode(AST_SEQ, NCH(pn) - 2, pn->row, pn->col);
+        for (ii = 1, jj = 0; jj < sn->size; ii++, jj++) {
+            AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+        }
         break;
 
     case FOR_EXPR:
+        sn = newastnode(AST_LIST, 3, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
+        AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,2)));
+        if (NCH(pn) > 3) {
+            AST_SET_MEMBER(sn, 2, ast_from_pnode(CHILD(pn,4)));
+        } else {
+            AST_SET_MEMBER(sn, 2, newastnode(AST_LITERAL, 0, pn->row, pn->col));
+            AST_GET_MEMBER(sn, 2)->v.lexeme = get_strp("1");
+        }
         break;
 
         /*
@@ -289,79 +346,87 @@ ast_from_pnode(Node *pn) {
         }
         break;
 
-    case TRAILER:
-        fatal("cannot be here");
-        break;
-
     case ATOM:
         if (NCH(pn) == 1)
             sn = ast_from_pnode(CHILD(pn, 0));
-        else { // (...) expr
+        else { // ( expr )
             sn = ast_from_pnode(CHILD(pn, 1));
         }
         break;
 
     case EXPR_LIST:
-        sn = newastnode(AST_LIST, NCH(pn)/2+1, pn->row, pn->col);
+        sn = newastnode(AST_LIST, NCH(pn) / 2 + 1, pn->row, pn->col);
         for (ii = jj = 0; jj < sn->size; ii += 2, jj++) {
             AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
         }
         break;
 
     case PARMLIST:
-        size = 0;
+        /*
+         * Always has 3 members and they are regular parameters (positional
+         * and keyword), extra parameter and extra keywords. If they
+         * are not provided by user code, they will be set as empty.
+         */
+        sn = newastnode(AST_LIST, 3, pn->row, pn->col);
         if (CHILD(pn,0)->type == DSTAR) { // only extra keywords **c
-            sn = newastnode(AST_LIST, 1, pn->row, pn->col);
+            AST_SET_MEMBER(sn, 0, newastnode(AST_LIST,0,pn->row,pn->col));
+            AST_SET_MEMBER(sn, 1, newastnode(AST_EXTRAP, 0, pn->row, pn->col));
             sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,0)->row,
-            CHILD(pn,0)->col);
+                    CHILD(pn,0)->col);
             AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,1)));
-            AST_SET_MEMBER(sn, 0, sn_temp);
+            AST_SET_MEMBER(sn, 2, sn_temp);
         } else if (CHILD(pn,0)->type == '*') { // no regular params
+            AST_SET_MEMBER(sn, 0, newastnode(AST_LIST,0,pn->row,pn->col));
             if (NCH(pn) > 2) { // *b, **c
-                sn = newastnode(AST_LIST, 2, pn->row, pn->col);
                 sn_temp = newastnode(AST_EXTRAP, 1, CHILD(pn,0)->row,
                 CHILD(pn,0)->col); // *b
                 AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,1)));
-                AST_SET_MEMBER(sn, 0, sn_temp);
+                AST_SET_MEMBER(sn, 1, sn_temp);
                 sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,3)->row,
                 CHILD(pn,3)->col); // **c
-                AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,4)));
-                AST_SET_MEMBER(sn, 1, sn_temp);
+                AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,4)));
+                AST_SET_MEMBER(sn, 2, sn_temp);
             } else {
-                sn = newastnode(AST_LIST, 1, pn->row, pn->col);
                 sn_temp = newastnode(AST_EXTRAP, 1, CHILD(pn,0)->row,
                 CHILD(pn,0)->col); // *b
                 AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,1)));
-                AST_SET_MEMBER(sn, 0, sn_temp);
+                AST_SET_MEMBER(sn, 1, sn_temp);
+                AST_SET_MEMBER(sn, 2,
+                        newastnode(AST_EXTRAK, 0, pn->row, pn->col));
             }
         } else { // start with regular params
             if (NCH(pn) == 1) { // a only
-                sn = newastnode(AST_LIST, 1, pn->row, pn->col);
                 AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
+                AST_SET_MEMBER(sn, 1,
+                        newastnode(AST_EXTRAP, 0, pn->row, pn->col));
+                AST_SET_MEMBER(sn, 2,
+                        newastnode(AST_EXTRAK, 0, pn->row, pn->col));
             } else if (NCH(pn) > 3) { // a, *b, **c
-                sn = newastnode(AST_LIST, 3, pn->row, pn->col);
                 AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0))); // a
                 sn_temp = newastnode(AST_EXTRAP, 1, CHILD(pn,1)->row,
-                        CHILD(pn,1)->col); // *b
+                CHILD(pn,1)->col); // *b
                 AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,2)));
                 AST_SET_MEMBER(sn, 1, sn_temp);
-                sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,3)->row,
-                        CHILD(pn,3)->col);
-                AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,4)));
+                sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,4)->row,
+                CHILD(pn,4)->col);
+                AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,5)));
                 AST_SET_MEMBER(sn, 2, sn_temp);
             } else { //
-                sn = newastnode(AST_LIST, 2, pn->row, pn->col);
                 AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0))); // a
                 if (CHILD(pn,1)->type == '*') { // *b
                     sn_temp = newastnode(AST_EXTRAP, 1, CHILD(pn,1)->row,
-                            CHILD(pn,1)->col); // *b
+                    CHILD(pn,1)->col); // *b
                     AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,2)));
                     AST_SET_MEMBER(sn, 1, sn_temp);
+                    AST_SET_MEMBER(sn, 2,
+                            newastnode(AST_EXTRAK, 0, pn->row, pn->col));
                 } else { // **c
+                    AST_SET_MEMBER(sn, 1,
+                            newastnode(AST_EXTRAP, 0, pn->row, pn->col));
                     sn_temp = newastnode(AST_EXTRAK, 1, CHILD(pn,1)->row,
-                            CHILD(pn,1)->col); // *b
+                    CHILD(pn,1)->col); // *b
                     AST_SET_MEMBER(sn_temp, 0, ast_from_pnode(CHILD(pn,2)));
-                    AST_SET_MEMBER(sn, 1, sn_temp);
+                    AST_SET_MEMBER(sn, 2, sn_temp);
                 }
             }
         }
@@ -383,6 +448,9 @@ ast_from_pnode(Node *pn) {
         break;
 
     case KVPAIR:
+        sn = newastnode(AST_KVPAIR, 2, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,0)));
+        AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn,2)));
         break;
 
     case ARGLIST:
@@ -393,11 +461,7 @@ ast_from_pnode(Node *pn) {
         break;
 
     case OARG:
-        if (CHILD(pn,0)->type != KVPAIR) {
-            sn = ast_from_pnode(CHILD(pn,0));
-        } else {
-            // XXX kvpair
-        }
+        sn = ast_from_pnode(CHILD(pn,0));
         break;
 
     case SUBSCRIPTION:
@@ -482,7 +546,7 @@ ast_from_pnode(Node *pn) {
         break;
 
     default:
-        fatal("error when constructing AST");
+        fatal("unknown parse node when constructing AST");
         break;
 
     }
