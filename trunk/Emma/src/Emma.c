@@ -53,57 +53,71 @@ void cleanup() {
     freeobj(constTable);
 }
 
-int main(int argc, char **argv) {
-
-    init_all(argc, argv);
+int run_file() {
 
     Node *ptree;
     AstNode *stree;
 
-    /*
-     * Parse the input
-     */
-    // source.type = SOURCE_TYPE_PROMPT;
-    if (source.type == SOURCE_TYPE_FILE) {
+    ptree = parse();
+    if (ptree) {
+        printtree(ptree);
+
+        stree = ast_from_ptree(ptree);
+        freetree(ptree);
+        printstree(stree);
+        freestree(stree);
+
+    }
+    fclose(source.fp);
+
+    return 1;
+}
+
+int run_prompt() {
+
+    Node *ptree;
+    AstNode *stree;
+
+    while (1) {
         ptree = parse();
         if (ptree) {
-            printtree(ptree);
 
-            stree = ast_from_ptree(ptree);
-            freetree(ptree);
-            printstree(stree);
-            freestree(stree);
+            if (ptree->type != MAGIC_COMMAND) {
+                printtree(ptree);
+                stree = ast_from_ptree(ptree);
+                freetree(ptree);
+                printstree(stree);
+                freestree(stree);
 
-        }
-        fclose(source.fp);
-
-    } else { // SOURCE_TYPE_PROMPT
-        while (1) {
-            ptree = parse();
-            if (ptree) {
-
-                if (ptree->type != MAGIC_COMMAND) {
-                    printtree(ptree);
-                    stree = ast_from_ptree(ptree);
-                    freetree(ptree);
-                    printstree(stree);
-                    freestree(stree);
-
-                } else { // MAGIC_COMMAND
-                    printf("got magic command %d\n", CHILD(ptree,0)->type);
-                    if (NCH(ptree) == 2) {
-                        printf("magic command arg = %s\n",
-                                CHILD(ptree,1)->lexeme);
-                    }
-                    if (CHILD(ptree,0)->type == MCA_EXIT) {
-                        freetree(ptree); // release memory before exit
-                        break;
-                    }
-                    // Always release memory of parse tree
-                    freetree(ptree);
+            } else { // MAGIC_COMMAND
+                printf("got magic command %d\n", CHILD(ptree,0)->type);
+                if (NCH(ptree) == 2) {
+                    printf("magic command arg = %s\n",
+                    CHILD(ptree,1)->lexeme);
                 }
+                if (CHILD(ptree,0)->type == MCA_EXIT) {
+                    freetree(ptree); // release memory before exit
+                    break;
+                }
+                // Always release memory of parse tree
+                freetree(ptree);
             }
         }
+    }
+
+    return 1;
+}
+
+int main(int argc, char **argv) {
+
+    init_all(argc, argv);
+
+
+    if (source.type == SOURCE_TYPE_FILE) {
+        run_file();
+
+    } else { // SOURCE_TYPE_PROMPT
+        run_prompt();
     }
 
     //printobj(constTable, stdout);

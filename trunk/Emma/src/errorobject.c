@@ -55,6 +55,10 @@ void printerror() {
             source.row, source.pos);
 }
 
+/*
+ * Fatal error indicates internal program design/coding bugs in contrast
+ * to user errors.
+ */
 void fatal(char *message) {
     fprintf(stderr, "Fatal error: %s near <row %d, col %d>\n", message,
             source.row, source.pos);
