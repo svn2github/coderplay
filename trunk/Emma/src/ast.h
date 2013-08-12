@@ -28,12 +28,6 @@ typedef struct _ast_node {
     unsigned int col;
     int size;
 
-    /*
-     * It is not necessary to use union for two pointer type variables.
-     * A void pointer is good enough to represent both of them. However,
-     * It is more readale to use union and have two different variable
-     * names.
-     */
     union {
         struct _ast_node **members;
         char *lexeme; // literal and ident
