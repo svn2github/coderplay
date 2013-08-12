@@ -28,9 +28,11 @@ EmObject *listobject_get(EmObject *ob, int idx);
 EmObject *listobject_slice(EmObject *ob, int start, int end, int step);
 int listobject_set(EmObject *ob, int idx, EmObject *val);
 EmObject *listobject_append(EmObject *ob, EmObject *val);
+EmObject *listobject_insert(EmObject *ob, int idx, EmObject *val);
 EmObject *listobject_delete(EmObject *ob, int idx);
 EmObject *listobject_pop(EmObject *ob);
 EmObject *listobject_shift(EmObject *ob);
+int listobject_index(EmObject *ob, EmObject *val);
 
 
 #endif /* LISTOBJECT_H_ */

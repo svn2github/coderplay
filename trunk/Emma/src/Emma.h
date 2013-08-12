@@ -24,6 +24,6 @@
  * Constant table (hashobject) that stores all constants
  * in the source file.
  */
-extern EmObject *constTable;
+extern EmObject *literalTable;
 
 #endif /* EMMA_H_ */

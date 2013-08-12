@@ -8,11 +8,17 @@
 
 EmObject *
 newstringobject(char *sval) {
+    char *tval;
+    if ((tval = (char *) malloc(sizeof(char)*strlen(sval)+1)) == NULL) {
+        return log_error(MEMORY_ERROR, "no memory to create new string");
+    }
+    strcpy(tval, sval);
     EmStringObject *ob;
-    if ((ob = NEWOBJ(EmStringObject, &Stringtype)) == NULL)
+    if ((ob = NEWOBJ(EmStringObject, &Stringtype)) == NULL) {
+        DEL(tval);
         return NULL;
-    ob->sval = (char *) malloc (sizeof(char)*(strlen(sval)+1));
-    strcpy(ob->sval, sval);
+    }
+    ob->sval = tval;
     return (EmObject *)ob;
 }
 

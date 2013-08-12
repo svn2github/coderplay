@@ -17,6 +17,8 @@
 #define AST_GET_LEXEME(n)           (n)->v.lexeme
 #define AST_SET_LEXEME(n,s)         (n)->v.lexeme = s; s = NULL
 
+#define AST_GET_LEXEME_SAFE(n)      ((n)->v.lexeme?(n)->v.lexeme:"null")
+
 #define AST_GET_SYMBOL(n)           (n)->v.symbol
 #define AST_SET_SYMBOL(n,s)         (n)->v.symbol = s
 

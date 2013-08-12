@@ -135,6 +135,25 @@ EmObject *listobject_append(EmObject *ob, EmObject *val) {
     return (EmObject *)lo;
 }
 
+EmObject *listobject_insert(EmObject *ob, int idx, EmObject *val) {
+    EmListObject *lo = (EmListObject *)ob;
+    if (idx < 0)
+        idx += lo->nitems;
+    if (idx >= lo->nitems) {
+        log_error(INDEX_ERROR, "index out of list boundary");
+        return NULL;
+    }
+    if (lo->nitems * 2 > lo->size) {
+        lo = listobject_resize(lo, lo->nitems*4); // load 0.25
+    }
+    INCREF(val);
+    memmove(lo->list[idx+1], lo->list[idx],
+            sizeof(EmObject *) * (lo->nitems - 1 - idx));
+    lo->list[idx] = val;
+    lo->nitems++;
+    return (EmObject *)lo;
+}
+
 EmObject *listobject_delete(EmObject *ob, int idx) {
     EmListObject *lo = (EmListObject *) ob;
     if (idx < 0)
@@ -159,6 +178,16 @@ EmObject *listobject_pop(EmObject *ob) {
 
 EmObject *listobject_shift(EmObject *ob) {
     return listobject_delete(ob, 0);
+}
+
+int listobject_index(EmObject *ob, EmObject *val) {
+    EmListObject *lo = (EmListObject *) ob;
+    int ii;
+    for (ii=0;ii<lo->nitems;ii++) {
+        if (cmpobj(lo->list[ii], val) == 0)
+            return ii;
+    }
+    return -1;
 }
 
 static EmSequenceMethods list_as_sequence = {

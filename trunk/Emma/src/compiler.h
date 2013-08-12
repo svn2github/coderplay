@@ -10,15 +10,19 @@
 
 #include "Emma.h"
 
+#define GET_OPCODE(c,n)       (c)->code[(n)++]
+#define HAS_ARG(c)          (c > OP_HASARG ? 1: 0)
 
 typedef struct _compiled {
-    char *code;
+    unsigned char *code;
     EmObject *consts;       // list of constants and compiled functions
     EmObject *names;        // list of variable names
     int nexti;              // index to code
+    int len;               // length of code
 } Compiled;
 
 
+Compiled *compile_ast(AstNode *stree);
 
 
 #endif /* COMPILER_H_ */

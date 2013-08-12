@@ -1,0 +1,32 @@
+#define OP_STOP              0
+#define OP_ADD               1
+#define OP_SUB               2
+#define OP_MUL               3
+#define OP_DIV               4
+#define OP_MOD               5
+#define OP_GT                6
+#define OP_GE                7
+#define OP_EQ                8
+#define OP_LE                9
+#define OP_LT                10
+#define OP_NE                11
+#define OP_AND               12
+#define OP_OR                13
+#define OP_XOR               14
+#define OP_NOT               15
+#define OP_PLUS              16
+#define OP_MINUS             17
+
+#define OP_HASARG            18
+
+#define OP_LABEL             19
+#define OP_PUSH              20
+#define OP_PUSHC             21
+#define OP_POP               22
+#define OP_FUNC              23
+#define OP_CALL              24
+#define OP_RETURN            25
+#define OP_JUMP              26
+#define OP_FJUMP             27
+
+extern char *opcode_types[];

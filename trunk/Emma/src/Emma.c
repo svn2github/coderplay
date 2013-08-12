@@ -7,7 +7,7 @@
 
 #include "Emma.h"
 
-EmObject *constTable;
+EmObject *literalTable;
 
 void init_all(int argc, char **argv) {
     // process command line arguments
@@ -31,18 +31,18 @@ void init_all(int argc, char **argv) {
     source.fp = fp;
 
     // Constant hash table
-    constTable = newhashobject();
+    literalTable = newhashobject();
     // Add commonly used literals
     ob = newintobject(1);
-    hashobject_insert_by_string(constTable, "1", ob);
+    hashobject_insert_by_string(literalTable, "1", ob);
     DECREF(ob);
     ob = newintobject(-1);
-    hashobject_insert_by_string(constTable, "-1", ob);
+    hashobject_insert_by_string(literalTable, "-1", ob);
     DECREF(ob);
     ob = newintobject(0);
-    hashobject_insert_by_string(constTable, "0", ob);
+    hashobject_insert_by_string(literalTable, "0", ob);
     DECREF(ob);
-    hashobject_insert_by_string(constTable, "null", &nulobj);
+    hashobject_insert_by_string(literalTable, "null", &nulobj);
 
     // initialize the lexer
     lexer_init();
@@ -50,7 +50,7 @@ void init_all(int argc, char **argv) {
 
 void cleanup() {
     lexer_free();
-    freeobj(constTable);
+    freeobj(literalTable);
 }
 
 int run_file() {
@@ -120,8 +120,8 @@ int main(int argc, char **argv) {
         run_prompt();
     }
 
-    //printobj(constTable, stdout);
-    //printf("constTable = %s\n", tostrobj(constTable));
+    //printobj(literalTable, stdout);
+    //printf("literalTable = %s\n", tostrobj(literalTable));
 
     cleanup();
 

@@ -87,9 +87,9 @@ process_fraction(int intpart, int length) {
         lexeme[length] = '\0';
         fval = intpart;
     }
-    if (hashobject_haskey_by_string(constTable, lexeme) == 0) {
+    if (hashobject_haskey_by_string(literalTable, lexeme) == 0) {
         ob = newfloatobject(fval);
-        constTable = hashobject_insert_by_string(constTable, lexeme, ob);
+        literalTable = hashobject_insert_by_string(literalTable, lexeme, ob);
         DECREF(ob);
     }
     return FLOAT;
@@ -190,9 +190,9 @@ get_token() {
             // make sure it is an integer
             if (source.peek != '.' && source.peek != 'e' && source.peek != 'E') {
                 lexeme[length] = '\0';
-                if (hashobject_haskey_by_string(constTable, lexeme) == 0) {
+                if (hashobject_haskey_by_string(literalTable, lexeme) == 0) {
                     ob = newintobject(ival);
-                    constTable = hashobject_insert_by_string(constTable, lexeme,
+                    literalTable = hashobject_insert_by_string(literalTable, lexeme,
                             ob);
                     DECREF(ob);
                 }
@@ -228,13 +228,13 @@ get_token() {
                 lexeme[length++] = source.peek;
             } while (!(source.peek == quote && source.lastPeek != '\\'));
             lexeme[length] = '\0';
-            if (hashobject_haskey_by_string(constTable, lexeme) == 0) {
+            if (hashobject_haskey_by_string(literalTable, lexeme) == 0) {
                 lexeme[length - 1] = '\0'; // -1 to erase ending quote
                 ob = newstringobject(lexeme + 1); // +1 to skip leading quote
                 // Now add the quote to use as key
                 lexeme[length - 1] = quote;
                 lexeme[length] = '\0';
-                constTable = hashobject_insert_by_string(constTable, lexeme,
+                literalTable = hashobject_insert_by_string(literalTable, lexeme,
                         ob);
                 DECREF(ob);
             }
