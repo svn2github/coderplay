@@ -103,6 +103,7 @@ freecompiledunit(CompiledUnit *cu) {
     cu->block = cu->curblock = NULL;
     freeobj(cu->consts);
     freeobj(cu->names);
+    DEL(cu);
 }
 
 
