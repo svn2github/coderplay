@@ -195,7 +195,7 @@ static void compile_assign(AstNode *sn) {
         ob = newstringobject(AST_GET_LEXEME_SAFE(sn));
         idx = listobject_index(cu->names, ob);
         if (idx < 0) {
-            listobject_append(cu->names, ob);
+            cu->names = listobject_append(cu->names, ob);
             idx = listobject_len(cu->names) - 1;
         }
         NEXT_INSTR(cu->curblock, off);
@@ -228,7 +228,7 @@ static void compile_ast_node(AstNode *sn) {
         ob = newstringobject(AST_GET_LEXEME_SAFE(sn));
         idx = listobject_index(cu->names, ob);
         if (idx < 0) {
-            listobject_append(cu->names, ob);
+            cu->names = listobject_append(cu->names, ob);
             idx = listobject_len(cu->names) - 1;
         }
         NEXT_INSTR(cu->curblock, off);
@@ -244,7 +244,7 @@ static void compile_ast_node(AstNode *sn) {
         ob = hashobject_lookup_by_string(literalTable, AST_GET_LEXEME_SAFE(sn));
         idx = listobject_index(cu->consts, ob);
         if (idx < 0) {
-            listobject_append(cu->consts, ob);
+            cu->consts =listobject_append(cu->consts, ob);
             idx = listobject_len(cu->consts) - 1;
         }
         NEXT_INSTR(cu->curblock, off);
@@ -310,6 +310,84 @@ compiler_init() {
 CompiledUnit *
 compile_ast(AstNode *stree) {
     int ii;
+
+    char *var[] = {
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z",
+};
+    EmObject *ob;
+    int idx;
+    EmObject * l = newlistobject(0);
+    for (ii=0;ii<52;ii++) {
+        ob = newstringobject(var[ii]);
+        idx = listobject_index(l, ob);
+        if (idx < 0) {
+            l = listobject_append(l, ob);
+            idx = listobject_len(l) - 1;
+        }
+        DECREF(ob);
+        printf ("idx = %d\n", idx);
+    }
+    for (ii=0;ii<listobject_len(l);ii++) {
+        ob = listobject_get(l, ii);
+        printf(" = %s\n", tostrobj(ob));
+        DECREF(ob);
+    }
+
+    freeobj(l);
+
+
+    /*
     compiler_init();
 
     if (setjmp(__compile_buf) == 0) {
@@ -317,9 +395,11 @@ compile_ast(AstNode *stree) {
             compile_ast_node(AST_GET_MEMBER(stree,ii));
         }
     } else {
+        fprintf(stderr, "ERROR compile\n");
         freecompiledunit(compiler.cu);
         compiler.cu = NULL;
     }
+    */
 
     return compiler.cu;
 }

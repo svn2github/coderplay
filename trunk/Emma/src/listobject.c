@@ -119,16 +119,28 @@ EmObject *listobject_slice(EmObject *ob, int start, int end, int step) {
     return (EmObject *)newlo;
 }
 
-EmListObject *listobject_resize(EmListObject *lo, int size) {
-    EmListObject *newlo = (EmListObject *)newlistobject(size);
-    lo->list = (EmObject **) realloc(lo->list, size*sizeof(EmObject *));
+EmListObject *listobject_resize(EmListObject *lo) {
+    int newnitems = lo->nitems * 2u; // 50% load
+    EmObject ** tmp;
+    tmp = (EmObject **) realloc(lo->list, newnitems * sizeof(EmObject *));
+    if (tmp == NULL) {
+        log_error(MEMORY_ERROR, "no memory to resize list");
+    } else {
+        size_t newsize, oldsize;
+        oldsize = lo->size * sizeof(EmObject *);
+        newsize = newnitems * sizeof(EmObject *);
+        // Make sure the newly allocated space are filled with zeros.
+        memset((char *)tmp + oldsize, 0, newsize - oldsize);
+        lo->list = tmp;
+        lo->size = newnitems;
+    }
     return lo;
 }
 
 EmObject *listobject_append(EmObject *ob, EmObject *val) {
-    EmListObject *lo = (EmListObject *)ob;
-    if (lo->nitems * 2 > lo->size) {
-        lo = listobject_resize(lo, lo->nitems*4); // load 0.25
+    EmListObject *lo = (EmListObject *) ob;
+    if (lo->nitems * 3 > lo->size * 2) {
+        lo = listobject_resize(lo);
     }
     INCREF(val);
     lo->list[lo->nitems] = val;
@@ -144,8 +156,8 @@ EmObject *listobject_insert(EmObject *ob, int idx, EmObject *val) {
         log_error(INDEX_ERROR, "index out of list boundary");
         return NULL;
     }
-    if (lo->nitems * 2 > lo->size) {
-        lo = listobject_resize(lo, lo->nitems*4); // load 0.25
+    if (lo->nitems * 3 > lo->size * 2) {
+        lo = listobject_resize(lo);
     }
     INCREF(val);
     memmove(lo->list[idx+1], lo->list[idx],
