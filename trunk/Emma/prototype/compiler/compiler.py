@@ -8,6 +8,7 @@ sub
 mul
 div
 mod
+pow
 gt
 ge
 eq

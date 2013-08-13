@@ -5,6 +5,7 @@ char *opcode_types[] = {
         "OP_MUL",
         "OP_DIV",
         "OP_MOD",
+        "OP_POW",
         "OP_GT",
         "OP_GE",
         "OP_EQ",

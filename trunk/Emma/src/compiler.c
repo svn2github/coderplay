@@ -7,7 +7,47 @@
 #include "Emma.h"
 #include "opcode.i"
 
+#define DEFAULT_BLOCK_SIZE      16
+
+#define GET_INSTR_FROM_BLOCK(b,i)       (&(b)->instrlist[i])
+#define I_STR(instr)    opcode_types[instr->opcode]
+#define I_HASARG(instr) instr->hasarg
+#define I_ARG(instr)    instr->v.arg
+#define I_TARGET(instr)    instr->v.target
+
+#define SET_I_ARG(instr,a)    instr->v.arg = a
+#define SET_I_TARGET(instr,t)   instr->v.target = t
+#define SET_I_ROWCOL(instr,sn)  instr->row=sn->row; \
+                                    instr->col=sn->col
+
+
+#define NEXT_INSTR(b,i)   i=next_instr_from_block(b); \
+                            if (i<0) longjmp(__compile_buf, 1); \
+
+
+#define BINOP_OF_ASTTYPE(t)     t==AST_ADD ? OP_ADD : \
+                                    (t==AST_SUB ? OP_SUB : \
+                                    (t==AST_AND ? OP_AND : \
+                                    (t==AST_OR ? OP_OR : \
+                                    (t==AST_XOR ? OP_XOR : \
+                                    (t==AST_GT ? OP_GT : \
+                                    (t==AST_LT ? OP_LT : \
+                                    (t==AST_GE ? OP_GE : \
+                                    (t==AST_LE ? OP_LE : \
+                                    (t==AST_EQ ? OP_EQ : \
+                                    (t==AST_NE ? OP_NE : \
+                                    (t==AST_MUL ? OP_MUL : \
+                                    (t==AST_DIV ? OP_DIV : \
+                                    (t==AST_MOD ? OP_MOD : OP_POW )))))))))))))
+
+#define UNARYOP_OF_ASTTYPE(t)   t==AST_PLUS ? OP_PLUS : \
+                                    (t==AST_MINUS ? OP_MINUS : OP_NOT)
+
+
+
+
 static Compiler compiler;
+static jmp_buf __compile_buf;
 
 static Instr *
 newinstr(int size) {
@@ -33,7 +73,7 @@ newbasicblock() {
 }
 
 static int
-get_next_instr_from_block(Basicblock *b) {
+next_instr_from_block(Basicblock *b) {
     if (b->instrlist == NULL) {
         b->instrlist = newinstr(DEFAULT_BLOCK_SIZE);
         if (b->instrlist == NULL) {
@@ -158,13 +198,12 @@ static void compile_assign(AstNode *sn) {
             listobject_append(cu->names, ob);
             idx = listobject_len(cu->names) - 1;
         }
-        off = get_next_instr_from_block(cu->curblock);
+        NEXT_INSTR(cu->curblock, off);
         instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
         instr->opcode = OP_POP;
         instr->hasarg = 1;
-        instr->v.arg = idx;
-        instr->row = sn->row;
-        instr->col = sn->col;
+        SET_I_ARG(instr, idx);
+        SET_I_ROWCOL(instr, sn);
         DECREF(ob);
         break;
     default:
@@ -192,14 +231,51 @@ static void compile_ast_node(AstNode *sn) {
             listobject_append(cu->consts, ob);
             idx = listobject_len(cu->consts) - 1;
         }
-        off = get_next_instr_from_block(cu->curblock);
+        NEXT_INSTR(cu->curblock, off);
         instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
         instr->opcode = OP_PUSHC;
         instr->hasarg = 1;
-        instr->v.arg = idx;
-        instr->row = sn->row;
-        instr->col = sn->col;
+        SET_I_ARG(instr, idx);
+        SET_I_ROWCOL(instr, sn);
         DECREF(ob);
+        break;
+
+
+    /*
+     * Binary operators
+     */
+    case AST_ADD:
+    case AST_SUB:
+    case AST_AND:
+    case AST_OR:
+    case AST_XOR:
+    case AST_GT:
+    case AST_LT:
+    case AST_GE:
+    case AST_LE:
+    case AST_EQ:
+    case AST_NE:
+    case AST_MUL:
+    case AST_DIV:
+    case AST_MOD:
+    case AST_POW:
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        compile_ast_node(AST_GET_MEMBER(sn,1));
+        NEXT_INSTR(cu->curblock, off);
+        instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
+        instr->opcode = BINOP_OF_ASTTYPE(sn->type);
+        break;
+
+    /*
+     * Unary operators
+     */
+    case AST_PLUS:
+    case AST_MINUS:
+    case AST_NOT:
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        NEXT_INSTR(cu->curblock, off);
+        instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
+        instr->opcode = UNARYOP_OF_ASTTYPE(sn->type);
         break;
 
     default:
@@ -208,15 +284,26 @@ static void compile_ast_node(AstNode *sn) {
 
 }
 
+static int
+compiler_init() {
+    compiler.cu = newcompiledunit();
+    return 1;
+}
+
 CompiledUnit *
 compile_ast(AstNode *stree) {
-
-    compiler.cu = newcompiledunit();
-
     int ii;
-    for (ii = 0; ii < stree->size; ii++) {
-        compile_ast_node(AST_GET_MEMBER(stree,ii));
+    compiler_init();
+
+    if (setjmp(__compile_buf) == 0) {
+        for (ii = 0; ii < stree->size; ii++) {
+            compile_ast_node(AST_GET_MEMBER(stree,ii));
+        }
+    } else {
+        freecompiledunit(compiler.cu);
+        compiler.cu = NULL;
     }
+
     return compiler.cu;
 }
 

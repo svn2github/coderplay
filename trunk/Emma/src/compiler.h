@@ -8,12 +8,6 @@
 #ifndef COMPILER_H_
 #define COMPILER_H_
 
-#define DEFAULT_BLOCK_SIZE      16
-
-#define GET_INSTR_FROM_BLOCK(b,i)       (&(b)->instrlist[i])
-#define I_STR(instr)    opcode_types[instr->opcode]
-#define I_ARG(instr)    instr->v.arg
-#define I_TARGET(instr)    instr->v.target
 
 
 typedef struct _instr {
