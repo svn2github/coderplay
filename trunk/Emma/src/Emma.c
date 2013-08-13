@@ -64,16 +64,16 @@ int run_file() {
         printtree(ptree);
 
         stree = ast_from_ptree(ptree);
-
         printstree(stree);
 
 
         cu = compile_ast(stree);
-        freecompiledunit(cu);
+        printcompiledunit(cu);
 
 
         freetree(ptree);
         freestree(stree);
+        freecompiledunit(cu);
 
     }
     fclose(source.fp);

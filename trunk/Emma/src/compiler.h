@@ -11,10 +11,13 @@
 #define DEFAULT_BLOCK_SIZE      16
 
 #define GET_INSTR_FROM_BLOCK(b,i)       (&(b)->instrlist[i])
+#define I_STR(instr)    opcode_types[instr->opcode]
+#define I_ARG(instr)    instr->v.arg
+#define I_TARGET(instr)    instr->v.target
 
 
 typedef struct _instr {
-    unsigned isjump :1;
+    unsigned isjump :1;     // this member use one bit
     unsigned hasarg :1;
     int opcode;
     union {
@@ -45,6 +48,7 @@ typedef struct _compiler {
 
 
 void freecompiledunit(CompiledUnit *cu);
+void printcompiledunit(CompiledUnit *cu);
 CompiledUnit *compile_ast(AstNode *);
 
 #endif /* COMPILER_H_ */

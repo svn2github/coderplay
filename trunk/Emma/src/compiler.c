@@ -87,13 +87,13 @@ newcompiledunit() {
     return c;
 }
 
-
 static void
 freebasicblock(Basicblock *b) {
     if (b->next)
         freebasicblock(b->next);
     DEL(b->instrlist);
-    DEL(b);
+    DEL(b)
+    ;
 }
 
 void
@@ -103,16 +103,45 @@ freecompiledunit(CompiledUnit *cu) {
     cu->block = cu->curblock = NULL;
     freeobj(cu->consts);
     freeobj(cu->names);
-    DEL(cu);
+    DEL(cu)
+    ;
 }
 
-
-void printcompiled(CompiledUnit *cu) {
+void printcompiledunit(CompiledUnit *cu) {
     int ii;
     int opcode;
+    Basicblock *b;
+    Instr *instr;
+    EmObject *ob;
+    for (b = cu->block; b != NULL; b = b->next) {
+        for (ii = 0; ii < b->inxt; ii++) {
+            instr = GET_INSTR_FROM_BLOCK(b,ii);
+            printf("%-20s",
+                    I_STR(instr));
+            if (instr->hasarg) {
+                if (instr->isjump) {
+                    printf("0x%08x", I_TARGET(instr));
+                } else {
+                    printf("%d ", instr->v.arg);
+                    if (instr->opcode == OP_PUSHC) {
+                        ob = listobject_get(cu->consts, I_ARG(instr));
+                        printf("(%s)", tostrobj(ob));
+                        DECREF(ob);
+
+                    } else if (instr->opcode == OP_PUSH
+                            || instr->opcode == OP_POP) {
+                        ob = listobject_get(cu->names, I_ARG(instr));
+                        printf("(%s)", tostrobj(ob));
+                        DECREF(ob);
+                    }
+                }
+            }
+            printf("\n");
+        }
+        printf("\n");
+    }
 
 }
-
 
 static void compile_assign(AstNode *sn) {
 
@@ -190,15 +219,6 @@ compile_ast(AstNode *stree) {
     }
     return compiler.cu;
 }
-
-
-
-
-
-
-
-
-
 
 //static int
 //c_resize_code(CompiledUnit *c) {
