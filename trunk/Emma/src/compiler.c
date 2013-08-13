@@ -9,20 +9,17 @@
 
 #define DEFAULT_BLOCK_SIZE      16
 
-#define GET_INSTR_FROM_BLOCK(b,i)       (&(b)->instrlist[i])
-#define I_STR(instr)    opcode_types[instr->opcode]
-#define I_HASARG(instr) instr->hasarg
-#define I_ARG(instr)    instr->v.arg
-#define I_TARGET(instr)    instr->v.target
+#define INSTR_AT(b,i)       (&(b)->instrlist[i])
+#define I_STR(instr)        opcode_types[instr->opcode]
+#define I_HASARG(instr)     (instr)->opcode>OP_HASARG?1:0
+#define I_ISJUMP(instr)     ((instr)->opcode==OP_JUMP || (instr)->opcode == OP_FJUMP)?1:0
+#define I_ARG(instr)        instr->v.arg
+#define I_TARGET(instr)     instr->v.target
 
 #define SET_I_ARG(instr,a)    instr->v.arg = a
 #define SET_I_TARGET(instr,t)   instr->v.target = t
 #define SET_I_ROWCOL(instr,sn)  instr->row=sn->row; \
                                     instr->col=sn->col
-
-#define NEXT_INSTR(b,i)   i=next_instr_from_block(b); \
-                            if (i<0) longjmp(__compile_buf, 1); \
-
 
 #define BINOP_OF_ASTTYPE(t)     t==AST_ADD ? OP_ADD : \
                                     (t==AST_SUB ? OP_SUB : \
@@ -61,6 +58,7 @@ newbasicblock() {
     if (b == NULL) {
         return log_error(MEMORY_ERROR, "no memory for new basic block");
     }
+    b->lineno = 0;
     b->next = NULL;
     b->instrlist = NULL;
     b->inxt = 0;
@@ -68,12 +66,13 @@ newbasicblock() {
     return b;
 }
 
-static int
-next_instr_from_block(Basicblock *b) {
+static Instr*
+next_instr(Basicblock *b) {
     if (b->instrlist == NULL) {
         b->instrlist = newinstr(DEFAULT_BLOCK_SIZE);
         if (b->instrlist == NULL) {
-            return -1;
+            log_error(MEMORY_ERROR, "can get no more instruction");
+            longjmp(__compile_buf, 1);
         }
         b->inxt = 0;
         b->ilen = DEFAULT_BLOCK_SIZE;
@@ -83,12 +82,13 @@ next_instr_from_block(Basicblock *b) {
         newsize = oldsize << 1;
         b->instrlist = (Instr *) realloc(b->instrlist, newsize);
         if (b->instrlist == NULL) {
-            return -1;
+            log_error(MEMORY_ERROR, "can get no more instruction");
+            longjmp(__compile_buf, 1);
         }
         memset((char *) b->instrlist + oldsize, 0, newsize - oldsize);
         b->ilen <<= 1;
     }
-    return b->inxt++;
+    return INSTR_AT(b, b->inxt++);
 }
 static void freebasicblock(Basicblock *b);
 
@@ -125,8 +125,7 @@ newcompiledunit() {
     return c;
 }
 
-static void
-freebasicblock(Basicblock *b) {
+static void freebasicblock(Basicblock *b) {
     if (b->next)
         freebasicblock(b->next);
     DEL(b->instrlist);
@@ -134,8 +133,7 @@ freebasicblock(Basicblock *b) {
     ;
 }
 
-void
-freecompiledunit(CompiledUnit *cu) {
+void freecompiledunit(CompiledUnit *cu) {
     if (cu->block)
         freebasicblock(cu->block);
     cu->block = cu->curblock = NULL;
@@ -152,12 +150,13 @@ void printcompiledunit(CompiledUnit *cu) {
     Instr *instr;
     EmObject *ob;
     for (b = cu->block; b != NULL; b = b->next) {
+        printf("block at <0x%08x>\n", b);
         for (ii = 0; ii < b->inxt; ii++) {
-            instr = GET_INSTR_FROM_BLOCK(b,ii);
+            instr = INSTR_AT(b,ii);
             printf("%-20s",
-                    I_STR(instr));
-            if (instr->hasarg) {
-                if (instr->isjump) {
+            I_STR(instr));
+            if (I_HASARG(instr)) {
+                if (I_ISJUMP(instr)) {
                     printf("0x%08x", I_TARGET(instr));
                 } else {
                     printf("%d ", instr->v.arg);
@@ -178,11 +177,12 @@ void printcompiledunit(CompiledUnit *cu) {
         }
         printf("\n");
     }
-
 }
 
-static void compile_identifier(AstNode *sn) {
-    int idx, off;
+static void compile_ast_node(AstNode *sn);
+
+static void compile_identifier(AstNode *sn, int opcode) {
+    int idx;
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
@@ -193,26 +193,39 @@ static void compile_identifier(AstNode *sn) {
         cu->names = listobject_append(cu->names, ob);
         idx = listobject_len(cu->names) - 1;
     }
-    NEXT_INSTR(cu->curblock, off);
-    instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
-    instr->opcode = OP_POP;
-    instr->hasarg = 1;
+    DECREF(ob);
+    instr = next_instr(cu->curblock);
+    instr->opcode = opcode;
     SET_I_ARG(instr, idx);
     SET_I_ROWCOL(instr, sn);
-    DECREF(ob);
 }
 
 static void compile_assign(AstNode *sn) {
 
-    int idx, off;
+    int idx;
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
 
     switch (sn->type) {
     case AST_IDENT:
-        compile_identifier(sn);
+        compile_identifier(sn, OP_POP);
         break;
+
+    case AST_FIELD:
+        compile_ast_node(AST_GET_MEMBER(sn,1)); // field
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_SET_FIELD;
+        break;
+
+    case AST_INDEX:
+        compile_ast_node(AST_GET_MEMBER(sn,1)); // index
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_SET_INDEX;
+        break;
+
     default:
         break;
     }
@@ -220,27 +233,31 @@ static void compile_assign(AstNode *sn) {
 
 static void compile_ast_node(AstNode *sn) {
 
-    int idx, off;
+    int ii, idx, arg, count;
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
 
     switch (sn->type) {
+    case AST_SEQ:
+        for (ii = 0; ii < sn->size; ii++) {
+            compile_ast_node(AST_GET_MEMBER(sn,ii));
+        }
+        break;
+
     case AST_ASSIGN:
         compile_ast_node(AST_GET_MEMBER(sn,1));
         compile_assign(AST_GET_MEMBER(sn,0));
         break;
 
     case AST_IDENT:
-        compile_identifier(sn);
+        compile_identifier(sn, OP_PUSH);
         break;
 
     case AST_CALL:
         compile_ast_node(AST_GET_MEMBER(sn,1)); // the parameters
         compile_ast_node(AST_GET_MEMBER(sn,0)); // the func
-        NEXT_INSTR(cu->curblock, off)
-        ;
-        instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
+        instr = next_instr(cu->curblock);
         instr->opcode = OP_CALL;
         SET_I_ROWCOL(instr, sn)
         ;
@@ -253,58 +270,86 @@ static void compile_ast_node(AstNode *sn) {
             cu->consts = listobject_append(cu->consts, ob);
             idx = listobject_len(cu->consts) - 1;
         }
-        NEXT_INSTR(cu->curblock, off)
-        ;
-        instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
+        DECREF(ob);
+        instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
-        instr->hasarg = 1;
         SET_I_ARG(instr, idx);
         SET_I_ROWCOL(instr, sn)
         ;
-        DECREF(ob);
         break;
 
     case AST_LIST:
-        if (sn->size == 0) {
+        if (sn->size == 0) { // empty list
             ob = hashobject_lookup_by_string(literalTable, "null");
             idx = listobject_index(cu->consts, ob);
             if (idx < 0) {
                 cu->consts = listobject_append(cu->consts, ob);
                 idx = listobject_len(cu->consts) - 1;
             }
-            NEXT_INSTR(cu->curblock, off);
-            instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
+            DECREF(ob);
+            instr = next_instr(cu->curblock);
             instr->opcode = OP_PUSHC;
-            instr->hasarg = 1;
             SET_I_ARG(instr, idx);
             SET_I_ROWCOL(instr, sn);
-            DECREF(ob);
+        } else { // non-empty list
+            /*
+             * Regular parameter first
+             */
+            count = 0;
+            for (ii = 0; ii < sn->size; ii++) {
+                if (AST_GET_MEMBER(sn,ii)->type != AST_KVPAIR) {
+                    compile_ast_node(AST_GET_MEMBER(sn,ii));
+                    count++;
+                }
+            }
+            /*
+             * Process any keyword style params
+             */
+            if (count != sn->size) { // still have keyword args
+                for (ii = 0; ii < sn->size; ii++) {
+                    if (AST_GET_MEMBER(sn,ii)->type == AST_KVPAIR) {
+                        compile_ast_node(AST_GET_MEMBER(sn,ii));
+                    }
+                }
+                instr = next_instr(cu->curblock);
+                instr->opcode = OP_MKHASH;
+                SET_I_ARG(instr, count);
+                SET_I_ROWCOL(instr, sn);
+                count++; // hash is only 1 more element for the list
+            }
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_MKLIST;
+            SET_I_ARG(instr, count);
+            SET_I_ROWCOL(instr, sn);
         }
+        break;
+
+    case AST_KVPAIR:
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        compile_ast_node(AST_GET_MEMBER(sn,1));
         break;
 
         /*
          * Binary operators
          */
     case AST_ADD:
-        case AST_SUB:
-        case AST_AND:
-        case AST_OR:
-        case AST_XOR:
-        case AST_GT:
-        case AST_LT:
-        case AST_GE:
-        case AST_LE:
-        case AST_EQ:
-        case AST_NE:
-        case AST_MUL:
-        case AST_DIV:
-        case AST_MOD:
-        case AST_POW:
+    case AST_SUB:
+    case AST_AND:
+    case AST_OR:
+    case AST_XOR:
+    case AST_GT:
+    case AST_LT:
+    case AST_GE:
+    case AST_LE:
+    case AST_EQ:
+    case AST_NE:
+    case AST_MUL:
+    case AST_DIV:
+    case AST_MOD:
+    case AST_POW:
         compile_ast_node(AST_GET_MEMBER(sn,0));
         compile_ast_node(AST_GET_MEMBER(sn,1));
-        NEXT_INSTR(cu->curblock, off)
-        ;
-        instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
+        instr = next_instr(cu->curblock);
         instr->opcode = BINOP_OF_ASTTYPE(sn->type);
         break;
 
@@ -312,13 +357,35 @@ static void compile_ast_node(AstNode *sn) {
          * Unary operators
          */
     case AST_PLUS:
-        case AST_MINUS:
-        case AST_NOT:
+    case AST_MINUS:
+    case AST_NOT:
         compile_ast_node(AST_GET_MEMBER(sn,0));
-        NEXT_INSTR(cu->curblock, off)
-        ;
-        instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
+        instr = next_instr(cu->curblock);
         instr->opcode = UNARYOP_OF_ASTTYPE(sn->type);
+        break;
+
+    case AST_IF:
+
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        Basicblock *elseblock, *endblock;
+        elseblock = newbasicblock();
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_FJUMP;
+        SET_I_TARGET(instr, elseblock);
+        compile_ast_node(AST_GET_MEMBER(sn,1));
+        if (AST_GET_MEMBER(sn,2)->size > 0) { // non-empty else clause
+            endblock = newbasicblock();
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_JUMP;
+            SET_I_TARGET(instr, endblock);
+            cu->curblock->next = elseblock;
+            cu->curblock = elseblock;
+            compile_ast_node(AST_GET_MEMBER(sn,2));
+        } else { // empty else clause
+            endblock = elseblock;
+        }
+        cu->curblock->next = endblock;
+        cu->curblock = endblock;
         break;
 
     default:
@@ -327,8 +394,7 @@ static void compile_ast_node(AstNode *sn) {
 
 }
 
-static int
-compiler_init() {
+static int compiler_init() {
     compiler.cu = newcompiledunit();
     return 1;
 }
@@ -353,35 +419,3 @@ compile_ast(AstNode *stree) {
     return compiler.cu;
 }
 
-//static int
-//c_resize_code(CompiledUnit *c) {
-//    c->code =
-//            (unsigned char *) realloc(c->code,
-//                    (c->len + 1000) * sizeof(unsigned char));
-//    if (c->code == NULL) {
-//        log_error(MEMORY_ERROR, "no memory to increase code length");
-//        return 0;
-//    }
-//    c->len += 1000;
-//    return 1;
-//}
-
-//static void
-//c_addbyte(CompiledUnit *c, int byte) {
-//    if (byte < 0 || byte > 255) {
-//        fatal("trying to add invalid byte to code");
-//    }
-//    if (c->nexti >= c->len) {
-//        c_resize_code(c);
-//    }
-//    c->code[c->nexti++] = byte;
-//}
-//
-//static void
-//c_addint(CompiledUnit *c, int i) {
-//    if (i < 0) {
-//        fatal("trying to add invalid int to code");
-//    }
-//    c_addbyte(c, i & 0xff);
-//    c_addbyte(c, i >> 8);
-//}

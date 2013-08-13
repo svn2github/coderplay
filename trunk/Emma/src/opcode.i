@@ -18,14 +18,19 @@ char *opcode_types[] = {
         "OP_NOT",
         "OP_PLUS",
         "OP_MINUS",
+        "OP_CALL",
+        "OP_SET_FIELD",
+        "OP_SET_INDEX",
+        "OP_SET_IDXRANGE",
+        "OP_SET_SLICE",
         "OP_HASARG",
-        "OP_LABEL",
         "OP_PUSH",
         "OP_PUSHC",
         "OP_POP",
         "OP_FUNC",
-        "OP_CALL",
         "OP_RETURN",
         "OP_JUMP",
-        "OP_FJUMP"
+        "OP_FJUMP",
+        "OP_MKLIST",
+        "OP_MKHASH"
 };

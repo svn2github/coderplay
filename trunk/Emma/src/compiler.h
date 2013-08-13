@@ -11,8 +11,6 @@
 
 
 typedef struct _instr {
-    unsigned isjump :1;     // this member use one bit
-    unsigned hasarg :1;
     int opcode;
     union {
         int arg;
@@ -23,6 +21,7 @@ typedef struct _instr {
 } Instr;
 
 typedef struct _basic_block {
+    int lineno;         // starting line number of opcode list in this block
     struct _basic_block *next;
     Instr *instrlist;
     int inxt;   // next instruction

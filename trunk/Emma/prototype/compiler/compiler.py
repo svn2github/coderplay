@@ -23,19 +23,28 @@ not
 plus
 minus
 
-hasarg
+call
 
-label
+set_field
+set_index
+set_idxrange
+set_slice
+
+hasarg
 
 push
 pushc
 pop
 func
-call
 return
 jump
 fjump
+
+mklist
+mkhash
+
 '''
+
 
 def gen_c_code():
     opcodelist = ['OP_'+str.upper(t) for t in opcode_string.split('\n') if t != '']
