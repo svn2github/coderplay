@@ -87,12 +87,15 @@ next_instr_from_block(Basicblock *b) {
         newsize = oldsize << 1;
         b->instrlist = (Instr *) realloc(b->instrlist, newsize);
         if (b->instrlist == NULL) {
+            fatal("can get no more instruction");
             return -1;
         }
         memset((char *) b->instrlist + oldsize, 0, newsize - oldsize);
+        b->ilen <<= 1;
     }
     return b->inxt++;
 }
+static void freebasicblock(Basicblock *b);
 
 static CompiledUnit *
 newcompiledunit() {
@@ -110,15 +113,15 @@ newcompiledunit() {
     c->curblock = c->block;
 
     if ((c->consts = newlistobject(0)) == NULL) {
-        DEL(c->block);
+        freebasicblock(c->block);
         DEL(c);
         return log_error(MEMORY_ERROR,
                 "not enough memory for consts of compiled unit");
     }
 
     if ((c->names = newlistobject(0)) == NULL) {
-        DEL(c->block);
-        DEL(c->consts);
+        freeobj(c->consts);
+        freebasicblock(c->block);
         DEL(c);
         return log_error(MEMORY_ERROR,
                 "not enough memory for names of compiled unit");
@@ -311,83 +314,6 @@ CompiledUnit *
 compile_ast(AstNode *stree) {
     int ii;
 
-    char *var[] = {
-            "a",
-            "b",
-            "c",
-            "d",
-            "e",
-            "f",
-            "g",
-            "h",
-            "i",
-            "j",
-            "k",
-            "l",
-            "m",
-            "n",
-            "o",
-            "p",
-            "q",
-            "r",
-            "s",
-            "t",
-            "u",
-            "v",
-            "w",
-            "x",
-            "y",
-            "z",
-            "a",
-            "b",
-            "c",
-            "d",
-            "e",
-            "f",
-            "g",
-            "h",
-            "i",
-            "j",
-            "k",
-            "l",
-            "m",
-            "n",
-            "o",
-            "p",
-            "q",
-            "r",
-            "s",
-            "t",
-            "u",
-            "v",
-            "w",
-            "x",
-            "y",
-            "z",
-};
-    EmObject *ob;
-    int idx;
-    EmObject * l = newlistobject(0);
-    for (ii=0;ii<52;ii++) {
-        ob = newstringobject(var[ii]);
-        idx = listobject_index(l, ob);
-        if (idx < 0) {
-            l = listobject_append(l, ob);
-            idx = listobject_len(l) - 1;
-        }
-        DECREF(ob);
-        printf ("idx = %d\n", idx);
-    }
-    for (ii=0;ii<listobject_len(l);ii++) {
-        ob = listobject_get(l, ii);
-        printf(" = %s\n", tostrobj(ob));
-        DECREF(ob);
-    }
-
-    freeobj(l);
-
-
-    /*
     compiler_init();
 
     if (setjmp(__compile_buf) == 0) {
@@ -395,11 +321,11 @@ compile_ast(AstNode *stree) {
             compile_ast_node(AST_GET_MEMBER(stree,ii));
         }
     } else {
+        fatal("compiler error");
         fprintf(stderr, "ERROR compile\n");
         freecompiledunit(compiler.cu);
         compiler.cu = NULL;
     }
-    */
 
     return compiler.cu;
 }
