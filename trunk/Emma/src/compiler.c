@@ -93,6 +93,7 @@ freebasicblock(Basicblock *b) {
     if (b->next)
         freebasicblock(b->next);
     DEL(b->instrlist);
+    DEL(b);
 }
 
 void
@@ -103,7 +104,6 @@ freecompiledunit(CompiledUnit *cu) {
     freeobj(cu->consts);
     freeobj(cu->names);
 }
-
 
 
 void printcompiled(CompiledUnit *cu) {
