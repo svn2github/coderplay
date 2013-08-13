@@ -181,6 +181,52 @@ void printcompiledunit(CompiledUnit *cu) {
 
 static void compile_ast_node(AstNode *sn);
 
+static void compile_if(AstNode *sn) {
+    CompiledUnit *cu = compiler.cu;
+    Instr *instr;
+    Basicblock *elseblock, *endblock;
+
+    compile_ast_node(AST_GET_MEMBER(sn,0)); // test
+    elseblock = newbasicblock();
+    instr = next_instr(cu->curblock);
+    instr->opcode = OP_FJUMP;
+    SET_I_TARGET(instr, elseblock);
+    compile_ast_node(AST_GET_MEMBER(sn,1));
+    if (AST_GET_MEMBER(sn,2)->size > 0) { // non-empty else clause
+        endblock = newbasicblock();
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_JUMP;
+        SET_I_TARGET(instr, endblock);
+        cu->curblock->next = elseblock;
+        cu->curblock = elseblock;
+        compile_ast_node(AST_GET_MEMBER(sn,2));
+    } else { // empty else clause
+        endblock = elseblock;
+    }
+    cu->curblock->next = endblock;
+    cu->curblock = endblock;
+}
+
+static void compile_while(AstNode *sn) {
+    CompiledUnit *cu = compiler.cu;
+    Instr *instr;
+    Basicblock *whileblock, *endblock;
+    whileblock = newbasicblock();
+    endblock = newbasicblock();
+    cu->curblock->next = whileblock;
+    cu->curblock = whileblock;
+    compile_ast_node(AST_GET_MEMBER(sn,0));
+    instr = next_instr(cu->curblock);
+    instr->opcode = OP_FJUMP;
+    SET_I_TARGET(instr, endblock);
+    compile_ast_node(AST_GET_MEMBER(sn,1));
+    instr = next_instr(cu->curblock);
+    instr->opcode = OP_JUMP;
+    SET_I_TARGET(instr, whileblock);
+    cu->curblock->next = endblock;
+    cu->curblock = endblock;
+}
+
 static void compile_identifier(AstNode *sn, int opcode) {
     int idx;
     EmObject *ob;
@@ -365,27 +411,11 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_IF:
+        compile_if(sn);
+        break;
 
-        compile_ast_node(AST_GET_MEMBER(sn,0));
-        Basicblock *elseblock, *endblock;
-        elseblock = newbasicblock();
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_FJUMP;
-        SET_I_TARGET(instr, elseblock);
-        compile_ast_node(AST_GET_MEMBER(sn,1));
-        if (AST_GET_MEMBER(sn,2)->size > 0) { // non-empty else clause
-            endblock = newbasicblock();
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_JUMP;
-            SET_I_TARGET(instr, endblock);
-            cu->curblock->next = elseblock;
-            cu->curblock = elseblock;
-            compile_ast_node(AST_GET_MEMBER(sn,2));
-        } else { // empty else clause
-            endblock = elseblock;
-        }
-        cu->curblock->next = endblock;
-        cu->curblock = endblock;
+    case AST_WHILE:
+        compile_while(sn);
         break;
 
     default:
