@@ -224,6 +224,22 @@ static void compile_ast_node(AstNode *sn) {
         compile_assign(AST_GET_MEMBER(sn,0));
         break;
 
+    case AST_IDENT:
+        ob = newstringobject(AST_GET_LEXEME_SAFE(sn));
+        idx = listobject_index(cu->names, ob);
+        if (idx < 0) {
+            listobject_append(cu->names, ob);
+            idx = listobject_len(cu->names) - 1;
+        }
+        NEXT_INSTR(cu->curblock, off);
+        instr = GET_INSTR_FROM_BLOCK(cu->curblock,off);
+        instr->opcode = OP_PUSH;
+        instr->hasarg = 1;
+        SET_I_ARG(instr, idx);
+        SET_I_ROWCOL(instr, sn);
+        DECREF(ob);
+        break;
+
     case AST_LITERAL:
         ob = hashobject_lookup_by_string(literalTable, AST_GET_LEXEME_SAFE(sn));
         idx = listobject_index(cu->consts, ob);
@@ -239,6 +255,7 @@ static void compile_ast_node(AstNode *sn) {
         SET_I_ROWCOL(instr, sn);
         DECREF(ob);
         break;
+
 
 
     /*
