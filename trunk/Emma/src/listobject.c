@@ -36,6 +36,7 @@ void listobject_free(EmObject *ob) {
             DECREF(lo->list[i]);
         }
     }
+    DEL(lo->list);
     DEL(lo);
 }
 
