@@ -57,14 +57,22 @@ int run_file() {
 
     Node *ptree;
     AstNode *stree;
+    CompiledUnit *cu;
 
     ptree = parse();
     if (ptree) {
         printtree(ptree);
 
         stree = ast_from_ptree(ptree);
-        freetree(ptree);
+
         printstree(stree);
+
+
+        cu = compile_ast(stree);
+        freecompiledunit(cu);
+
+
+        freetree(ptree);
         freestree(stree);
 
     }

@@ -1,5 +1,5 @@
-#include "allobject.h"
 #include "Emma.h"
+#include "token.h"
 #include "lexer.h"
 #include "lexer.i"
 

@@ -9,9 +9,6 @@
 #ifndef NODE_H_
 #define NODE_H_
 
-#include "allobject.h"
-#include "token.h"
-
 #define NCH(n)          (n)->nchildren
 // The ith child from the left, zero based
 #define CHILD(n, i)     (&(n)->child[i])

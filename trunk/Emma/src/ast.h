@@ -8,7 +8,6 @@
 #ifndef AST_H_
 #define AST_H_
 
-#include "Emma.h"
 #include "ast.hi"
 
 #define AST_SET_MEMBER(n,i,c)       (n)->v.members[i] = c

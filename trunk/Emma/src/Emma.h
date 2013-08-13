@@ -13,12 +13,16 @@
 #include <math.h>
 #include <setjmp.h>
 #include <string.h>
+#include <ctype.h>
 #include "allobject.h"
 #include "node.h"
 #include "source.h"
 #include "lexer.h"
 #include "parser.h"
 #include "ast.h"
+#include "opcode.h"
+#include "compiler.h"
+
 
 /*
  * Constant table (hashobject) that stores all constants

@@ -5,7 +5,7 @@
  *      Author: ywang@gmail.com
  */
 
-#include "ast.h"
+#include "Emma.h"
 #include "ast.i"
 
 #define AST_TYPE_OF_BINOP(t,n,i)    if (CHILD(n,i)->type==OR) t=AST_OR; \

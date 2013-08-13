@@ -4,8 +4,7 @@
  *  Created on: 12/08/2013
  *      Author: ywangd
  */
-#include "opcode.h"
-#include "compiler.h"
+#include "Emma.h"
 #include "opcode.i"
 
 static Compiler compiler;
@@ -96,7 +95,7 @@ freebasicblock(Basicblock *b) {
     DEL(b->instrlist);
 }
 
-static void
+void
 freecompiledunit(CompiledUnit *cu) {
     if (cu->block)
         freebasicblock(cu->block);
@@ -179,7 +178,8 @@ static void compile_ast_node(AstNode *sn) {
 
 }
 
-void compile_ast(AstNode *stree) {
+CompiledUnit *
+compile_ast(AstNode *stree) {
 
     compiler.cu = newcompiledunit();
 
@@ -187,6 +187,7 @@ void compile_ast(AstNode *stree) {
     for (ii = 0; ii < stree->size; ii++) {
         compile_ast_node(AST_GET_MEMBER(stree,ii));
     }
+    return compiler.cu;
 }
 
 

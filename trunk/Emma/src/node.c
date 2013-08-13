@@ -4,6 +4,9 @@
  *  Created on: 04/08/2013
  *      Author: ywangd
  */
+
+#include "allobject.h"
+#include "token.h"
 #include "node.h"
 
 #define TOKEN_BASE      256

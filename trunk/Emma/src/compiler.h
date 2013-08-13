@@ -8,14 +8,10 @@
 #ifndef COMPILER_H_
 #define COMPILER_H_
 
-#include "Emma.h"
-
 #define DEFAULT_BLOCK_SIZE      16
 
 #define GET_INSTR_FROM_BLOCK(b,i)       (&(b)->instrlist[i])
 
-#define GET_OPCODE(c,n)       (c)->code[(n)++]
-#define HAS_ARG(c)          (c > OP_HASARG ? 1: 0)
 
 typedef struct _instr {
     unsigned isjump :1;
@@ -47,6 +43,8 @@ typedef struct _compiler {
     CompiledUnit *cu;
 } Compiler;
 
-void compile_ast(AstNode *stree);
+
+void freecompiledunit(CompiledUnit *cu);
+CompiledUnit *compile_ast(AstNode *);
 
 #endif /* COMPILER_H_ */
