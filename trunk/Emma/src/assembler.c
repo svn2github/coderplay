@@ -5,6 +5,7 @@
  *      Author: ywangd
  */
 
+#include "Emma.h"
 
 //static int
 //c_resize_code(CompiledUnit *c) {

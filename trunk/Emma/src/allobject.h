@@ -20,6 +20,8 @@
 #include "intobject.h"
 #include "floatobject.h"
 #include "listobject.h"
+#include "funcobject.h"
+#include "codeobject.h"
 
 
 #endif /* ALLOBJECT_H_ */
