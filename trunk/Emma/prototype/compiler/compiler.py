@@ -26,12 +26,14 @@ minus
 rot_two
 rot_three
 
+print
+
 call
 
 set_field
 set_index
-set_idxrange
 set_slice
+set_idxlist
 
 setup_for
 for

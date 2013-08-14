@@ -19,24 +19,25 @@
 #define OP_MINUS             18
 #define OP_ROT_TWO           19
 #define OP_ROT_THREE         20
-#define OP_CALL              21
-#define OP_SET_FIELD         22
-#define OP_SET_INDEX         23
-#define OP_SET_IDXRANGE      24
+#define OP_PRINT             21
+#define OP_CALL              22
+#define OP_SET_FIELD         23
+#define OP_SET_INDEX         24
 #define OP_SET_SLICE         25
-#define OP_SETUP_FOR         26
-#define OP_FOR               27
+#define OP_SET_IDXLIST       26
+#define OP_SETUP_FOR         27
+#define OP_FOR               28
 
-#define OP_HASARG            28
+#define OP_HASARG            29
 
-#define OP_PUSH              29
-#define OP_PUSHC             30
-#define OP_POP               31
-#define OP_FUNC              32
-#define OP_RETURN            33
-#define OP_JUMP              34
-#define OP_FJUMP             35
-#define OP_MKLIST            36
-#define OP_MKHASH            37
+#define OP_PUSH              30
+#define OP_PUSHC             31
+#define OP_POP               32
+#define OP_FUNC              33
+#define OP_RETURN            34
+#define OP_JUMP              35
+#define OP_FJUMP             36
+#define OP_MKLIST            37
+#define OP_MKHASH            38
 
 extern char *opcode_types[];

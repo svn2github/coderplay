@@ -434,17 +434,34 @@ static void compile_assign(AstNode *sn) {
         break;
 
     case AST_FIELD:
-        compile_ast_node(AST_GET_MEMBER(sn,1)); // field
         compile_ast_node(AST_GET_MEMBER(sn,0));
+        compile_ast_node(AST_GET_MEMBER(sn,1)); // field
         instr = next_instr(cu->curblock);
         instr->opcode = OP_SET_FIELD;
         break;
 
     case AST_INDEX:
-        compile_ast_node(AST_GET_MEMBER(sn,1)); // index
         compile_ast_node(AST_GET_MEMBER(sn,0));
+        compile_ast_node(AST_GET_MEMBER(sn,1)); // index
         instr = next_instr(cu->curblock);
         instr->opcode = OP_SET_INDEX;
+        break;
+
+    case AST_SLICE:
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        compile_ast_node(AST_GET_MEMBER(sn,1)); // slice
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_SET_SLICE;
+        break;
+
+    case AST_IDXLIST:
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        compile_ast_node(AST_GET_MEMBER(sn,1)); // idxlist
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_MKLIST;
+        SET_I_ARG(instr, AST_GET_MEMBER(sn,1)->size);
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_SET_IDXLIST;
         break;
 
     default:
@@ -500,7 +517,7 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_LIST:
-        for (ii = 0; sn->size; ii++) {
+        for (ii = 0; ii<sn->size; ii++) {
             compile_ast_node(AST_GET_MEMBER(sn,ii));
         }
         break;
@@ -567,6 +584,25 @@ static void compile_ast_node(AstNode *sn) {
         instr = next_instr(cu->curblock);
         instr->opcode = OP_JUMP;
         SET_I_TARGET(instr, GET_BREAK_BLOCK(cu));
+        break;
+
+    case AST_PRINT:
+        compile_ast_node(AST_GET_MEMBER(sn,0)); // the destination
+        compile_ast_node(AST_GET_MEMBER(sn,1)); // the item list
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_MKLIST;
+        SET_I_ARG(instr, AST_GET_MEMBER(sn,1)->size);
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_PRINT;
+        break;
+
+    case AST_READ:
+        break;
+
+    case AST_FUNCDEF:
+        break;
+
+    case AST_RETURN:
         break;
 
     default:
