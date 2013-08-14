@@ -23,12 +23,18 @@ not
 plus
 minus
 
+rot_two
+rot_three
+
 call
 
 set_field
 set_index
 set_idxrange
 set_slice
+
+setup_for
+for
 
 hasarg
 

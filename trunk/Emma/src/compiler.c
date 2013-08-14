@@ -12,7 +12,9 @@
 #define INSTR_AT(b,i)       (&(b)->instrlist[i])
 #define I_STR(instr)        opcode_types[instr->opcode]
 #define I_HASARG(instr)     (instr)->opcode>OP_HASARG?1:0
-#define I_ISJUMP(instr)     ((instr)->opcode==OP_JUMP || (instr)->opcode == OP_FJUMP)?1:0
+#define I_ISJUMP(instr)     ((instr)->opcode==OP_JUMP || \
+                                (instr)->opcode == OP_FJUMP || \
+                                (instr)->opcode == OP_FOR) ? 1 : 0
 #define I_ARG(instr)        instr->v.arg
 #define I_TARGET(instr)     instr->v.target
 
@@ -20,6 +22,9 @@
 #define SET_I_TARGET(instr,t)   instr->v.target = t
 #define SET_I_ROWCOL(instr,sn)  instr->row=sn->row; \
                                     instr->col=sn->col
+
+#define SET_NEW_BLOCK(cu,b)     (cu)->curblock->next = b; \
+                                    (cu)->curblock = b
 
 #define BINOP_OF_ASTTYPE(t)     t==AST_ADD ? OP_ADD : \
                                     (t==AST_SUB ? OP_SUB : \
@@ -38,6 +43,9 @@
 
 #define UNARYOP_OF_ASTTYPE(t)   t==AST_PLUS ? OP_PLUS : \
                                     (t==AST_MINUS ? OP_MINUS : OP_NOT)
+
+
+
 
 static Compiler compiler;
 static jmp_buf __compile_buf;
@@ -180,6 +188,8 @@ void printcompiledunit(CompiledUnit *cu) {
 }
 
 static void compile_ast_node(AstNode *sn);
+static void compile_assign(AstNode *sn);
+static void compile_identifier(AstNode *sn, int opcode);
 
 static void compile_if(AstNode *sn) {
     CompiledUnit *cu = compiler.cu;
@@ -225,6 +235,92 @@ static void compile_while(AstNode *sn) {
     SET_I_TARGET(instr, whileblock);
     cu->curblock->next = endblock;
     cu->curblock = endblock;
+}
+
+static void compile_for(AstNode *sn) {
+    CompiledUnit *cu = compiler.cu;
+    Instr *instr;
+    Basicblock *forblock, *endblock;
+    forblock = newbasicblock();
+    endblock = newbasicblock();
+    // The loop variables: start, end, step
+    compile_ast_node(AST_GET_MEMBER(sn,1));
+    instr = next_instr(cu->curblock);
+    // change stack order to step, end, start
+    instr->opcode = OP_ROT_THREE;
+    // Assign start to counter
+    compile_assign(AST_GET_MEMBER(sn,0));
+    // Setup the for loop, including pre-decrease counter
+    instr = next_instr(cu->curblock);
+    instr->opcode = OP_SETUP_FOR;
+
+    /*
+     * Now the for block
+     */
+    SET_NEW_BLOCK(cu,forblock);
+    /*
+     * The FOR instruction increase the counter and test for
+     * the end. Then push them back for next loop iteration.
+     */
+    instr->opcode = OP_FOR;
+    SET_I_TARGET(instr,endblock);
+    // The loop body
+    compile_ast_node(AST_GET_MEMBER(sn,2));
+
+    // End of the for loop
+    SET_NEW_BLOCK(cu,endblock);
+}
+
+static void compile_list(AstNode *sn) {
+    int ii, idx, count;
+    EmObject *ob;
+    CompiledUnit *cu = compiler.cu;
+    Instr *instr;
+    if (sn->size == 0) { // empty list
+        ob = hashobject_lookup_by_string(literalTable, "null");
+        idx = listobject_index(cu->consts, ob);
+        if (idx < 0) {
+            cu->consts = listobject_append(cu->consts, ob);
+            idx = listobject_len(cu->consts) - 1;
+        }
+        DECREF(ob);
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_PUSHC;
+        SET_I_ARG(instr, idx);
+        SET_I_ROWCOL(instr, sn)
+        ;
+    } else { // non-empty list
+        /*
+         * Regular first
+         */
+        count = 0;
+        for (ii = 0; ii < sn->size; ii++) {
+            if (AST_GET_MEMBER(sn,ii)->type != AST_KVPAIR) {
+                compile_ast_node(AST_GET_MEMBER(sn,ii));
+                count++;
+            }
+        }
+        /*
+         * Process any keyword style params
+         */
+        if (count != sn->size) { // still have keyword args
+            for (ii = 0; ii < sn->size; ii++) {
+                if (AST_GET_MEMBER(sn,ii)->type == AST_KVPAIR) {
+                    compile_ast_node(AST_GET_MEMBER(sn,ii));
+                }
+            }
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_MKHASH;
+            SET_I_ARG(instr, count);
+            SET_I_ROWCOL(instr, sn);
+            count++; // hash is only 1 more element for the list
+        }
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_MKLIST;
+        SET_I_ARG(instr, count);
+        SET_I_ROWCOL(instr, sn)
+        ;
+    }
 }
 
 static void compile_identifier(AstNode *sn, int opcode) {
@@ -279,7 +375,7 @@ static void compile_assign(AstNode *sn) {
 
 static void compile_ast_node(AstNode *sn) {
 
-    int ii, idx, arg, count;
+    int ii, idx, count;
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
@@ -325,49 +421,7 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_LIST:
-        if (sn->size == 0) { // empty list
-            ob = hashobject_lookup_by_string(literalTable, "null");
-            idx = listobject_index(cu->consts, ob);
-            if (idx < 0) {
-                cu->consts = listobject_append(cu->consts, ob);
-                idx = listobject_len(cu->consts) - 1;
-            }
-            DECREF(ob);
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_PUSHC;
-            SET_I_ARG(instr, idx);
-            SET_I_ROWCOL(instr, sn);
-        } else { // non-empty list
-            /*
-             * Regular parameter first
-             */
-            count = 0;
-            for (ii = 0; ii < sn->size; ii++) {
-                if (AST_GET_MEMBER(sn,ii)->type != AST_KVPAIR) {
-                    compile_ast_node(AST_GET_MEMBER(sn,ii));
-                    count++;
-                }
-            }
-            /*
-             * Process any keyword style params
-             */
-            if (count != sn->size) { // still have keyword args
-                for (ii = 0; ii < sn->size; ii++) {
-                    if (AST_GET_MEMBER(sn,ii)->type == AST_KVPAIR) {
-                        compile_ast_node(AST_GET_MEMBER(sn,ii));
-                    }
-                }
-                instr = next_instr(cu->curblock);
-                instr->opcode = OP_MKHASH;
-                SET_I_ARG(instr, count);
-                SET_I_ROWCOL(instr, sn);
-                count++; // hash is only 1 more element for the list
-            }
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_MKLIST;
-            SET_I_ARG(instr, count);
-            SET_I_ROWCOL(instr, sn);
-        }
+        compile_list(sn);
         break;
 
     case AST_KVPAIR:
@@ -416,6 +470,10 @@ static void compile_ast_node(AstNode *sn) {
 
     case AST_WHILE:
         compile_while(sn);
+        break;
+
+    case AST_FOR:
+        compile_for(sn);
         break;
 
     default:
