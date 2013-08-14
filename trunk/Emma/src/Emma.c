@@ -61,10 +61,10 @@ int run_file() {
 
     ptree = parse();
     if (ptree) {
-        printtree(ptree);
+        //printtree(ptree);
 
         stree = ast_from_ptree(ptree);
-        printstree(stree);
+        //printstree(stree);
 
 
         cu = compile_ast(stree);

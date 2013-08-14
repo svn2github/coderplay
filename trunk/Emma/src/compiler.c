@@ -26,6 +26,33 @@
 #define SET_NEW_BLOCK(cu,b)     (cu)->curblock->next = b; \
                                     (cu)->curblock = b
 
+#define PUSH_CONTINUE_BLOCK(cu,b)   (cu)->continueblock[cu->i_continueblock++] = b; \
+                                        if (cu->i_continueblock >= MAX_NEST_LEVEL) { \
+                                            log_error(MEMORY_ERROR, "continue block overflow"); \
+                                            longjmp(__compile_buf, 1); \
+                                        }
+
+#define PUSH_BREAK_BLOCK(cu,b)      (cu)->breakblock[cu->i_breakblock++] = b; \
+                                        if (cu->i_breakblock >= MAX_NEST_LEVEL) { \
+                                            log_error(MEMORY_ERROR, "break block overflow"); \
+                                            longjmp(__compile_buf, 1); \
+                                        }
+
+#define POP_CONTINUE_BLOCK(cu)      (cu)->i_continueblock--; \
+                                        if (cu->i_continueblock < 0) { \
+                                            log_error(MEMORY_ERROR, "continue block underflow"); \
+                                            longjmp(__compile_buf, 1); \
+                                        }
+
+#define POP_BREAK_BLOCK(cu)         (cu)->i_breakblock--; \
+                                        if (cu->i_breakblock < 0) { \
+                                            log_error(MEMORY_ERROR, "break block underflow"); \
+                                            longjmp(__compile_buf, 1); \
+                                        }
+
+#define GET_CONTINUE_BLOCK(cu)      (cu)->continueblock[cu->i_continueblock-1]
+#define GET_BREAK_BLOCK(cu)         (cu)->breakblock[cu->i_breakblock-1]
+
 #define BINOP_OF_ASTTYPE(t)     t==AST_ADD ? OP_ADD : \
                                     (t==AST_SUB ? OP_SUB : \
                                     (t==AST_AND ? OP_AND : \
@@ -43,9 +70,6 @@
 
 #define UNARYOP_OF_ASTTYPE(t)   t==AST_PLUS ? OP_PLUS : \
                                     (t==AST_MINUS ? OP_MINUS : OP_NOT)
-
-
-
 
 static Compiler compiler;
 static jmp_buf __compile_buf;
@@ -103,34 +127,51 @@ static void freebasicblock(Basicblock *b);
 static CompiledUnit *
 newcompiledunit() {
 
-    CompiledUnit *c = (CompiledUnit *) malloc(sizeof(CompiledUnit));
-    if (c == NULL) {
+    CompiledUnit *cu = (CompiledUnit *) malloc(sizeof(CompiledUnit));
+    if (cu == NULL) {
         return log_error(MEMORY_ERROR,
                 "not enough memory to create new compiled unit");
     }
 
-    if ((c->block = newbasicblock()) == NULL) {
-        DEL(c);
+    if ((cu->block = newbasicblock()) == NULL) {
+        DEL(cu);
         return NULL;;
     }
-    c->curblock = c->block;
+    cu->curblock = cu->block;
 
-    if ((c->consts = newlistobject(0)) == NULL) {
-        freebasicblock(c->block);
-        DEL(c);
+    if ((cu->consts = newlistobject(0)) == NULL) {
+        freebasicblock(cu->block);
+        DEL(cu);
         return log_error(MEMORY_ERROR,
                 "not enough memory for consts of compiled unit");
     }
 
-    if ((c->names = newlistobject(0)) == NULL) {
-        freeobj(c->consts);
-        freebasicblock(c->block);
-        DEL(c);
+    if ((cu->names = newlistobject(0)) == NULL) {
+        freeobj(cu->consts);
+        freebasicblock(cu->block);
+        DEL(cu);
         return log_error(MEMORY_ERROR,
                 "not enough memory for names of compiled unit");
     }
 
-    return c;
+    cu->continueblock = (Basicblock **) malloc(
+            sizeof(Basicblock *) * MAX_NEST_LEVEL);
+    cu->breakblock = (Basicblock **) malloc(
+            sizeof(Basicblock *) * MAX_NEST_LEVEL);
+
+    if (cu->continueblock == NULL || cu->breakblock == NULL) {
+        DEL(cu->continueblock);
+        DEL(cu->breakblock);
+        freeobj(cu->consts);
+        freebasicblock(cu->block);
+        DEL(cu);
+        return log_error(MEMORY_ERROR,
+                "no memory for continue and break block management");
+    }
+
+    cu->i_continueblock = cu->i_breakblock = 0;
+
+    return cu;
 }
 
 static void freebasicblock(Basicblock *b) {
@@ -147,6 +188,8 @@ void freecompiledunit(CompiledUnit *cu) {
     cu->block = cu->curblock = NULL;
     freeobj(cu->consts);
     freeobj(cu->names);
+    DEL(cu->continueblock);
+    DEL(cu->breakblock);
     DEL(cu)
     ;
 }
@@ -221,28 +264,49 @@ static void compile_while(AstNode *sn) {
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
     Basicblock *whileblock, *endblock;
+
+    // The marking blocks
     whileblock = newbasicblock();
     endblock = newbasicblock();
-    cu->curblock->next = whileblock;
-    cu->curblock = whileblock;
+
+    // Start new block for while
+    SET_NEW_BLOCK(cu, whileblock);
+    // test
     compile_ast_node(AST_GET_MEMBER(sn,0));
     instr = next_instr(cu->curblock);
     instr->opcode = OP_FJUMP;
     SET_I_TARGET(instr, endblock);
+
+    // manage possible break or continue
+    PUSH_CONTINUE_BLOCK(cu, whileblock);
+    PUSH_BREAK_BLOCK(cu, endblock);
+
+    // while body
     compile_ast_node(AST_GET_MEMBER(sn,1));
+
+    // manage possible break or continue
+    POP_CONTINUE_BLOCK(cu);
+    POP_BREAK_BLOCK(cu);
+
+    // loop to the start
     instr = next_instr(cu->curblock);
     instr->opcode = OP_JUMP;
     SET_I_TARGET(instr, whileblock);
-    cu->curblock->next = endblock;
-    cu->curblock = endblock;
+
+    // Start new block after while
+    SET_NEW_BLOCK(cu, endblock);
+
 }
 
 static void compile_for(AstNode *sn) {
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
     Basicblock *forblock, *endblock;
+
+    // The marking blocks
     forblock = newbasicblock();
     endblock = newbasicblock();
+
     // The loop variables: start, end, step
     compile_ast_node(AST_GET_MEMBER(sn,1));
     instr = next_instr(cu->curblock);
@@ -257,21 +321,36 @@ static void compile_for(AstNode *sn) {
     /*
      * Now the for block
      */
-    SET_NEW_BLOCK(cu,forblock);
+    // new block for the forloop
+    SET_NEW_BLOCK(cu, forblock);
     /*
      * The FOR instruction increase the counter and test for
      * the end. Then push them back for next loop iteration.
      */
     instr->opcode = OP_FOR;
-    SET_I_TARGET(instr,endblock);
+    SET_I_TARGET(instr, endblock);
+
+    // manage possible break or continue
+    PUSH_CONTINUE_BLOCK(cu, forblock);
+    PUSH_BREAK_BLOCK(cu, endblock);
+
     // The loop body
     compile_ast_node(AST_GET_MEMBER(sn,2));
 
+    // manage possible break or continue
+    POP_CONTINUE_BLOCK(cu);
+    POP_BREAK_BLOCK(cu);
+
+    // loop to the start
+    instr = next_instr(cu->curblock);
+    instr->opcode = OP_JUMP;
+    SET_I_TARGET(instr, forblock);
+
     // End of the for loop
-    SET_NEW_BLOCK(cu,endblock);
+    SET_NEW_BLOCK(cu, endblock);
 }
 
-static void compile_list(AstNode *sn) {
+static void compile_arglist(AstNode *sn) {
     int ii, idx, count;
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
@@ -291,7 +370,7 @@ static void compile_list(AstNode *sn) {
         ;
     } else { // non-empty list
         /*
-         * Regular first
+         * Regular positional parameter first
          */
         count = 0;
         for (ii = 0; ii < sn->size; ii++) {
@@ -397,8 +476,8 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_CALL:
-        compile_ast_node(AST_GET_MEMBER(sn,1)); // the parameters
         compile_ast_node(AST_GET_MEMBER(sn,0)); // the func
+        compile_arglist(AST_GET_MEMBER(sn,1)); // the parameter
         instr = next_instr(cu->curblock);
         instr->opcode = OP_CALL;
         SET_I_ROWCOL(instr, sn)
@@ -421,7 +500,9 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_LIST:
-        compile_list(sn);
+        for (ii = 0; sn->size; ii++) {
+            compile_ast_node(AST_GET_MEMBER(sn,ii));
+        }
         break;
 
     case AST_KVPAIR:
@@ -474,6 +555,18 @@ static void compile_ast_node(AstNode *sn) {
 
     case AST_FOR:
         compile_for(sn);
+        break;
+
+    case AST_CONTINUE:
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_JUMP;
+        SET_I_TARGET(instr, GET_CONTINUE_BLOCK(cu));
+        break;
+
+    case AST_BREAK:
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_JUMP;
+        SET_I_TARGET(instr, GET_BREAK_BLOCK(cu));
         break;
 
     default:
