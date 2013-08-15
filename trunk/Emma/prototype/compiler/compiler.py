@@ -43,7 +43,8 @@ hasarg
 push
 pushc
 pop
-func
+funcdef
+classdef
 return
 jump
 fjump
