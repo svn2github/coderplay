@@ -15,7 +15,7 @@ newcodeobject(int nbytes) {
         log_error(MEMORY_ERROR, "no memory for new code object");
         return NULL;
     }
-    if ((co->code = (char *) malloc(sizeof(char) * nbytes)) == NULL) {
+    if ((co->code = (unsigned char *) malloc(sizeof(unsigned char) * nbytes)) == NULL) {
         DEL(co);
         log_error(MEMORY_ERROR, "no memory for code string in code object");
         return NULL;

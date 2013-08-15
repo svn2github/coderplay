@@ -11,7 +11,7 @@
 
 typedef struct _codeobject {
     OB_HEAD;
-    char *code;
+    unsigned char *code;
     int nbytes;
     EmObject *consts;
     EmObject *names;
