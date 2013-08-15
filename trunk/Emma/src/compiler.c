@@ -690,6 +690,7 @@ static void compile_ast_node(AstNode *sn) {
         // here for code simplicity.
         listobject_append(cu->consts, ob);
         idx = listobject_len(cu->consts) - 1;
+        DECREF(ob);
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
