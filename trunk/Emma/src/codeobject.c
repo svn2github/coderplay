@@ -80,6 +80,10 @@ void codeobject_print(EmObject *ob, FILE *fp) {
     }
 }
 
+int codeobject_boolean(EmObject *ob) {
+    // at least one byte for the OP_END
+    return ((EmCodeObject *) ob)->nbytes > 1 ? 1 : 0;
+}
 
 
 EmTypeObject Codetype = {
@@ -96,6 +100,7 @@ EmTypeObject Codetype = {
         0,                              // tp_setattr
         codeobject_compare,             // tp_compare
         0,                              // tp_hashfunc
+        codeobject_boolean,             // tp_boolean
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence

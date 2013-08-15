@@ -112,6 +112,12 @@ long hashobj(EmObject *ob) {
     return (*ob->type->tp_hashfunc)(ob);
 }
 
+int boolobj(EmObject *ob) {
+    if (ob->type->tp_boolean == NULL) {
+        return 1;
+    }
+    return (*ob->type->tp_boolean)(ob);
+}
 
 /*
  * The null object singleton
@@ -123,6 +129,10 @@ void null_print(EmObject *ob, FILE *fp) {
 
 char *null_tostr(EmObject *ob) {
     return "null";
+}
+
+int null_boolean(EmObject *ob) {
+    return 0;
 }
 
 EmTypeObject Nulltype = {
@@ -139,6 +149,7 @@ EmTypeObject Nulltype = {
         0,                              // tp_setattr
         0,                              // tp_compare
         0,                              // tp_hashfunc
+        null_boolean,                   // tp_boolean
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence

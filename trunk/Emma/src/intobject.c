@@ -44,6 +44,10 @@ long intobject_hash(EmObject *ob) {
     return hashval;
 }
 
+int intobject_boolean(EmObject *ob) {
+    return ((EmIntObject *)ob)->ival != 0 ? 1 : 0;
+}
+
 
 EmTypeObject Inttype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -59,6 +63,7 @@ EmTypeObject Inttype = {
         0,                              // tp_setattr
         intobject_compare,              // tp_compare
         intobject_hash,                 // tp_hashfunc
+        intobject_boolean,              // tp_boolean
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence

@@ -77,6 +77,9 @@ long stringobject_hash(EmObject *ob) {
     return hashval;
 }
 
+int stringobject_boolean(EmObject *ob) {
+    return strlen(((EmStringObject *)ob)->sval) > 0 ? 1 : 0;
+}
 
 
 
@@ -94,6 +97,7 @@ EmTypeObject Stringtype = {
         0,                              // tp_setattr
         stringobject_compare,           // tp_compare
         stringobject_hash,              // tp_hashfunc
+        stringobject_boolean,           // tp_boolean
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence

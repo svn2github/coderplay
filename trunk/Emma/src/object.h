@@ -84,6 +84,7 @@ typedef struct _typeobject {
     int (*tp_setattr)(EmObject *, char *, EmObject *);
     int (*tp_compare)(EmObject *, EmObject *);
     long (*tp_hashfunc)(EmObject *);
+    int (*tp_boolean)(EmObject *);
 
     EmNumberMethods *tp_as_number;
     EmSequenceMethods *tp_as_sequence;
@@ -105,6 +106,7 @@ EmObject *getattr(EmObject *, char *);
 int setattr(EmObject *, char *, EmObject *);
 int cmpobj(EmObject *, EmObject *);
 long hashobj(EmObject *);
+int boolobj(EmObject *);
 
 
 extern EmTypeObject Typetype;

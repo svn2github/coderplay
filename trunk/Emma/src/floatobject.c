@@ -36,6 +36,9 @@ int floatobject_compare(EmObject *a, EmObject *b) {
     return (u < v) ? -1 : ((u > v) ? 1 : 0);
 }
 
+int floatobject_boolean(EmObject *ob) {
+    return ((EmFloatObject *)ob)->fval != 0.0 ? 1 : 0;
+}
 
 EmTypeObject Floattype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -51,6 +54,7 @@ EmTypeObject Floattype = {
         0,                              // tp_setattr
         floatobject_compare,            // tp_compare
         0,                              // tp_hashfunc
+        floatobject_boolean,            // tp_boolean
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence

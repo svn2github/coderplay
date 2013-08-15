@@ -31,9 +31,6 @@ int funcobject_compare(EmObject *a, EmObject *b) {
     return 0;
 }
 
-long funcobject_hash(EmObject *ob) {
-    return 0;
-}
 
 EmTypeObject Functype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -48,7 +45,8 @@ EmTypeObject Functype = {
         0,                              // tp_getattr
         0,                              // tp_setattr
         funcobject_compare,              // tp_compare
-        funcobject_hash,                 // tp_hashfunc
+        0,                              // tp_hashfunc
+        0,                              // tp_boolean
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence

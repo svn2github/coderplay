@@ -212,6 +212,9 @@ static EmSequenceMethods list_as_sequence = {
         0,                          // set slice
 };
 
+int listobject_boolean(EmObject *ob) {
+    return ((EmListObject *)ob)->nitems > 0 ? 1 : 0;
+}
 
 EmTypeObject Listtype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -227,6 +230,7 @@ EmTypeObject Listtype = {
         0,                              // tp_setattr
         0,                              // tp_compare
         0,                              // tp_hashfunc
+        listobject_boolean,             // tp_boolean
 
         0,                              // tp_as_number
         &list_as_sequence,              // tp_as_sequence

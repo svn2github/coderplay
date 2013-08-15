@@ -10,7 +10,7 @@
 
 typedef struct _funcobject {
     OB_HEAD;
-    EmObject *code;
+    EmObject *co;
     EmObject *env; // where the function is defined
 } EmFuncObject;
 

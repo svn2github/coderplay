@@ -66,6 +66,7 @@ EmTypeObject XXXtype = {
         0,                              // tp_setattr
         xxxobject_compare,              // tp_compare
         xxxobject_hash,                 // tp_hashfunc
+        xxxobject_boolean,              // tp_boolean
 
         0,                              // tp_as_number
         0,                              // tp_as_sequence
