@@ -68,11 +68,13 @@ void codeobject_print(EmObject *ob, FILE *fp) {
             fprintf(fp, "%d ", arg);
             if (opcode == OP_PUSHC) {
                 m = listobject_get(co->consts, arg);
+                fprintf(fp, "(%s)", tostrobj(m));
+                DECREF(m);
             } else if (opcode == OP_PUSH || opcode == OP_POP) {
                 m = listobject_get(co->names, arg);
+                fprintf(fp, "(%s)", tostrobj(m));
+                DECREF(m);
             }
-            fprintf(fp, "(%s)", tostrobj(m));
-            DECREF(m);
         }
         fprintf(fp, "\n");
     }

@@ -57,7 +57,7 @@ int run_file() {
 
     Node *ptree;
     AstNode *stree;
-    CompiledUnit *cu;
+    EmCodeObject *co;
 
     ptree = parse();
     if (ptree) {
@@ -67,13 +67,13 @@ int run_file() {
         //printstree(stree);
 
 
-        cu = compile_ast(stree);
-        printcompiledunit(cu);
+        co = compile_ast_tree(stree);
+        printobj((EmObject *)co, stdout);
 
 
         freetree(ptree);
         freestree(stree);
-        freecompiledunit(cu);
+        freeobj((EmObject *)co);
 
     }
     fclose(source.fp);

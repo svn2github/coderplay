@@ -48,6 +48,6 @@ typedef struct _compiler {
 
 void freecompiledunit(CompiledUnit *cu);
 void printcompiledunit(CompiledUnit *cu);
-CompiledUnit *compile_ast(AstNode *);
+EmCodeObject *compile_ast_tree(AstNode *);
 
 #endif /* COMPILER_H_ */

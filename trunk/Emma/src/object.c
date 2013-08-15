@@ -30,6 +30,8 @@ EmObject *newobj(EmTypeObject *tp) {
 }
 
 void freeobj(EmObject *ob) {
+    if (ob == NULL)
+        return;
     if (ob->type->tp_dealloc)
         ob->type->tp_dealloc(ob);
 }

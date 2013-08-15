@@ -611,6 +611,13 @@ static void compile_ast_node(AstNode *sn) {
 
 }
 
+static void compile_ast_unit(AstNode *sn) {
+    int ii;
+    for (ii = 0; ii < sn->size; ii++) {
+        compile_ast_node(AST_GET_MEMBER(sn,ii));
+    }
+}
+
 static int compiler_init() {
     compiler.cu = newcompiledunit();
     return 1;
@@ -618,16 +625,13 @@ static int compiler_init() {
 
 static EmCodeObject *assemble(CompiledUnit *cu);
 
-CompiledUnit *
-compile_ast(AstNode *stree) {
-    int ii;
+EmCodeObject *
+compile_ast_tree(AstNode *stree) {
 
     compiler_init();
 
     if (setjmp(__compile_buf) == 0) {
-        for (ii = 0; ii < stree->size; ii++) {
-            compile_ast_node(AST_GET_MEMBER(stree,ii));
-        }
+        compile_ast_unit(stree);
     } else {
         fatal("compiler error");
         fprintf(stderr, "ERROR compile\n");
@@ -636,11 +640,9 @@ compile_ast(AstNode *stree) {
     }
 
     EmCodeObject *co = assemble(compiler.cu);
-    printobj((EmObject *)co, stdout);
+    freecompiledunit(compiler.cu);
 
-
-
-    return compiler.cu;
+    return co;
 }
 
 
@@ -690,6 +692,9 @@ assemble(CompiledUnit *cu) {
 
     co->consts = cu->consts;
     co->names = cu->names;
+
+    cu->consts = NULL;
+    cu->names = NULL;
 
     return co;
 }
