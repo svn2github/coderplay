@@ -230,6 +230,7 @@ void printcompiledunit(CompiledUnit *cu) {
     }
 }
 
+static EmCodeObject *compile_ast_unit(AstNode *sn);
 static void compile_ast_node(AstNode *sn);
 static void compile_assign(AstNode *sn);
 static void compile_identifier(AstNode *sn, int opcode);
@@ -600,6 +601,24 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_FUNCDEF:
+        // Compile parameters
+        compile_ast_node(AST_GET_MEMBER(sn,1));
+        compiler.cu = newcompiledunit();
+        // compile the body of function
+        ob = (EmObject *)compile_ast_unit(AST_GET_MEMBER(sn,2));
+        compiler.cu = cu;
+        idx = listobject_index(cu->consts, (EmObject *)ob);
+        if (idx < 0) {
+            cu->consts = listobject_append(cu->consts, ob);
+            idx = listobject_len(cu->consts) - 1;
+        }
+        DECREF(ob);
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_PUSHC;
+        SET_I_ARG(instr, idx);
+        SET_I_ROWCOL(instr, sn);
+
+        compile_identifier(AST_GET_MEMBER(sn,0), OP_FUNCDEF);
         break;
 
     case AST_RETURN:
@@ -611,11 +630,18 @@ static void compile_ast_node(AstNode *sn) {
 
 }
 
-static void compile_ast_unit(AstNode *sn) {
+
+static EmCodeObject *assemble(CompiledUnit *cu);
+
+static EmCodeObject *
+compile_ast_unit(AstNode *sn) {
     int ii;
     for (ii = 0; ii < sn->size; ii++) {
         compile_ast_node(AST_GET_MEMBER(sn,ii));
     }
+    EmCodeObject *co = assemble(compiler.cu);
+    freecompiledunit(compiler.cu);
+    return co;
 }
 
 static int compiler_init() {
@@ -623,24 +649,20 @@ static int compiler_init() {
     return 1;
 }
 
-static EmCodeObject *assemble(CompiledUnit *cu);
-
 EmCodeObject *
 compile_ast_tree(AstNode *stree) {
 
+    EmCodeObject *co;
     compiler_init();
 
     if (setjmp(__compile_buf) == 0) {
-        compile_ast_unit(stree);
+        co = compile_ast_unit(stree);
     } else {
         fatal("compiler error");
         fprintf(stderr, "ERROR compile\n");
         freecompiledunit(compiler.cu);
         compiler.cu = NULL;
     }
-
-    EmCodeObject *co = assemble(compiler.cu);
-    freecompiledunit(compiler.cu);
 
     return co;
 }
