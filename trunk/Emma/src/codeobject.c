@@ -76,7 +76,7 @@ void codeobject_print(EmObject *ob, FILE *fp) {
                 }
                 DECREF(m);
             } else if (opcode == OP_PUSH || opcode == OP_POP
-                    || opcode == OP_FUNCDEF) {
+                    || opcode == OP_PUSHN || opcode == OP_FUNCDEF) {
                 m = listobject_get(co->names, arg);
                 fprintf(fp, "(%s)", tostrobj(m));
                 DECREF(m);

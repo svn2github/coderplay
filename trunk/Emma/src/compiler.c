@@ -235,6 +235,51 @@ static void compile_ast_node(AstNode *sn);
 static void compile_assign(AstNode *sn);
 static void compile_identifier(AstNode *sn, int opcode);
 
+static int idx_in_consts(char *key) {
+    EmObject *ob, *keyob;
+    CompiledUnit *cu = compiler.cu;
+    int idx;
+
+    keyob = newstringobject(key);
+    if (hashobject_haskey(compiler.symtab, keyob)) {
+        ob = hashobject_lookup(compiler.symtab, keyob);
+        idx = ((EmIntObject *) ob)->ival;
+        DECREF(ob);
+    } else {
+        ob = hashobject_lookup(literalTable, keyob);
+        listobject_append(cu->consts, ob);
+        DECREF(ob);
+        idx = listobject_len(cu->consts) - 1;
+        ob = newintobject(idx);
+        compiler.symtab = hashobject_insert(compiler.symtab, keyob, ob);
+        DECREF(ob);
+    }
+    DECREF(keyob);
+    return idx;
+}
+
+static int idx_in_names(char *name) {
+    EmObject *ob, *nameob;
+    CompiledUnit *cu = compiler.cu;
+    int idx;
+
+    nameob = newstringobject(name);
+    if (hashobject_haskey(compiler.symtab, nameob)) {
+        ob = hashobject_lookup(compiler.symtab, nameob);
+        idx = ((EmIntObject *) ob)->ival;
+        DECREF(ob);
+    } else {
+        listobject_append(cu->names, nameob);
+        idx = listobject_len(cu->names) - 1;
+        ob = newintobject(idx);
+        compiler.symtab = hashobject_insert(compiler.symtab, nameob, ob);
+        DECREF(ob);
+    }
+    DECREF(nameob);
+    return idx;
+}
+
+
 static void compile_if(AstNode *sn) {
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
@@ -357,13 +402,7 @@ static void compile_arglist(AstNode *sn) {
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
     if (sn->size == 0) { // empty list
-        ob = hashobject_lookup_by_string(literalTable, "null");
-        idx = listobject_index(cu->consts, ob);
-        if (idx < 0) {
-            cu->consts = listobject_append(cu->consts, ob);
-            idx = listobject_len(cu->consts) - 1;
-        }
-        DECREF(ob);
+        idx = idx_in_consts("null");
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
@@ -403,19 +442,57 @@ static void compile_arglist(AstNode *sn) {
     }
 }
 
+static void compile_extra_p_k(AstNode *sn) {
+    int idx;
+    EmObject *ob;
+    CompiledUnit *cu = compiler.cu;
+    Instr *instr;
+
+    instr = next_instr(cu->curblock);
+    if (sn->size == 0) {
+        idx = idx_in_consts("null");
+        instr->opcode = OP_PUSHC;
+    } else {
+        idx = idx_in_names(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn,0)));
+        instr->opcode = OP_PUSHN;
+    }
+    SET_I_ARG(instr, idx);
+    SET_I_ROWCOL(instr, sn);
+}
+
+static void compile_paramlist(AstNode *sn) {
+    int ii, idx, count;
+    EmObject *ob;
+    CompiledUnit *cu = compiler.cu;
+    Instr *instr;
+    AstNode *m;
+
+    if (sn->size == 0) {
+        // empty paramlist, push 3 null
+        idx = idx_in_consts("null");
+        for (ii = 0; ii < 3; ii++) {
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_PUSHC;
+            SET_I_ARG(instr, idx);
+        }
+        return;
+    }
+
+    // positional and keyword parameters
+    compile_arglist(AST_GET_MEMBER(sn,0));
+    // extra p
+    compile_extra_p_k(AST_GET_MEMBER(sn,1));
+    // extra k;
+    compile_extra_p_k(AST_GET_MEMBER(sn,2));
+}
+
 static void compile_identifier(AstNode *sn, int opcode) {
     int idx;
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
 
-    ob = newstringobject(AST_GET_LEXEME_SAFE(sn));
-    idx = listobject_index(cu->names, ob);
-    if (idx < 0) {
-        cu->names = listobject_append(cu->names, ob);
-        idx = listobject_len(cu->names) - 1;
-    }
-    DECREF(ob);
+    idx = idx_in_names(AST_GET_LEXEME_SAFE(sn));
     instr = next_instr(cu->curblock);
     instr->opcode = opcode;
     SET_I_ARG(instr, idx);
@@ -503,13 +580,7 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_LITERAL:
-        ob = hashobject_lookup_by_string(literalTable, AST_GET_LEXEME_SAFE(sn));
-        idx = listobject_index(cu->consts, ob);
-        if (idx < 0) {
-            cu->consts = listobject_append(cu->consts, ob);
-            idx = listobject_len(cu->consts) - 1;
-        }
-        DECREF(ob);
+        idx = idx_in_consts(AST_GET_LEXEME_SAFE(sn));
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
@@ -518,13 +589,13 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_LIST:
-        for (ii = 0; ii<sn->size; ii++) {
+        for (ii = 0; ii < sn->size; ii++) {
             compile_ast_node(AST_GET_MEMBER(sn,ii));
         }
         break;
 
     case AST_KVPAIR:
-        compile_ast_node(AST_GET_MEMBER(sn,0));
+        compile_identifier(AST_GET_MEMBER(sn,0), OP_PUSHN);
         compile_ast_node(AST_GET_MEMBER(sn,1));
         break;
 
@@ -602,22 +673,29 @@ static void compile_ast_node(AstNode *sn) {
 
     case AST_FUNCDEF:
         // Compile parameters
-        compile_ast_node(AST_GET_MEMBER(sn,1));
+        compile_paramlist(AST_GET_MEMBER(sn,1));
+
+        // Create a new compiled unit for the function body
         compiler.cu = newcompiledunit();
+        EmObject *symtab = compiler.symtab;
+        compiler.symtab = newhashobject();
         // compile the body of function
-        ob = (EmObject *)compile_ast_unit(AST_GET_MEMBER(sn,2));
+        ob = (EmObject *) compile_ast_unit(AST_GET_MEMBER(sn,2));
         compiler.cu = cu;
-        idx = listobject_index(cu->consts, (EmObject *)ob);
-        if (idx < 0) {
-            cu->consts = listobject_append(cu->consts, ob);
-            idx = listobject_len(cu->consts) - 1;
-        }
-        DECREF(ob);
+        compiler.symtab = symtab;
+        // Simply add the body code object to the end of the consts list.
+        // This assumes no duplicate function definitions.
+        // Although duplicate function defs are legal, it makes no sense
+        // to have duplications. So I am not going to take care of duplications
+        // here for code simplicity.
+        listobject_append(cu->consts, ob);
+        idx = listobject_len(cu->consts) - 1;
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
-        SET_I_ROWCOL(instr, sn);
-
+        SET_I_ROWCOL(instr, sn)
+        ;
+        // function name
         compile_identifier(AST_GET_MEMBER(sn,0), OP_FUNCDEF);
         break;
 
@@ -630,7 +708,6 @@ static void compile_ast_node(AstNode *sn) {
 
 }
 
-
 static EmCodeObject *assemble(CompiledUnit *cu);
 
 static EmCodeObject *
@@ -641,11 +718,13 @@ compile_ast_unit(AstNode *sn) {
     }
     EmCodeObject *co = assemble(compiler.cu);
     freecompiledunit(compiler.cu);
+    freeobj(compiler.symtab);
     return co;
 }
 
 static int compiler_init() {
     compiler.cu = newcompiledunit();
+    compiler.symtab = newhashobject();
     return 1;
 }
 
@@ -666,8 +745,6 @@ compile_ast_tree(AstNode *stree) {
 
     return co;
 }
-
-
 
 static EmCodeObject *
 assemble(CompiledUnit *cu) {
@@ -691,7 +768,7 @@ assemble(CompiledUnit *cu) {
     }
 
     // nbytes + 1 to insert an OP_END at the end
-    EmCodeObject *co = (EmCodeObject *) newcodeobject(nbytes+1);
+    EmCodeObject *co = (EmCodeObject *) newcodeobject(nbytes + 1);
 
     count = 0;
     for (b = cu->block; b != NULL; b = b->next) {
@@ -720,9 +797,4 @@ assemble(CompiledUnit *cu) {
 
     return co;
 }
-
-
-
-
-
 

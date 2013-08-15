@@ -32,13 +32,14 @@
 
 #define OP_PUSH              30
 #define OP_PUSHC             31
-#define OP_POP               32
-#define OP_FUNCDEF           33
-#define OP_CLASSDEF          34
-#define OP_RETURN            35
-#define OP_JUMP              36
-#define OP_FJUMP             37
-#define OP_MKLIST            38
-#define OP_MKHASH            39
+#define OP_PUSHN             32
+#define OP_POP               33
+#define OP_FUNCDEF           34
+#define OP_CLASSDEF          35
+#define OP_RETURN            36
+#define OP_JUMP              37
+#define OP_FJUMP             38
+#define OP_MKLIST            39
+#define OP_MKHASH            40
 
 extern char *opcode_types[];

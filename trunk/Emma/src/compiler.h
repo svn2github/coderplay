@@ -43,6 +43,7 @@ typedef struct _compiled_unit {
 
 typedef struct _compiler {
     CompiledUnit *cu;
+    EmObject *symtab; // The symbol table for compilation
 } Compiler;
 
 

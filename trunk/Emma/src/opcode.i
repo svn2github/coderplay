@@ -31,6 +31,7 @@ char *opcode_types[] = {
         "OP_HASARG",
         "OP_PUSH",
         "OP_PUSHC",
+        "OP_PUSHN",
         "OP_POP",
         "OP_FUNCDEF",
         "OP_CLASSDEF",

@@ -42,6 +42,7 @@ hasarg
 
 push
 pushc
+pushn
 pop
 funcdef
 classdef
