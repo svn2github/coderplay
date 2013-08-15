@@ -11,7 +11,11 @@
 typedef struct _funcobject {
     OB_HEAD;
     EmObject *co;
-    EmObject *env; // where the function is defined
+    EmObject *extrap; // the variable name for extrap
+    EmObject *extrak; // the variable name for extrak
+    EmObject *globals;
+    EmObject *locals;
+
 } EmFuncObject;
 
 extern EmFuncObject Functype;
