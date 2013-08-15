@@ -2,7 +2,7 @@ from utils.utils import filepath, srcdir
 
 opcode_string = \
 '''
-stop
+end
 add
 sub
 mul

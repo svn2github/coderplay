@@ -616,6 +616,8 @@ static int compiler_init() {
     return 1;
 }
 
+static EmCodeObject *assemble(CompiledUnit *cu);
+
 CompiledUnit *
 compile_ast(AstNode *stree) {
     int ii;
@@ -633,6 +635,67 @@ compile_ast(AstNode *stree) {
         compiler.cu = NULL;
     }
 
+    EmCodeObject *co = assemble(compiler.cu);
+    printobj((EmObject *)co, stdout);
+
+
+
     return compiler.cu;
 }
+
+
+
+static EmCodeObject *
+assemble(CompiledUnit *cu) {
+    int ii, nbytes, count, arg;
+    Basicblock *b;
+    Instr *instr;
+
+    nbytes = 0;
+    for (b = cu->block; b != NULL; b = b->next) {
+        b->lineno = nbytes;
+        count = 0;
+        for (ii = 0; ii < b->inxt; ii++) {
+            instr = INSTR_AT(b,ii);
+            if (I_HASARG(instr)) {
+                count += 3;
+            } else {
+                count += 1;
+            }
+        }
+        nbytes += count;
+    }
+
+    // nbytes + 1 to insert an OP_END at the end
+    EmCodeObject *co = (EmCodeObject *) newcodeobject(nbytes+1);
+
+    count = 0;
+    for (b = cu->block; b != NULL; b = b->next) {
+        for (ii = 0; ii < b->inxt; ii++) {
+            instr = INSTR_AT(b,ii);
+            // add op byte
+            co->code[count++] = instr->opcode;
+            if (I_HASARG(instr)) {
+                if (I_ISJUMP(instr)) { // set jump lineno
+                    arg = I_TARGET(instr)->lineno;
+                } else { // regular arg
+                    arg = I_ARG(instr);
+                }
+                co->code[count++] = arg & 0xff;
+                co->code[count++] = arg >> 8;
+            }
+        }
+    }
+    co->code[count] = OP_END;
+
+    co->consts = cu->consts;
+    co->names = cu->names;
+
+    return co;
+}
+
+
+
+
+
 

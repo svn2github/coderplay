@@ -12,13 +12,14 @@
 typedef struct _codeobject {
     OB_HEAD;
     char *code;
+    int nbytes;
     EmObject *consts;
     EmObject *names;
 } EmCodeObject;
 
 extern EmTypeObject Codetype;
 
-EmObject *newcodeobject();
+EmObject *newcodeobject(int nbytes);
 
 
 #endif /* CODEOBJECT_H_ */

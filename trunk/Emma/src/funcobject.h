@@ -11,6 +11,7 @@
 typedef struct _funcobject {
     OB_HEAD;
     EmObject *code;
+    EmObject *env; // where the function is defined
 } EmFuncObject;
 
 extern EmFuncObject Functype;

@@ -1,4 +1,4 @@
-#define OP_STOP              0
+#define OP_END               0
 #define OP_ADD               1
 #define OP_SUB               2
 #define OP_MUL               3

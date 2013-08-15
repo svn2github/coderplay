@@ -1,5 +1,5 @@
 char *opcode_types[] = {
-        "OP_STOP",
+        "OP_END",
         "OP_ADD",
         "OP_SUB",
         "OP_MUL",
