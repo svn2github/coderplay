@@ -34,13 +34,11 @@ typedef struct _try_frame {
 
 typedef struct _vm {
     ExecutionFrame *curframe;   // currently running frame
-    ExecutionFrame *callstack; // call frame stack, points to top frame
     TryFrame *curtry; // currently working try frame
-    TryFrame *trystack; // try/catch stack
 } VM;
 
 
-int run_codeobject(EmObject *co, ExecutionFrame *prev, Environment *env);
+int run_codeobject(EmObject *co, Environment *env);
 
 
 

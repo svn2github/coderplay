@@ -110,9 +110,7 @@ int vm_init() {
         return 0;
     }
     vm->curframe = NULL;
-    vm->callstack = NULL;
     vm->curtry = NULL;
-    vm->trystack = NULL;
 
     if ((topenv = newenv(NULL)) == NULL) {
         DEL(vm);
@@ -123,25 +121,24 @@ int vm_init() {
 
 void vm_free() {
     ExecutionFrame *f;
-    for (f = vm->callstack; f != NULL; f = f->prev) {
+    for (f = vm->curframe; f != NULL; f = f->prev) {
         executionframe_free(f);
     }
     TryFrame *t;
-    for (t=vm->trystack; t != NULL; t = t->prev) {
+    for (t=vm->curtry; t != NULL; t = t->prev) {
         tryframe_free(t);
     }
     DEL(vm);
-
-    env_free(topenv);
 }
 
-int run_codeobject(EmObject *co, ExecutionFrame *prev, Environment *env) {
+int run_codeobject(EmObject *co, Environment *env) {
 
     if (env == NULL)
         env = topenv;
 
-    ExecutionFrame *f = newexecutionframe(prev, co, env);
-    vm->callstack = f;
+    ExecutionFrame *f = newexecutionframe(vm->curframe, co, env);
+    vm->curframe = f;
+
 
     return 1;
 }

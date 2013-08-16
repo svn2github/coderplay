@@ -74,7 +74,7 @@ int run_file() {
         co = compile_ast_tree(stree);
         printobj((EmObject *)co, stdout);
 
-        run_codeobject((EmObject *)co, NULL, NULL);
+        run_codeobject((EmObject *)co, NULL);
 
 
         freetree(ptree);
