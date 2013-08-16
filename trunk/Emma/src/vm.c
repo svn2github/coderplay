@@ -178,6 +178,13 @@ run_codeobject(EmCodeObject *co, Environment *env) {
     int pc = 0;
     int opcode, arg;
 
+    /*
+     * Variables obtained from POP() requires DECREF if it is no
+     * longer needed. Variables pushed with PUSH() mostly do NOT
+     * need INCREF because the refcnt usually increased already
+     * when the variable is obtained from somewhere else, e.g.
+     * consts list, env.
+     */
     while (1) {
         opcode = NEXT_OPCODE();
         if (HASARG(opcode))
