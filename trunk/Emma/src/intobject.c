@@ -48,6 +48,23 @@ int intobject_boolean(EmObject *ob) {
     return ((EmIntObject *)ob)->ival != 0 ? 1 : 0;
 }
 
+static EmObject *
+intobject_add(EmObject *u, EmObject *v) {
+    long x = ((EmIntObject *)u)->ival + ((EmIntObject *)v)->ival;
+    return newintobject(x);
+}
+
+static EmNumberMethods int_as_number = {
+        intobject_add,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+};
+
+
 
 EmTypeObject Inttype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -65,7 +82,7 @@ EmTypeObject Inttype = {
         intobject_hash,                 // tp_hashfunc
         intobject_boolean,              // tp_boolean
 
-        0,                              // tp_as_number
+        &int_as_number,                 // tp_as_number
         0,                              // tp_as_sequence
         0,                              // tp_as_mapping
 };

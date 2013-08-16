@@ -136,7 +136,7 @@ hashobject_lookup(EmObject *ob, EmObject *key) {
     EmHashObject *ho = (EmHashObject *)ob;
     EmHashEntry * ent = __hashobject_lookup(ho, key, &idx);
     if (ent == NULL)
-        return log_error(KEY_ERROR, "key not found");
+        return NULL;
     else {
         INCREF(ent->val);
         return ent->val;
@@ -199,7 +199,7 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
     if (new == NULL) { // create new entry
         new = (EmHashEntry*) malloc(sizeof(EmHashEntry));
         if (new == NULL) {
-            log_error(MEMORY_ERROR, "No memory to create new entry in dict");
+            log_error(MEMORY_ERROR, "No memory to create new entry of hash");
             return (EmObject *)ho;
         }
         new->key = key;

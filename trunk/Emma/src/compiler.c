@@ -675,7 +675,7 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_PRINT:
-        compile_ast_node(AST_GET_MEMBER(sn,0)); // the destination
+        compile_identifier(AST_GET_MEMBER(sn,0), OP_PUSHN); // the destination
         compile_ast_node(AST_GET_MEMBER(sn,1)); // the item list
         instr = next_instr(cu->curblock);
         instr->opcode = OP_MKLIST;
@@ -717,6 +717,10 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_RETURN:
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_RETURN;
+        SET_I_ROWCOL(instr, sn);
         break;
 
     default:

@@ -21,6 +21,7 @@ typedef struct _listobject {
 extern EmTypeObject Listtype;
 
 EmObject *newlistobject(unsigned int size);
+EmObject *newlistobject_of_null(unsigned int size);
 void listobject_free(EmObject *ob);
 void listobject_print(EmObject *ob, FILE *fp);
 

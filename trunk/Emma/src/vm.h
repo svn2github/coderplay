@@ -18,9 +18,8 @@ typedef struct _environment {
 
 typedef struct _execution_frame {
     struct _execution_frame *prev;
-    EmObject *co;
+    EmCodeObject *co;
     Environment *env;
-    int pc;
     EmObject **valuestack;
     int vs_size; // size of the value stack
     int vs_top;  // the top idx of value stack
@@ -38,7 +37,7 @@ typedef struct _vm {
 } VM;
 
 
-int run_codeobject(EmObject *co, Environment *env);
+EmObject* run_codeobject(EmCodeObject *co, Environment *env);
 
 
 

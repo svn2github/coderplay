@@ -28,6 +28,16 @@ newlistobject(unsigned int size) {
     return (EmObject *)lo;
 }
 
+EmObject *
+newlistobject_of_null(unsigned int size) {
+    EmObject *ob = newlistobject(size);
+    ob->nitems = size;
+    int ii;
+    for (ii=0;ii<size;ii++)
+        listobject_set(ob, ii, &nulobj);
+    return ob;
+}
+
 void listobject_free(EmObject *ob) {
     EmListObject *lo = (EmListObject *)ob;
     int i;
@@ -46,6 +56,15 @@ void listobject_print(EmObject *ob, FILE *fp) {
     for (i=0;i<lo->nitems;i++) {
         fprintf(fp, "%s, ", tostrobj(lo->list[i]));
     }
+}
+
+char *listobject_tostr(EmObject *ob) {
+    EmListObject *lo = (EmListObject *)ob;
+    int ii;
+    for (ii=0;ii<lo->nitems;ii++) {
+
+    }
+    return NULL;
 }
 
 
@@ -87,7 +106,8 @@ int listobject_set(EmObject *ob, int idx, EmObject *val) {
         log_error(INDEX_ERROR, "index out of list boundary");
         return 0;
     }
-    DECREF(lo->list[idx]);
+    if (lo->list[idx]) // check for NULL
+        DECREF(lo->list[idx]);
     INCREF(val);
     lo->list[idx] = val;
     return 1;
