@@ -22,6 +22,7 @@
 #include "ast.h"
 #include "opcode.h"
 #include "compiler.h"
+#include "vm.h"
 
 
 /*

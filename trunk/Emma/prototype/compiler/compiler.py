@@ -49,6 +49,7 @@ classdef
 return
 jump
 fjump
+tjump
 
 mklist
 mkhash

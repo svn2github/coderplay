@@ -13,14 +13,13 @@ typedef struct _funcobject {
     EmObject *co;
     EmObject *extrap; // the variable name for extrap
     EmObject *extrak; // the variable name for extrak
-    EmObject *globals;
-    EmObject *locals;
+    EmObject *env; // the environment where the function is defined
 
 } EmFuncObject;
 
 extern EmFuncObject Functype;
 
-EmObject *newfuncobject();
+EmObject *newfuncobject(EmObject *co, EmObject *env, EmObject *extrap, EmObject *extrak);
 
 
 

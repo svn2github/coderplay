@@ -38,6 +38,7 @@ char *opcode_types[] = {
         "OP_RETURN",
         "OP_JUMP",
         "OP_FJUMP",
+        "OP_TJUMP",
         "OP_MKLIST",
         "OP_MKHASH"
 };

@@ -14,6 +14,7 @@
 #define I_HASARG(instr)     (instr)->opcode>OP_HASARG?1:0
 #define I_ISJUMP(instr)     ((instr)->opcode==OP_JUMP || \
                                 (instr)->opcode == OP_FJUMP || \
+                                (instr)->opcode == OP_TJUMP || \
                                 (instr)->opcode == OP_FOR) ? 1 : 0
 #define I_ARG(instr)        instr->v.arg
 #define I_TARGET(instr)     instr->v.target
@@ -55,8 +56,6 @@
 
 #define BINOP_OF_ASTTYPE(t)     t==AST_ADD ? OP_ADD : \
                                     (t==AST_SUB ? OP_SUB : \
-                                    (t==AST_AND ? OP_AND : \
-                                    (t==AST_OR ? OP_OR : \
                                     (t==AST_XOR ? OP_XOR : \
                                     (t==AST_GT ? OP_GT : \
                                     (t==AST_LT ? OP_LT : \
@@ -66,7 +65,7 @@
                                     (t==AST_NE ? OP_NE : \
                                     (t==AST_MUL ? OP_MUL : \
                                     (t==AST_DIV ? OP_DIV : \
-                                    (t==AST_MOD ? OP_MOD : OP_POW )))))))))))))
+                                    (t==AST_MOD ? OP_MOD : OP_POW )))))))))))
 
 #define UNARYOP_OF_ASTTYPE(t)   t==AST_PLUS ? OP_PLUS : \
                                     (t==AST_MINUS ? OP_MINUS : OP_NOT)
@@ -602,10 +601,13 @@ static void compile_ast_node(AstNode *sn) {
         /*
          * Binary operators
          */
-    case AST_ADD:
+
     case AST_SUB:
-    case AST_AND:
-    case AST_OR:
+    case AST_ADD:
+    case AST_MUL:
+    case AST_DIV:
+    case AST_MOD:
+    case AST_POW:
     case AST_XOR:
     case AST_GT:
     case AST_LT:
@@ -613,14 +615,28 @@ static void compile_ast_node(AstNode *sn) {
     case AST_LE:
     case AST_EQ:
     case AST_NE:
-    case AST_MUL:
-    case AST_DIV:
-    case AST_MOD:
-    case AST_POW:
         compile_ast_node(AST_GET_MEMBER(sn,0));
         compile_ast_node(AST_GET_MEMBER(sn,1));
         instr = next_instr(cu->curblock);
         instr->opcode = BINOP_OF_ASTTYPE(sn->type);
+        break;
+
+        /*
+         * short-curcuit logic operators
+         */
+    case AST_AND:
+    case AST_OR:
+        compile_ast_node(AST_GET_MEMBER(sn,0));
+        Basicblock *sc_block = newbasicblock();
+        instr = next_instr(cu->curblock);
+        if (sn->type == AST_AND)
+            instr->opcode = OP_FJUMP;
+        else
+            instr->opcode = OP_TJUMP;
+        SET_I_TARGET(instr, sc_block);
+        compile_ast_node(AST_GET_MEMBER(sn,1));
+        SET_NEW_BLOCK(cu, sc_block)
+        ;
         break;
 
         /*

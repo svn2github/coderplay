@@ -8,10 +8,14 @@
 #include "allobject.h"
 
 EmObject *
-newfuncobject() {
+newfuncobject(EmObject *co, EmObject *env, EmObject *extrap, EmObject *extrak) {
     EmFuncObject *ob;
     if ((ob = NEWOBJ(EmFuncObject, &Functype)) == NULL)
         return NULL;
+    ob->co = co;
+    ob->env = env;
+    ob->extrap = extrap;
+    ob->extrak = extrak;
     return (EmObject *)ob;
 }
 
