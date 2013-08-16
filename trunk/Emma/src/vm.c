@@ -84,9 +84,14 @@ void resizevaluestack(ExecutionFrame *f) {
 }
 
 void executionframe_free(ExecutionFrame *f) {
-    freeobj((EmObject *)f->co);
+    if (f == NULL)
+        return;
+    if (f->prev != NULL)
+        executionframe_free(f->prev);
+    freeobj((EmObject *) f->co);
     env_free(f->env);
     DEL(f->valuestack);
+    DEL(f);
 }
 
 TryFrame *
@@ -102,6 +107,10 @@ newtryframe(TryFrame *prev, ExecutionFrame *f, int pc) {
 }
 
 void tryframe_free(TryFrame *t) {
+    if (t == NULL)
+        return;
+    if (t->prev != NULL)
+        tryframe_free(t->prev);
     DEL(t);
 }
 
@@ -121,14 +130,8 @@ int vm_init() {
 }
 
 void vm_free() {
-    ExecutionFrame *f;
-    for (f = vm->curframe; f != NULL; f = f->prev, free(f)) {
-        executionframe_free(f);
-    }
-    TryFrame *t;
-    for (t = vm->curtry; t != NULL; t = t->prev) {
-        tryframe_free(t);
-    }
+    executionframe_free(vm->curframe);
+    tryframe_free(vm->curtry);
     DEL(vm);
 }
 
