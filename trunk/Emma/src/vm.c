@@ -17,8 +17,31 @@
                         log_error(MEMORY_ERROR, "value stack underflow") : \
                         f->valuestack[--f->vs_top])
 
-
 static VM *vm;
+static Environment *topenv;
+
+Environment *
+newenv(Environment *parent) {
+    Environment *e = (Environment *) malloc(sizeof(Environment));
+    if (e == NULL) {
+        log_error(MEMORY_ERROR, "no memory for new environment");
+        return NULL;
+    }
+    e->parent = parent;
+    if ((e->binding = newhashobject()) == NULL) {
+        DEL(e);
+        log_error(MEMORY_ERROR, "no memory for environment binding");
+        return NULL;
+    }
+    return e;
+}
+
+
+void env_free(Environment *env) {
+    hashobject_free(env->binding);
+    free(env);
+}
+
 
 ExecutionFrame *
 newexecutionframe(ExecutionFrame *prev, EmObject *co, Environment *env) {
@@ -57,16 +80,68 @@ resizevaluestack(ExecutionFrame *f) {
 
 }
 
-int vm_init() {
+void
+executionframe_free(ExecutionFrame *f) {
+    freeobj(f->co);
+    env_free(f->env);
+    DEL(f->valuestack);
+}
 
+TryFrame *
+newtryframe(TryFrame *prev, ExecutionFrame *f, int pc) {
+    TryFrame *t;
+    if ((t = (TryFrame *)malloc(sizeof(TryFrame))) == NULL) {
+        log_error(MEMORY_ERROR, "no memory for new try frame");
+        return NULL;
+    }
+    t->prev = prev;
+    t->f = f;
+    t->pc = pc;
+}
+
+void tryframe_free(TryFrame *t) {
+    DEL(t);
+}
+
+
+int vm_init() {
+    if ((vm = (VM *) malloc(sizeof(VM))) == NULL) {
+        log_error(MEMORY_ERROR, "no memory for virtual machine");
+        return 0;
+    }
+    vm->curframe = NULL;
+    vm->callstack = NULL;
+    vm->curtry = NULL;
+    vm->trystack = NULL;
+
+    if ((topenv = newenv(NULL)) == NULL) {
+        DEL(vm);
+        return 0;
+    }
     return 1;
 }
 
 void vm_free() {
+    ExecutionFrame *f;
+    for (f = vm->callstack; f != NULL; f = f->prev) {
+        executionframe_free(f);
+    }
+    TryFrame *t;
+    for (t=vm->trystack; t != NULL; t = t->prev) {
+        tryframe_free(t);
+    }
+    DEL(vm);
 
+    env_free(topenv);
 }
 
-int run_codeobject(EmObject *co) {
+int run_codeobject(EmObject *co, ExecutionFrame *prev, Environment *env) {
+
+    if (env == NULL)
+        env = topenv;
+
+    ExecutionFrame *f = newexecutionframe(prev, co, env);
+    vm->callstack = f;
 
     return 1;
 }

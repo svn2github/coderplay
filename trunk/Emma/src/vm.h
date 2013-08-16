@@ -26,13 +26,21 @@ typedef struct _execution_frame {
     int vs_top;  // the top idx of value stack
 } ExecutionFrame;
 
+typedef struct _try_frame {
+    struct _try_frame *prev;
+    ExecutionFrame *f;
+    int pc;
+} TryFrame;
+
 typedef struct _vm {
-    ExecutionFrame *callstack; // call frame stack
-    ExecutionFrame *trystack; // try/catch frame stack
+    ExecutionFrame *curframe;   // currently running frame
+    ExecutionFrame *callstack; // call frame stack, points to top frame
+    TryFrame *curtry; // currently working try frame
+    TryFrame *trystack; // try/catch stack
 } VM;
 
 
-int run_codeobject(EmCodeObject *co);
+int run_codeobject(EmObject *co, ExecutionFrame *prev, Environment *env);
 
 
 

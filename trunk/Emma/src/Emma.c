@@ -46,11 +46,15 @@ void init_all(int argc, char **argv) {
 
     // initialize the lexer
     lexer_init();
+
+    // initialize the VM
+    vm_init();
 }
 
 void cleanup() {
     lexer_free();
     freeobj(literalTable);
+    vm_free();
 }
 
 int run_file() {
@@ -70,10 +74,12 @@ int run_file() {
         co = compile_ast_tree(stree);
         printobj((EmObject *)co, stdout);
 
+        run_codeobject((EmObject *)co, NULL, NULL);
+
 
         freetree(ptree);
         freestree(stree);
-        freeobj((EmObject *)co);
+        //freeobj((EmObject *)co);
 
     }
     fclose(source.fp);
