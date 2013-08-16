@@ -85,6 +85,7 @@ executionframe_free(ExecutionFrame *f) {
     freeobj(f->co);
     env_free(f->env);
     DEL(f->valuestack);
+    DEL(f);
 }
 
 TryFrame *
