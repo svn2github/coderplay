@@ -92,7 +92,9 @@ stringobject_concate(EmObject *a, EmObject *b) {
     char *s = (char *) malloc(sizeof(char) * (i + j + 1));
     strcpy(s, ((EmStringObject *)a)->sval);
     strcat(s, ((EmStringObject *)b)->sval);
-    return newstringobject(s);
+    EmObject *ob = newstringobject(s);
+    free(s);
+    return ob;
 }
 
 
