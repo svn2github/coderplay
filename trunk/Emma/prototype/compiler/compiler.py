@@ -27,6 +27,10 @@ rot_two
 rot_three
 
 print
+read
+
+package
+import
 
 call
 

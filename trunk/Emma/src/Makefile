@@ -6,15 +6,17 @@ DEPS = Makefile lexer.h token.h lexer.i hashobject.h errorobject.h \
        stringobject.h object.h Emma.h intobject.h floatobject.h \
        listobject.h source.h token.h parser.h parser.hi parser.i \
        node.h ast.h ast.hi ast.i opcode.h opcode.hi opcode.i compiler.h \
-       codeobject.h vm.h
+       codeobject.h fileobject.h vm.h
        
 SRC = lexer.c parser.c Emma.c hashobject.c errobject.c stringobject.c \
       object.c typeobject.c intobject.c floatobject.c listobject.c \
-      source.c parser.c node.c ast.c compiler.c codeobject.c vm.c
+      source.c parser.c node.c ast.c compiler.c codeobject.c fileobject.c \
+      vm.c
       
 OBJ = lexer.o parser.o Emma.o hashobject.o errorobject.o stringobject.o \
       object.o typeobject.o intobject.o floatobject.o listobject.o \
-      source.o parser.o node.o ast.o compiler.o codeobject.o vm.o
+      source.o parser.o node.o ast.o compiler.o codeobject.o fileobject.o \
+      vm.o
 
 all: Emma
 

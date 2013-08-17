@@ -42,7 +42,13 @@ void init_all(int argc, char **argv) {
     ob = newintobject(0);
     hashobject_insert_by_string(literalTable, "0", ob);
     DECREF(ob);
+
+    ob = newstringobject("*");
+    hashobject_insert_by_string(literalTable, "*", ob);
+    DECREF(ob);
+
     hashobject_insert_by_string(literalTable, "null", &nulobj);
+
 
     // initialize the lexer
     lexer_init();

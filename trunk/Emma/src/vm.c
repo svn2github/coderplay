@@ -126,6 +126,17 @@ int vm_init() {
         DEL(vm);
         return 0;
     }
+
+    /*
+     * Default variables in topenv
+     */
+    EmObject *name, *val;
+    name = newstringobject("stdout");
+    val = newfileobject(stdout, "stdout");
+    env_set(topenv, name, val);
+    DECREF(name);
+    DECREF(val);
+
     return 1;
 }
 
@@ -253,10 +264,8 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             case OP_PRINT:
                 v = POP(); // list
                 u = POP(); // destination
-                if (strcmp(tostrobj(u),"stdout") == 0) {
-                    printobj(v, stdout);
-                    fprintf(stdout, "\n");
-                }
+                printobj(v, ((EmFileObject *)u)->fp);
+                fprintf(((EmFileObject *)u)->fp, "\n");
                 DECREF(u);
                 DECREF(v);
                 break;

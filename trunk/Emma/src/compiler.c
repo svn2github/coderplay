@@ -675,7 +675,7 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_PRINT:
-        compile_identifier(AST_GET_MEMBER(sn,0), OP_PUSHN); // the destination
+        compile_ast_node(AST_GET_MEMBER(sn,0)); // the destination
         compile_ast_node(AST_GET_MEMBER(sn,1)); // the item list
         instr = next_instr(cu->curblock);
         instr->opcode = OP_MKLIST;
@@ -721,6 +721,42 @@ static void compile_ast_node(AstNode *sn) {
         instr = next_instr(cu->curblock);
         instr->opcode = OP_RETURN;
         SET_I_ROWCOL(instr, sn);
+        break;
+
+    case AST_PACKAGE:
+        compile_identifier(AST_GET_MEMBER(sn,0), OP_PUSHN);
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_PACKAGE;
+        SET_I_ROWCOL(instr, sn);
+        break;
+
+    case AST_IMPORT:
+        for (ii=0;ii<sn->size;ii++) {
+            if (AST_GET_MEMBER(sn, ii)->type != AST_SYMBOL)
+                compile_identifier(AST_GET_MEMBER(sn,ii), OP_PUSHN);
+            else {
+                idx = idx_in_consts("*");
+                instr = next_instr(cu->curblock);
+                instr->opcode = OP_PUSHC;
+                SET_I_ARG(instr, idx);
+                SET_I_ROWCOL(instr, sn);
+            }
+        }
+        break;
+
+    case AST_RAISE:
+        break;
+
+    case AST_TRY:
+        break;
+
+    case AST_CATCH:
+        break;
+
+    case AST_FINALLY:
+        break;
+
+    case AST_CLASSDEF:
         break;
 
     default:

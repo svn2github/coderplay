@@ -22,6 +22,7 @@
 #include "listobject.h"
 #include "funcobject.h"
 #include "codeobject.h"
+#include "fileobject.h"
 
 
 #endif /* ALLOBJECT_H_ */
