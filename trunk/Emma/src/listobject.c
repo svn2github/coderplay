@@ -68,7 +68,7 @@ char *listobject_tostr(EmObject *ob) {
 }
 
 
-unsigned int listobject_len(EmObject *ob) {
+int listobject_len(EmObject *ob) {
     return ob->nitems;
 }
 

@@ -47,7 +47,7 @@ typedef struct {
  * Methods for sequences like list and string
  */
 typedef struct {
-    unsigned int (*len) (EmObject *);
+    int (*len) (EmObject *);
     EmObject *(*concate) (EmObject *, EmObject *);
     EmObject *(*get) (EmObject *, int);
     EmObject *(*slice) (EmObject *, int, int, int);

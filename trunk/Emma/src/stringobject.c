@@ -81,6 +81,30 @@ int stringobject_boolean(EmObject *ob) {
     return strlen(((EmStringObject *)ob)->sval) > 0 ? 1 : 0;
 }
 
+int stringobject_len(EmObject *ob) {
+    return strlen(((EmStringObject *)ob)->sval);
+}
+
+EmObject *
+stringobject_concate(EmObject *a, EmObject *b) {
+    int i = stringobject_len(a);
+    int j = stringobject_len(b);
+    char *s = (char *) malloc(sizeof(char) * (i + j + 1));
+    strcpy(s, ((EmStringObject *)a)->sval);
+    strcat(s, ((EmStringObject *)b)->sval);
+    return newstringobject(s);
+}
+
+
+static EmSequenceMethods string_as_sequence = {
+        stringobject_len,
+        stringobject_concate,
+        0,
+        0,
+        0,
+        0,
+};
+
 
 
 EmTypeObject Stringtype = {
@@ -100,6 +124,6 @@ EmTypeObject Stringtype = {
         stringobject_boolean,           // tp_boolean
 
         0,                              // tp_as_number
-        0,                              // tp_as_sequence
+        &string_as_sequence,            // tp_as_sequence
         0,                              // tp_as_mapping
 };
