@@ -107,3 +107,5 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 enum cmp_op {LT, LE, EQ, NE, GT, GE, IN, NOT_IN, IS, IS_NOT, EXC_MATCH, BAD};
 
 #define HAS_ARG(op) ((op) >= HAVE_ARGUMENT)
+
+extern char *opcode_strings[];

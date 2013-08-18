@@ -35,6 +35,142 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "bltinmodule.h"
 #include "traceback.h"
 
+char *opcode_strings[] = {
+    "STOP_CODE",
+    "POP_TOP",
+    "ROT_TWO",
+    "ROT_THREE",
+    "DUP_TOP",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "UNARY_POSITIVE",
+    "UNARY_NEGATIVE",
+    "UNARY_NOT",
+    "UNARY_CONVERT",
+    "UNARY_CALL",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "BINARY_MULTIPLY",
+    "BINARY_DIVIDE",
+    "BINARY_MODULO",
+    "BINARY_ADD",
+    "BINARY_SUBTRACT",
+    "BINARY_SUBSCR",
+    "BINARY_CALL",
+    "",
+    "",
+    "",
+    "SLICE",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "STORE_SLICE",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "DELETE_SLICE",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "STORE_SUBSCR",
+    "DELETE_SUBSCR",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "PRINT_EXPR",
+    "PRINT_ITEM",
+    "PRINT_NEWLINE",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "BREAK_LOOP",
+    "RAISE_EXCEPTION",
+    "LOAD_LOCALS",
+    "RETURN_VALUE",
+    "REQUIRE_ARGS",
+    "REFUSE_ARGS",
+    "BUILD_FUNCTION",
+    "POP_BLOCK",
+    "END_FINALLY",
+    "BUILD_CLASS",
+    "STORE_NAME",
+    "DELETE_NAME",
+    "UNPACK_TUPLE",
+    "UNPACK_LIST",
+    "",
+    "STORE_ATTR",
+    "DELETE_ATTR",
+    "",
+    "",
+    "",
+    "LOAD_CONST",
+    "LOAD_NAME",
+    "BUILD_TUPLE",
+    "BUILD_LIST",
+    "BUILD_MAP",
+    "LOAD_ATTR",
+    "COMPARE_OP",
+    "IMPORT_NAME",
+    "IMPORT_FROM",
+    "",
+    "JUMP_FORWARD",
+    "JUMP_IF_FALSE",
+    "JUMP_IF_TRUE",
+    "JUMP_ABSOLUTE",
+    "FOR_LOOP",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "SETUP_LOOP",
+    "SETUP_EXCEPT",
+    "SETUP_FINALLY",
+    "",
+    "",
+    "",
+    "",
+    "SET_LINENO",
+};
+
+
+#define OP_STR(i)       opcode_strings[i]
+
+
+
 #ifndef NDEBUG
 #define TRACE
 #endif
@@ -243,6 +379,7 @@ call_builtin(func, arg)
                                "classobject() allows no arguments");
                        return NULL;
                }
+               printf("here\n");
                return newclassmemberobject(func);
        }
        err_setstr(TypeError, "call of non-function");
@@ -600,6 +737,11 @@ build_class(v, w)
                err_setstr(SystemError, "build_class with non-dictionary");
                return NULL;
        }
+       printf("!!! class !!!\n");
+       printobject(v, stdout, 0);
+       printf("\n");
+       printobject(w, stdout, 0);
+       printf("\n");
        return newclassobject(v, w);
 }
 
@@ -716,6 +858,8 @@ eval_code(co, globals, locals, arg)
                opcode = NEXTOP();
                if (HAS_ARG(opcode))
                        oparg = NEXTARG();
+
+               printf("%s\n", OP_STR(opcode));
 
 #ifdef TRACE
                /* Instruction tracing */
@@ -1014,6 +1158,9 @@ eval_code(co, globals, locals, arg)
 
                case LOAD_LOCALS:
                        v = f->f_locals;
+                       printf("        ");
+                       printobject(v, stdout, 0);
+                       printf("\n");
                        INCREF(v);
                        PUSH(v);
                        break;
@@ -1041,6 +1188,7 @@ eval_code(co, globals, locals, arg)
 
                case BUILD_FUNCTION:
                        v = POP();
+                       printcodeobject(v);
                        x = newfuncobject(v, f->f_globals);
                        DECREF(v);
                        PUSH(x);
@@ -1091,6 +1239,7 @@ eval_code(co, globals, locals, arg)
 
                case STORE_NAME:
                        name = GETNAME(oparg);
+                       printf("        %s\n", name);
                        v = POP();
                        err = dictinsert(f->f_locals, name, v);
                        DECREF(v);
@@ -1098,6 +1247,7 @@ eval_code(co, globals, locals, arg)
 
                case DELETE_NAME:
                        name = GETNAME(oparg);
+                       printf("        %s\n", name);
                        if ((err = dictremove(f->f_locals, name)) != 0)
                                err_setstr(NameError, name);
                        break;
@@ -1146,6 +1296,7 @@ eval_code(co, globals, locals, arg)
 
                case STORE_ATTR:
                        name = GETNAME(oparg);
+                       printf("        %s\n", name);
                        v = POP();
                        u = POP();
                        err = setattr(v, name, u); /* v.name = u */
@@ -1155,6 +1306,7 @@ eval_code(co, globals, locals, arg)
 
                case DELETE_ATTR:
                        name = GETNAME(oparg);
+                       printf("        %s\n", name);
                        v = POP();
                        err = setattr(v, name, (object *)NULL);
                                                        /* del v.name */
@@ -1163,12 +1315,16 @@ eval_code(co, globals, locals, arg)
 
                case LOAD_CONST:
                        x = GETCONST(oparg);
+                       printf("        ");
+                       printobject(x, stdout, 0);
+                       printf("\n");
                        INCREF(x);
                        PUSH(x);
                        break;
 
                case LOAD_NAME:
                        name = GETNAME(oparg);
+                       printf("        %s\n", name);
                        x = dictlookup(f->f_locals, name);
                        if (x == NULL) {
                                x = dictlookup(f->f_globals, name);
@@ -1215,6 +1371,7 @@ eval_code(co, globals, locals, arg)
 
                case LOAD_ATTR:
                        name = GETNAME(oparg);
+                       printf("        %s\n", name);
                        v = POP();
                        x = getattr(v, name);
                        DECREF(v);
@@ -1232,6 +1389,7 @@ eval_code(co, globals, locals, arg)
 
                case IMPORT_NAME:
                        name = GETNAME(oparg);
+                       printf("        %s\n", name);
                        x = import_module(name);
                        XINCREF(x);
                        PUSH(x);
@@ -1239,6 +1397,7 @@ eval_code(co, globals, locals, arg)
 
                case IMPORT_FROM:
                        name = GETNAME(oparg);
+                       printf("        %s\n", name);
                        v = TOP();
                        err = import_from(f->f_locals, v, name);
                        break;
@@ -1434,3 +1593,32 @@ eval_code(co, globals, locals, arg)
        else
                return NULL;
 }
+
+
+void printcodeobject(object *ob) {
+    codeobject *co = (codeobject *)ob;
+    unsigned char *next_instr = GETUSTRINGVALUE(co->co_code);
+    int opcode, oparg;
+    char *name;
+
+    while (1) {
+        opcode = NEXTOP();
+        if (HAS_ARG(opcode))
+            oparg = NEXTARG();
+
+        if (opcode == STORE_NAME) {
+            name = ((((stringobject *)(((listobject *)((co->co_names)))->ob_item[(((oparg)))]))->ob_sval));
+            printf("---> %s (%s)\n", OP_STR(opcode), name);
+        } else {
+            printf("---> %s\n", OP_STR(opcode));
+        }
+        if (opcode == RETURN_VALUE)
+            break;
+    }
+
+}
+
+
+
+
+
