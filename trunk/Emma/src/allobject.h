@@ -23,6 +23,8 @@
 #include "funcobject.h"
 #include "codeobject.h"
 #include "fileobject.h"
+#include "moduleobject.h"
+#include "bltinmethodobject.h"
 
 
 #endif /* ALLOBJECT_H_ */

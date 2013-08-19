@@ -18,5 +18,6 @@ extern EmTypeObject Stringtype;
 EmObject *newstringobject(char *sval);
 EmObject *newstringobject_from_int(long ival);
 EmObject *newstringobject_from_float(double fval);
+char *getstringvalue(EmObject *ob);
 
 #endif /* STRINGOBJECT_H_ */

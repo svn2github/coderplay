@@ -23,6 +23,7 @@
 #include "opcode.h"
 #include "compiler.h"
 #include "vm.h"
+#include "bltinmodule.h"
 
 
 /*

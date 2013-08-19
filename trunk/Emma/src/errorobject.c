@@ -44,6 +44,7 @@ static char *error_types[] = {
         "IndexError",
         "SyntaxError",
         "MagicError",
+        "RUNTIME_ERROR",
 };
 
 void printerror() {

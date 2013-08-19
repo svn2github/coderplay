@@ -34,6 +34,8 @@ int hashobject_haskey(EmObject *ob, EmObject *key);
 EmObject* hashobject_insert(EmObject *ho, EmObject *key, EmObject *val);
 int hashobject_delete(EmObject *ho, EmObject *key);
 
+EmObject *hashobject_keys(EmObject *ob);
+
 EmObject *hashobject_lookup_by_string(EmObject *ho, char *key);
 int hashobject_haskey_by_string(EmObject *ho, char *key);
 EmObject *hashobject_insert_by_string(EmObject *ho, char *key, EmObject *val);

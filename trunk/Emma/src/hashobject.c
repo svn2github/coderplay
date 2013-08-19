@@ -48,6 +48,23 @@ newhashobject_from_size(unsigned int size_req) {
 }
 
 EmObject *
+newhashobject_from_list(EmObject *ob) {
+    int size = listobject_len(ob);
+    if (size % 2 != 0) {
+        log_error(RUNTIME_ERROR, "number of list items must be even");
+        return NULL;
+    }
+    size /= 2;
+    EmObject *ho = newhashobject_from_size(size);
+    int ii;
+    for (ii = 0; ii < size; ii += 2) {
+        hashobject_insert(ho, listobject_get(ob, ii), listobject_get(ob, ii+1));
+    }
+    return ho;
+}
+
+
+EmObject *
 newhashobject() {
     return newhashobject_from_size(DEFAULT_HASH_SIZE);
 }
@@ -100,6 +117,9 @@ __hashobject_lookup(EmHashObject *ho, EmObject *key, unsigned int *idx)
 
     // calculate the hash
     hashval = hashobj(key);
+    if (hashval < 0) {
+        return NULL;
+    }
     *idx = hashval % ho->size;
 
     // calculate the increment for linear probing
@@ -237,6 +257,27 @@ hashobject_delete(EmObject *ob, EmObject *key) {
         return 0;
     }
 }
+
+int
+hashobject_len(EmObject *ob) {
+    return ob->nitems;
+}
+
+EmObject *
+hashobject_keys(EmObject *ob) {
+    EmHashObject *ho = (EmHashObject *)ob;
+
+    EmObject *lo = newlistobject(ho->nitems);
+    int i;
+    for (i = 0; i < ho->size; i++) {
+        if (ho->table[i] != NULL) {
+            listobject_append(lo, ho->table[i]->key);
+        }
+    }
+    return lo;
+}
+
+
 
 /*
  * Convenience function for String keys
