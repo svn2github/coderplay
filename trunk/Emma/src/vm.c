@@ -266,6 +266,18 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 PUSH(ob);
                 break;
 
+            case OP_MKHASH:
+                w = newhashobject_from_size(arg);
+                for (ii=0; ii<2*arg; ii+=2) {
+                    v = POP();
+                    u = POP();
+                    w = hashobject_insert(w, u, v);
+                    DECREF(u);
+                    DECREF(v);
+                }
+                PUSH(w);
+                break;
+
             case OP_PRINT:
                 v = POP(); // list
                 u = POP(); // destination

@@ -38,7 +38,7 @@ static int check_params(BltinmethodParamsDesc *desc, EmObject *ob) {
         char *match;
         int ii;
         for (ii = 0; ii < listobject_len(keylist); ii++) {
-            kw = listobject_get(keywords, ii);
+            kw = listobject_get(keylist, ii);
             match = strstr(desc->keywords, getstringvalue(kw));
             DECREF(kw);
             if (match == NULL) {
