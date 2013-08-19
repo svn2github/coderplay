@@ -418,26 +418,33 @@ static void compile_arglist(AstNode *sn) {
                 count++;
             }
         }
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_MKLIST;
+        SET_I_ARG(instr, count);
+
         /*
          * Process any keyword style params
          */
         if (count != sn->size) { // still have keyword args
+            count = 0;
             for (ii = 0; ii < sn->size; ii++) {
                 if (AST_GET_MEMBER(sn,ii)->type == AST_KVPAIR) {
                     compile_ast_node(AST_GET_MEMBER(sn,ii));
+                    count++;
                 }
             }
             instr = next_instr(cu->curblock);
             instr->opcode = OP_MKHASH;
             SET_I_ARG(instr, count);
-            SET_I_ROWCOL(instr, sn);
-            count++; // hash is only 1 more element for the list
+        } else {
+            idx = idx_in_consts("null");
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_PUSHC;
+            SET_I_ARG(instr, idx);
         }
         instr = next_instr(cu->curblock);
         instr->opcode = OP_MKLIST;
-        SET_I_ARG(instr, count);
-        SET_I_ROWCOL(instr, sn)
-        ;
+        SET_I_ARG(instr, 2);
     }
 }
 

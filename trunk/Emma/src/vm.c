@@ -9,7 +9,7 @@
 #define DEFAULT_VALUESTACK_SIZE     50
 
 static VM *vm;
-static Environment *topenv;
+Environment *topenv;
 
 Environment *
 newenv(Environment *parent) {
@@ -136,6 +136,11 @@ int vm_init() {
     env_set(topenv, name, val);
     DECREF(name);
     DECREF(val);
+
+    /*
+     * bltin methods
+     */
+    bltin_init();
 
     return 1;
 }
@@ -264,8 +269,24 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             case OP_PRINT:
                 v = POP(); // list
                 u = POP(); // destination
-                printobj(v, ((EmFileObject *)u)->fp);
+                for (ii=0;ii<v->nitems;ii++) {
+                    printobj(listobject_get(v,ii), ((EmFileObject *)u)->fp);
+                }
                 fprintf(((EmFileObject *)u)->fp, "\n");
+                DECREF(u);
+                DECREF(v);
+                break;
+
+
+            case OP_CALL:
+                printf("call\n");
+                v = POP(); // the params list
+                u = POP(); // the func
+                EmObject *retval;
+                if (u->type == &Bltinmethodtype) {
+                    retval = (*((EmBltinmethodObject *)u)->method)(NULL, v);
+                }
+                PUSH(retval);
                 DECREF(u);
                 DECREF(v);
                 break;

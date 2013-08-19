@@ -16,14 +16,15 @@ newbltinmethodobject(char *name, bo_method method, EmObject *self) {
     ob->name = newstringobject(name);
     ob->method = method;
     ob->self = self;
-    return NULL;
+    return (EmObject *)ob;
 }
 
 void bltinmethodobject_free(EmObject *ob) {
     EmBltinmethodObject *blto;
     blto = (EmBltinmethodObject *)ob;
     DECREF(blto->name);
-    DECREF(blto->self);
+    if (blto->self)
+        DECREF(blto->self);
     DEL(blto);
 }
 

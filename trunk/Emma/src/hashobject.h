@@ -9,7 +9,7 @@
 #define HASHOBJECT_H_
 
 #define is_EmHashObject(ob) ((ob)->type == &Hashtype)
-#define DEFAULT_HASH_SIZE       13u
+#define DEFAULT_HASH_SIZE       7u
 
 typedef struct {
     EmObject *key;

@@ -9,9 +9,9 @@
 
 #define NEWOBJ(type, typeobj)   ((type *) newobj(typeobj))
 
-#define NEWREF(ob)  ob->refcnt = 1
-#define INCREF(ob)  ob->refcnt++
-#define DECREF(ob)  if (--ob->refcnt == 0) freeobj(ob)
+#define NEWREF(ob)  (ob)->refcnt = 1
+#define INCREF(ob)  (ob)->refcnt++
+#define DECREF(ob)  if (--(ob)->refcnt == 0) freeobj(ob)
 #define CLRREF(ob)  freeobj(ob)
 
 #define DEL(p)      free(p); (p) = NULL

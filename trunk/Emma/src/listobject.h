@@ -9,7 +9,7 @@
 #define LISTOBJECT_H_
 
 #define is_EmListObject(ob) ((ob)->type == &Listtype)
-#define DEFAULT_LIST_SIZE       16u
+#define DEFAULT_LIST_SIZE       1u
 
 
 typedef struct _listobject {

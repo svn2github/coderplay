@@ -36,6 +36,7 @@ typedef struct _vm {
     TryFrame *curtry; // currently working try frame
 } VM;
 
+extern Environment *topenv;
 
 EmObject* run_codeobject(EmCodeObject *co, Environment *env);
 

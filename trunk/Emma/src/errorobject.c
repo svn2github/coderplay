@@ -30,6 +30,7 @@ void reset_error() {
 
 void *log_error(int errorNumber, char *message) {
 
+    printf("%s\n", message);
     errobj.errorNumber = errorNumber;
     errobj.message = message;
     return NULL;

@@ -58,7 +58,7 @@ newhashobject_from_list(EmObject *ob) {
     EmObject *ho = newhashobject_from_size(size);
     int ii;
     for (ii = 0; ii < size; ii += 2) {
-        hashobject_insert(ho, listobject_get(ob, ii), listobject_get(ob, ii+1));
+        ho = hashobject_insert(ho, listobject_get(ob, ii), listobject_get(ob, ii+1));
     }
     return ho;
 }
@@ -177,23 +177,23 @@ hashobject_haskey(EmObject *ob, EmObject *key) {
 static EmHashObject *
 hashobject_rehash(EmHashObject *ho)
 {
-    EmHashObject * newho;
+    EmObject * newho;
     unsigned int size;
     int i;
 
     /* calculate new hash table size based on load factor */
     size = ho->nitems * 2u;  // 50% load
-    newho = (EmHashObject *)newhashobject_from_size(size);
+    newho = newhashobject_from_size(size);
 
     /* rehash the values on the old hash table */
     for (i = 0; i < ho->size; i++) {
         if (ho->table[i] != NULL) {
-            hashobject_insert((EmObject *)newho,
+            newho = hashobject_insert(newho,
                     ho->table[i]->key, ho->table[i]->val);
         }
     }
     hashobject_free((EmObject *)ho);
-    return newho;
+    return (EmHashObject *)newho;
 }
 
 EmObject *

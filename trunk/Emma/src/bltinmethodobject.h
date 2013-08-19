@@ -25,4 +25,9 @@ extern EmTypeObject Bltinmethodtype;
 
 EmObject *newbltinmethodobject();
 
+typedef struct _methodlist {
+    char *name;
+    bo_method meth;
+} Methodlist;
+
 #endif /* BLTINMETHODOBJECT_H_ */

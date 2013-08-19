@@ -34,20 +34,20 @@ void init_all(int argc, char **argv) {
     literalTable = newhashobject();
     // Add commonly used literals
     ob = newintobject(1);
-    hashobject_insert_by_string(literalTable, "1", ob);
+    literalTable = hashobject_insert_by_string(literalTable, "1", ob);
     DECREF(ob);
     ob = newintobject(-1);
-    hashobject_insert_by_string(literalTable, "-1", ob);
+    literalTable = hashobject_insert_by_string(literalTable, "-1", ob);
     DECREF(ob);
     ob = newintobject(0);
-    hashobject_insert_by_string(literalTable, "0", ob);
+    literalTable = hashobject_insert_by_string(literalTable, "0", ob);
     DECREF(ob);
 
     ob = newstringobject("*");
-    hashobject_insert_by_string(literalTable, "*", ob);
+    literalTable = hashobject_insert_by_string(literalTable, "*", ob);
     DECREF(ob);
 
-    hashobject_insert_by_string(literalTable, "null", &nulobj);
+    literalTable = hashobject_insert_by_string(literalTable, "null", &nulobj);
 
 
     // initialize the lexer
@@ -71,10 +71,10 @@ int run_file() {
 
     ptree = parse();
     if (ptree) {
-        //printtree(ptree);
+        printtree(ptree);
 
         stree = ast_from_ptree(ptree);
-        //printstree(stree);
+        printstree(stree);
 
 
         co = compile_ast_tree(stree);
