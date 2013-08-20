@@ -22,7 +22,7 @@ void floatobject_free(EmObject *ob) {
 }
 
 void floatobject_print(EmObject *ob, FILE *fp) {
-    fprintf(fp, "%f\n", ((EmFloatObject *)ob)->fval);
+    fprintf(fp, "%f", ((EmFloatObject *)ob)->fval);
 }
 
 char *floatobject_tostr(EmObject *ob) {

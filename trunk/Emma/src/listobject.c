@@ -53,9 +53,13 @@ void listobject_free(EmObject *ob) {
 void listobject_print(EmObject *ob, FILE *fp) {
     EmListObject *lo = (EmListObject *)ob;
     int i;
+    fprintf(fp, "[");
     for (i=0;i<lo->nitems;i++) {
-        fprintf(fp, "%s, ", tostrobj(lo->list[i]));
+        printobj(lo->list[i], fp);
+        if (i < lo->nitems - 1)
+            fprintf(fp, ", ");
     }
+    fprintf(fp, "]");
 }
 
 char *listobject_tostr(EmObject *ob) {

@@ -34,6 +34,11 @@ import
 
 call
 
+get_field
+get_index
+get_slice
+get_idxlist
+
 set_field
 set_index
 set_slice

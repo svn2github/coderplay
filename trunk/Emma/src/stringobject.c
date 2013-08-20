@@ -41,7 +41,7 @@ void stringobject_free(EmObject *ob) {
 }
 
 void stringobject_print(EmObject *ob, FILE *fp) {
-    fprintf(fp, "%s\n", ((EmStringObject *)ob)->sval);
+    fprintf(fp, "%s", ((EmStringObject *)ob)->sval);
 }
 
 char *stringobject_tostr(EmObject *ob) {

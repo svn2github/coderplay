@@ -751,6 +751,13 @@ static void compile_ast_node(AstNode *sn) {
         }
         break;
 
+    case AST_INDEX:
+        compile_ast_node(AST_GET_MEMBER(sn,0)); // the list
+        compile_ast_node(AST_GET_MEMBER(sn,1)); // the index
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_GET_INDEX;
+        break;
+
     case AST_RAISE:
         break;
 

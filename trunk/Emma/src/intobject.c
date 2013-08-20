@@ -23,7 +23,7 @@ void intobject_free(EmObject *ob) {
 }
 
 void intobject_print(EmObject *ob, FILE *fp) {
-    fprintf(fp, "%ld\n", ((EmIntObject *)ob)->ival);
+    fprintf(fp, "%ld", ((EmIntObject *)ob)->ival);
 }
 
 char *intobject_tostr(EmObject *ob) {
@@ -64,6 +64,10 @@ static EmNumberMethods int_as_number = {
         0,
 };
 
+
+int getintvalue(EmObject *ob) {
+    return ((EmIntObject *) ob)->ival;
+}
 
 
 EmTypeObject Inttype = {

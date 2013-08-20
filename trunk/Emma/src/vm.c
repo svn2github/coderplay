@@ -304,8 +304,25 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 DECREF(v);
                 break;
 
+            case OP_GET_INDEX:
+                u = POP(); // the index, must be integer
+                w = POP(); // the list object
+                v = listobject_get(w, getintvalue(u));
+                PUSH(v);
+                break;
+
+            case OP_SET_INDEX:
+                u = POP(); // the index, must be integer
+                w = POP(); // the list object
+                v = POP(); // the value
+                listobject_set(w, getintvalue(u), v);
+                DECREF(u);
+                DECREF(v);
+                DECREF(w);
+                break;
+
             default:
-                printf("here\n");
+                printf("unhandled OP code\n");
                 break;
         }
 
