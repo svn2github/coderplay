@@ -282,7 +282,9 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 v = POP(); // list
                 u = POP(); // destination
                 for (ii=0;ii<v->nitems;ii++) {
-                    printobj(listobject_get(v,ii), ((EmFileObject *)u)->fp);
+                    w = listobject_get(v,ii);
+                    printobj(w, ((EmFileObject *)u)->fp);
+                    DECREF(w);
                 }
                 fprintf(((EmFileObject *)u)->fp, "\n");
                 DECREF(u);
