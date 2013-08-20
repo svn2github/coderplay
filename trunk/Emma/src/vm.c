@@ -357,8 +357,18 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 DECREF(w);
                 break;
 
+            case OP_SET_IDXLIST:
+                u = POP(); // the idxlist
+                w = POP(); // the list object
+                v = POP(); // the value
+                listobject_set_idxlist(w, u, v);
+                DECREF(u);
+                DECREF(v);
+                DECREF(w);
+                break;
+
             default:
-                printf("unhandled OP code\n");
+                printf("Unhandled OP code\n");
                 break;
         }
 

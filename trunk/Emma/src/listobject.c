@@ -233,6 +233,24 @@ EmObject *listobject_idxlist(EmObject *ob, EmObject *idxlist) {
     return (EmObject *)newlo;
 }
 
+int listobject_set_idxlist(EmObject *ob, EmObject *idxlist, EmObject *val) {
+    if (listobject_len(idxlist) != listobject_len(val)) {
+        log_error(RUNTIME_ERROR, "number of items do not match for assignment");
+        return 0;
+    }
+    int ii;
+    EmObject *idx, *item;
+    for (ii=0;ii<listobject_len(idxlist);ii++) {
+        idx = listobject_get(idxlist, ii);
+        item = listobject_get(val, ii);
+        listobject_set(ob, getintvalue(idx), item);
+        DECREF(idx);
+        DECREF(item);
+    }
+    return 1;
+}
+
+
 EmListObject *listobject_resize(EmListObject *lo) {
     int newnitems = lo->nitems * 2u; // 50% load
     EmObject ** tmp;
