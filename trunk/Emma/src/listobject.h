@@ -30,6 +30,9 @@ EmObject *listobject_slice(EmObject *ob, int start, int end, int step);
 EmObject *listobject_slice_by_list(EmObject *ob, EmObject *slice);
 EmObject *listobject_idxlist(EmObject *ob, EmObject *idxlist);
 
+int listobject_set_slice(EmObject *ob, EmObject *slice, EmObject *val);
+int listobject_set_idxlist(EmObject *ob, EmObject *idxlist, EmObject *val);
+
 int listobject_set(EmObject *ob, int idx, EmObject *val);
 EmObject *listobject_append(EmObject *ob, EmObject *val);
 EmObject *listobject_insert(EmObject *ob, int idx, EmObject *val);
