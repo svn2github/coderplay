@@ -316,6 +316,24 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 DECREF(w);
                 break;
 
+            case OP_GET_SLICE:
+                u = POP(); // the slice list, 3 elements
+                w = POP(); // the list object
+                v =listobject_slice_by_list(w, u);
+                PUSH(v);
+                DECREF(u);
+                DECREF(w);
+                break;
+
+            case OP_GET_IDXLIST:
+                u = POP(); // the idxlist
+                w = POP(); // the list object
+                v = listobject_idxlist(w, u);
+                PUSH(v);
+                DECREF(u);
+                DECREF(w);
+                break;
+
             case OP_SET_INDEX:
                 u = POP(); // the index, must be integer
                 w = POP(); // the list/hash object

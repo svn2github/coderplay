@@ -27,6 +27,9 @@ void listobject_print(EmObject *ob, FILE *fp);
 
 EmObject *listobject_get(EmObject *ob, int idx);
 EmObject *listobject_slice(EmObject *ob, int start, int end, int step);
+EmObject *listobject_slice_by_list(EmObject *ob, EmObject *slice);
+EmObject *listobject_idxlist(EmObject *ob, EmObject *idxlist);
+
 int listobject_set(EmObject *ob, int idx, EmObject *val);
 EmObject *listobject_append(EmObject *ob, EmObject *val);
 EmObject *listobject_insert(EmObject *ob, int idx, EmObject *val);

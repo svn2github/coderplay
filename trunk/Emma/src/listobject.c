@@ -128,6 +128,7 @@ EmObject *listobject_slice(EmObject *ob, int start, int end, int step) {
 
     int nitems = (int) (fabs((start - end)/step) + 1);
     EmListObject *newlo = (EmListObject *) newlistobject(nitems);
+    newlo->nitems = nitems;
     int i = 0;
     if (start <= end) {
         for (; start <= end; start += step) {
@@ -139,6 +140,33 @@ EmObject *listobject_slice(EmObject *ob, int start, int end, int step) {
             newlo->list[i] = listobject_get(ob, start);
             i++;
         }
+    }
+    return (EmObject *)newlo;
+}
+
+EmObject *listobject_slice_by_list(EmObject *ob, EmObject *slice) {
+    EmObject *start, *end, *step;
+    start = listobject_get(slice, 0);
+    end = listobject_get(slice, 1);
+    step = listobject_get(slice, 2);
+    EmObject *newlo = listobject_slice(ob, getintvalue(start), getintvalue(end), getintvalue(step));
+    DECREF(start);
+    DECREF(end);
+    DECREF(step);
+    return newlo;
+}
+
+EmObject *listobject_idxlist(EmObject *ob, EmObject *idxlist) {
+    EmListObject *newlo;
+    EmObject *idx;
+    int ii, nitems;
+    nitems = listobject_len(idxlist);
+    newlo = (EmListObject *)newlistobject(nitems);
+    newlo->nitems = nitems;
+    for (ii=0; ii<nitems; ii++) {
+        idx = listobject_get(idxlist, ii);
+        newlo->list[ii] = listobject_get(ob, getintvalue(idx));
+        DECREF(idx);
     }
     return (EmObject *)newlo;
 }
