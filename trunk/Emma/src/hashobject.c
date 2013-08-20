@@ -105,8 +105,10 @@ void hashobject_print(EmObject * ob, FILE *fp) {
     int i;
     for (i = 0; i < ho->size; i++) {
         if (ho->table[i] != NULL) {
-            fprintf(fp, "%s:", tostrobj(ho->table[i]->key));
-            fprintf(fp, "    %s\n", tostrobj(ho->table[i]->val));
+            printobj(ho->table[i]->key, fp);
+            fprintf(fp, ":    ");
+            printobj(ho->table[i]->val, fp);
+            fprintf(fp, "\n");
         }
     }
 }

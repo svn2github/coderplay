@@ -306,8 +306,11 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
             case OP_GET_INDEX:
                 u = POP(); // the index, must be integer
-                w = POP(); // the list object
-                v = listobject_get(w, getintvalue(u));
+                w = POP(); // the list/hash object
+                if (is_EmListObject(w))
+                    v = listobject_get(w, getintvalue(u));
+                else
+                    v = hashobject_lookup(w, u);
                 PUSH(v);
                 DECREF(u);
                 DECREF(w);
@@ -315,9 +318,12 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
             case OP_SET_INDEX:
                 u = POP(); // the index, must be integer
-                w = POP(); // the list object
+                w = POP(); // the list/hash object
                 v = POP(); // the value
-                listobject_set(w, getintvalue(u), v);
+                if (is_EmListObject(w))
+                    listobject_set(w, getintvalue(u), v);
+                else
+                    hashobject_insert(w, u, v);
                 DECREF(u);
                 DECREF(v);
                 DECREF(w);

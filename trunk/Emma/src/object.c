@@ -124,7 +124,7 @@ int boolobj(EmObject *ob) {
  */
 
 void null_print(EmObject *ob, FILE *fp) {
-    fprintf(fp, "null\n");
+    fprintf(fp, "null");
 }
 
 char *null_tostr(EmObject *ob) {
