@@ -1167,6 +1167,9 @@ eval_code(co, globals, locals, arg)
 
                case RETURN_VALUE:
                        retval = POP();
+                       printf("        ");
+                       printobject(retval, stdout, 0);
+                       printf("\n");
                        why = WHY_RETURN;
                        break;
 
@@ -1460,6 +1463,7 @@ eval_code(co, globals, locals, arg)
                        if (trace)
                                printf("--- Line %d ---\n", oparg);
 #endif
+                       printf("        %d\n", oparg);
                        lineno = oparg;
                        break;
 
