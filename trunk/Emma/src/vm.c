@@ -347,6 +347,16 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 DECREF(w);
                 break;
 
+            case OP_SET_SLICE:
+                u = POP(); // the slice list
+                w = POP(); // the list object
+                v = POP(); // the value
+                listobject_set_slice(w, u, v);
+                DECREF(u);
+                DECREF(v);
+                DECREF(w);
+                break;
+
             default:
                 printf("unhandled OP code\n");
                 break;

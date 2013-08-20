@@ -535,6 +535,9 @@ static void compile_assign(AstNode *sn) {
         compile_ast_node(AST_GET_MEMBER(sn,0));
         compile_ast_node(AST_GET_MEMBER(sn,1)); // slice
         instr = next_instr(cu->curblock);
+        instr->opcode = OP_MKLIST;
+        SET_I_ARG(instr, 3);
+        instr = next_instr(cu->curblock);
         instr->opcode = OP_SET_SLICE;
         break;
 

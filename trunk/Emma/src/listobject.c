@@ -156,6 +156,68 @@ EmObject *listobject_slice_by_list(EmObject *ob, EmObject *slice) {
     return newlo;
 }
 
+int listobject_set_slice(EmObject *ob, EmObject *slice, EmObject *val) {
+    EmObject *startob, *endob, *stepob;
+    startob = listobject_get(slice, 0);
+    endob = listobject_get(slice, 1);
+    stepob = listobject_get(slice, 2);
+
+    int start, end, step;
+
+    start = getintvalue(startob);
+    end = getintvalue(endob);
+    step = getintvalue(stepob);
+
+    DECREF(startob);
+    DECREF(endob);
+    DECREF(stepob);
+
+    int retval = 1;
+
+    int nitems_0, nitems;
+    nitems_0 = listobject_len(ob);
+    if (start < 0)
+        start += nitems_0;
+    if (end < 0)
+        end += nitems_0;
+
+    if (start >= nitems_0 || end >= nitems_0) {
+        log_error(INDEX_ERROR, "slice out of list boundary");
+        retval = 0;
+        goto end_listobject_set_slice;
+    }
+
+    nitems = (int) (fabs((start - end)/step) + 1);
+
+    if (nitems != listobject_len(val)) {
+        log_error(RUNTIME_ERROR, "number of items do not match for assignment");
+        retval = 0;
+        goto end_listobject_set_slice;
+    }
+
+    EmObject *item;
+    int i = 0;
+    if (start <= end) {
+        for (; start <= end; start += step) {
+            item = listobject_get(val, i);
+            listobject_set(ob, start, item);
+            DECREF(item);
+            i++;
+        }
+    } else {
+        for (; start >= end; i -= step) {
+            item = listobject_get(val, i);
+            listobject_set(ob, start, item);
+            DECREF(item);
+            i++;
+        }
+    }
+
+    end_listobject_set_slice:
+
+    return retval;
+}
+
 EmObject *listobject_idxlist(EmObject *ob, EmObject *idxlist) {
     EmListObject *newlo;
     EmObject *idx;
