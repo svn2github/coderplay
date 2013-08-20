@@ -55,7 +55,7 @@ static int check_params(BltinmethodParamsDesc *desc, EmObject *ob) {
 
 EmObject *
 bltin_list(EmObject *self, EmObject *v) {
-    static BltinmethodParamsDesc desc = { -1, 0, "size", };
+    static BltinmethodParamsDesc desc = { -1, 0, "size value", };
     EmObject *keywords, *pparams;
     EmObject *kw, *item;
     EmObject *ret;
@@ -81,6 +81,15 @@ bltin_list(EmObject *self, EmObject *v) {
             }
         }
         ret = newlistobject_of_null(size);
+        if (keywords != &nulobj) {
+            kw = hashobject_lookup_by_string(keywords, "value");
+            if (kw != NULL) {
+                for (ii=0;ii<listobject_len(ret);ii++) {
+                    listobject_set(ret, ii, kw);
+                }
+                DECREF(kw);
+            }
+        }
         for (ii=0;ii<listobject_len(pparams);ii++) {
             item = listobject_get(pparams, ii);
             listobject_set(ret, ii, item);

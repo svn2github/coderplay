@@ -293,7 +293,6 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
 
             case OP_CALL:
-                printf("call\n");
                 v = POP(); // the params list
                 u = POP(); // the func
                 EmObject *retval;
