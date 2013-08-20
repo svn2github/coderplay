@@ -26,8 +26,7 @@ extern EmTypeObject Hashtype;
 
 EmObject *newhashobject();
 EmObject *newhashobject_from_size(unsigned int size);
-void hashobject_free(EmObject *ho);
-void hashobject_print(EmObject *ho, FILE *fp);
+EmObject *newhashobject_from_list(EmObject *ob);
 
 EmObject* hashobject_lookup(EmObject *ho, EmObject *key);
 int hashobject_haskey(EmObject *ob, EmObject *key);

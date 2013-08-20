@@ -54,11 +54,16 @@ newhashobject_from_list(EmObject *ob) {
         log_error(RUNTIME_ERROR, "number of list items must be even");
         return NULL;
     }
-    size /= 2;
-    EmObject *ho = newhashobject_from_size(size);
+    EmObject *ho = newhashobject_from_size(0);
+
+    EmObject *k, *v;
     int ii;
     for (ii = 0; ii < size; ii += 2) {
-        ho = hashobject_insert(ho, listobject_get(ob, ii), listobject_get(ob, ii+1));
+        k = listobject_get(ob, ii);
+        v = listobject_get(ob, ii+1);
+        ho = hashobject_insert(ho, k, v);
+        DECREF(k);
+        DECREF(v);
     }
     return ho;
 }
@@ -100,8 +105,8 @@ void hashobject_print(EmObject * ob, FILE *fp) {
     int i;
     for (i = 0; i < ho->size; i++) {
         if (ho->table[i] != NULL) {
-            fprintf(fp, "%s:    %s\n", tostrobj(ho->table[i]->key),
-                    tostrobj(ho->table[i]->val));
+            fprintf(fp, "%s:", tostrobj(ho->table[i]->key));
+            fprintf(fp, "    %s\n", tostrobj(ho->table[i]->val));
         }
     }
 }

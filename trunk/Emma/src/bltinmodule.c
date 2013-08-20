@@ -8,7 +8,7 @@
 
 static int check_params(BltinmethodParamsDesc *desc, EmObject *ob) {
 
-    int ret = 1, npparams, haskeywords;
+    int retval = 1, npparams, haskeywords;
     EmObject *keywords, *pparams;
 
     if (ob == &nulobj) {
@@ -24,11 +24,11 @@ static int check_params(BltinmethodParamsDesc *desc, EmObject *ob) {
     npparams = listobject_len(pparams);
     if (npparams > desc->nargs && desc->nargs >= 0) {
         log_error(RUNTIME_ERROR, "incorrect number of arguments");
-        ret = 0;
+        retval = 0;
     }
     if (npparams < desc->nreq_args) {
         log_error(RUNTIME_ERROR, "fewer arguments than required");
-        ret = 0;
+        retval = 0;
     }
     DECREF(pparams);
 
@@ -43,22 +43,22 @@ static int check_params(BltinmethodParamsDesc *desc, EmObject *ob) {
             DECREF(kw);
             if (match == NULL) {
                 log_error(RUNTIME_ERROR, "unknown keyword parameter");
-                ret = 0;
+                retval = 0;
             }
         }
         DECREF(keylist);
     }
     DECREF(keywords);
 
-    return ret;
+    return retval;
 }
 
 EmObject *
 bltin_list(EmObject *self, EmObject *v) {
     static BltinmethodParamsDesc desc = { -1, 0, "size value", };
-    EmObject *keywords, *pparams;
+    EmObject *pparams, *keywords;
     EmObject *kw, *item;
-    EmObject *ret;
+    EmObject *retval;
     int ii, size;
 
     if (check_params(&desc, v) == 0) {
@@ -66,7 +66,7 @@ bltin_list(EmObject *self, EmObject *v) {
     }
 
     if (v == &nulobj) {
-        ret = newlistobject(0);
+        retval = newlistobject(0);
     } else {
         pparams = listobject_get(v, 0);
         keywords = listobject_get(v, 1);
@@ -80,40 +80,48 @@ bltin_list(EmObject *self, EmObject *v) {
                 DECREF(kw);
             }
         }
-        ret = newlistobject_of_null(size);
+        retval = newlistobject_of_null(size);
         if (keywords != &nulobj) {
             kw = hashobject_lookup_by_string(keywords, "value");
             if (kw != NULL) {
-                for (ii=0;ii<listobject_len(ret);ii++) {
-                    listobject_set(ret, ii, kw);
+                for (ii=0;ii<listobject_len(retval);ii++) {
+                    listobject_set(retval, ii, kw);
                 }
                 DECREF(kw);
             }
         }
         for (ii=0;ii<listobject_len(pparams);ii++) {
             item = listobject_get(pparams, ii);
-            listobject_set(ret, ii, item);
+            listobject_set(retval, ii, item);
             DECREF(item);
         }
         DECREF(pparams);
         DECREF(keywords);
     }
 
-    return ret;
+    return retval;
 }
 
 EmObject *
-bltin_hash(EmObject *lo) {
-    int size = listobject_len(lo);
-    if (size % 2 != 0) {
-        log_error(RUNTIME_ERROR, "incorrect number of parameters for hash");
+bltin_hash(EmObject *self, EmObject *v) {
+    static BltinmethodParamsDesc desc = { -1, 0, ""};
+    if (check_params(&desc, v) == 0) {
         return NULL;
     }
-    return NULL;
+
+    EmObject *pparams;
+    EmObject *retval;
+
+    pparams = listobject_get(v, 0);
+    retval = newhashobject_from_list(pparams);
+    DECREF(pparams);
+
+    return retval;
 }
 
 static Methodlist bltin_methods[] = {
         {"list", bltin_list},
+        {"hash", bltin_hash},
         {NULL, NULL},
 };
 
