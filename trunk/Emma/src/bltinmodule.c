@@ -8,7 +8,7 @@
 
 static int check_params(BltinmethodParamsDesc *desc, EmObject *ob) {
 
-    int ret, npparams, haskeywords;
+    int ret = 1, npparams, haskeywords;
     EmObject *keywords, *pparams;
 
     if (ob == &nulobj) {
