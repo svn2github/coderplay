@@ -19,7 +19,7 @@ extern EmTypeObject Filetype;
 
 EmObject *newfileobject(FILE *fp, char *name);
 
-
+FILE *getfp(EmObject *ob);
 
 
 #endif /* FILEOBJECT_H_ */

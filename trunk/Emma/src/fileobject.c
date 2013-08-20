@@ -41,6 +41,10 @@ int fileobject_boolean(EmObject *ob) {
     return 1;
 }
 
+FILE *getfp(EmObject *ob) {
+    return ((EmFileObject *)ob)->fp;
+}
+
 EmTypeObject Filetype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
         0,                              // nitems

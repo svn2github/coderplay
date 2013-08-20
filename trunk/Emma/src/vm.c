@@ -286,7 +286,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                     printobj(w, ((EmFileObject *)u)->fp);
                     DECREF(w);
                 }
-                fprintf(((EmFileObject *)u)->fp, "\n");
+                fprintf(getfp(u), "\n");
                 DECREF(u);
                 DECREF(v);
                 break;
@@ -309,6 +309,8 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 w = POP(); // the list object
                 v = listobject_get(w, getintvalue(u));
                 PUSH(v);
+                DECREF(u);
+                DECREF(w);
                 break;
 
             case OP_SET_INDEX:
