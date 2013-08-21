@@ -43,11 +43,13 @@ int env_set(Environment *env, EmObject *name, EmObject *val) {
     return hashobject_insert(env->binding, name, val);
 }
 
-void env_set_by_string(Environment *env, char *name, EmObject *val) {
+int env_set_by_string(Environment *env, char *name, EmObject *val) {
     EmObject *nameob;
+    int retval;
     nameob = newstringobject(name);
-    env_set(env, nameob, val);
+    retval = env_set(env, nameob, val);
     DECREF(nameob);
+    return retval;
 }
 
 void env_free(Environment *env) {
@@ -186,12 +188,14 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                         log_error(MEMORY_ERROR, "value stack underflow") : \
                         f->valuestack[--f->vs_top])
 
+#define N_VSTACK()  f->vs_top
+
 #define GET_CONST(i)    listobject_get(co->consts,i)
 #define GET_NAME(i)     listobject_get(co->names,i)
 
 
-    int ii;
-    EmObject *u, *v, *w, *x;
+    int ii, ok = 1;
+    EmObject *u, *v, *w, *x = &nulobj;
     int pc = 0;
     int opcode, arg;
 
@@ -258,7 +262,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             case OP_POP:
                 u = GET_NAME(arg);
                 v = POP();
-                env_set(f->env, u, v);
+                ok = env_set(f->env, u, v);
                 DECREF(u);
                 DECREF(v);
                 break;
@@ -267,22 +271,22 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 x = newlistobject_of_null(arg);
                 for (ii=0;ii<arg;ii++) {
                     v = POP();
-                    listobject_set(x, arg-1-ii, v);
+                    ok = listobject_set(x, arg-1-ii, v);
                     DECREF(v);
                 }
                 PUSH(x);
                 break;
 
             case OP_MKHASH:
-                w = newhashobject_from_size(arg);
+                x = newhashobject_from_size(arg);
                 for (ii=0; ii<2*arg; ii+=2) {
                     v = POP();
                     u = POP();
-                    hashobject_insert(w, u, v);
+                    ok = hashobject_insert(x, u, v);
                     DECREF(u);
                     DECREF(v);
                 }
-                PUSH(w);
+                PUSH(x);
                 break;
 
             case OP_PRINT:
@@ -299,15 +303,13 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 DECREF(v);
                 break;
 
-
             case OP_CALL:
                 v = POP(); // the params list
                 u = POP(); // the func
-                EmObject *retval;
                 if (u->type == &Bltinmethodtype) {
-                    retval = (*((EmBltinmethodObject *)u)->method)(NULL, v);
+                    x = (*((EmBltinmethodObject *)u)->method)(NULL, v);
                 }
-                PUSH(retval);
+                PUSH(x);
                 DECREF(u);
                 DECREF(v);
                 break;
@@ -316,10 +318,10 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 u = POP(); // the index, must be integer
                 w = POP(); // the list/hash object
                 if (is_EmListObject(w))
-                    v = listobject_get(w, getintvalue(u));
+                    x = listobject_get(w, getintvalue(u));
                 else
-                    v = hashobject_lookup(w, u);
-                PUSH(v);
+                    x = hashobject_lookup(w, u);
+                PUSH(x);
                 DECREF(u);
                 DECREF(w);
                 break;
@@ -327,8 +329,8 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             case OP_GET_SLICE:
                 u = POP(); // the slice list, 3 elements
                 w = POP(); // the list object
-                v =listobject_slice_by_list(w, u);
-                PUSH(v);
+                x =listobject_slice_by_list(w, u);
+                PUSH(x);
                 DECREF(u);
                 DECREF(w);
                 break;
@@ -336,8 +338,8 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             case OP_GET_IDXLIST:
                 u = POP(); // the idxlist
                 w = POP(); // the list object
-                v = listobject_idxlist(w, u);
-                PUSH(v);
+                x = listobject_idxlist(w, u);
+                PUSH(x);
                 DECREF(u);
                 DECREF(w);
                 break;
@@ -347,9 +349,9 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 w = POP(); // the list/hash object
                 v = POP(); // the value
                 if (is_EmListObject(w))
-                    listobject_set(w, getintvalue(u), v);
+                    ok = listobject_set(w, getintvalue(u), v);
                 else
-                    hashobject_insert(w, u, v);
+                    ok = hashobject_insert(w, u, v);
                 DECREF(u);
                 DECREF(v);
                 DECREF(w);
@@ -359,7 +361,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 u = POP(); // the slice list
                 w = POP(); // the list object
                 v = POP(); // the value
-                listobject_set_slice(w, u, v);
+                ok = listobject_set_slice(w, u, v);
                 DECREF(u);
                 DECREF(v);
                 DECREF(w);
@@ -369,7 +371,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 u = POP(); // the idxlist
                 w = POP(); // the list object
                 v = POP(); // the value
-                listobject_set_idxlist(w, u, v);
+                ok = listobject_set_idxlist(w, u, v);
                 DECREF(u);
                 DECREF(v);
                 DECREF(w);
@@ -377,8 +379,21 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
             default:
                 printf("Unhandled OP code\n");
+                ok = 0;
                 break;
         } // endswitch
+
+        // Check for exception
+        if (x == NULL || ok == 0) {
+            while (N_VSTACK() != 0) {
+                x = POP();
+                if (x != NULL)
+                    DECREF(x);
+            }
+            x = &nulobj;
+            ok = 1;
+
+        }
 
     } // endwhile
 

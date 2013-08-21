@@ -125,14 +125,32 @@ static Methodlist bltin_methods[] = {
         {NULL, NULL},
 };
 
+EmObject *MemoryException;
+EmObject *SystemException;
+EmObject *TypeException;
+EmObject *KeyException;
+EmObject *IndexException;
+EmObject *RuntimeException;
+
 EmObject *last_exception = NULL;
 
-int initerror(Environment *env, char *type, char *message) {
+EmObject *initerror(Environment *env, char *type, char *message) {
+    int ok;
     EmObject *eo;
+
     eo = newexceptionobject(type, message);
-    env_set_by_string(env, type, eo);
-    DECREF(eo);
-    return 1;
+    if (eo == NULL)
+        return NULL;
+
+    ok = env_set_by_string(env, type, eo);
+
+    if (ok) {
+        DECREF(eo);
+        return eo;
+    } else {
+        DECREF(eo);
+        return NULL;
+    }
 }
 
 void bltin_init(Environment *env) {
@@ -145,12 +163,12 @@ void bltin_init(Environment *env) {
         DECREF(v);
     }
 
-    initerror(env, "MemoryException", "no memory");
-    initerror(env, "SystemException", "internal error");
-    initerror(env, "TypeException", "wrong type");
-    initerror(env, "KeyException", "invalid key");
-    initerror(env, "IndexException", "invalid index");
-    initerror(env, "RuntimeException", "runtime error");
+    MemoryException = initerror(env, "MemoryException", "no memory");
+    SystemException =initerror(env, "SystemException", "internal error");
+    TypeException = initerror(env, "TypeException", "wrong type");
+    KeyException = initerror(env, "KeyException", "invalid key");
+    IndexException = initerror(env, "IndexException", "invalid index");
+    RuntimeException = initerror(env, "RuntimeException", "runtime error");
 }
 
 

@@ -66,6 +66,7 @@ int exceptionobject_boolean(EmObject *ob) {
 
 void exception_set(EmObject *ob, char *message, char *value) {
     EmExceptionObject *eo = (EmExceptionObject *)ob;
+
     if (eo->message) {
         DECREF(eo->message);
     }
@@ -78,6 +79,8 @@ void exception_set(EmObject *ob, char *message, char *value) {
     } else {
         eo->value = NULL;
     }
+
+    last_exception = ob;
 }
 
 EmTypeObject Exceptiontype = {

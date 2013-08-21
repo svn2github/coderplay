@@ -8,6 +8,8 @@
 #ifndef EXCEPTIONOBJECT_H_
 #define EXCEPTIONOBJECT_H_
 
+#define ex_nomem(msg,val)       exception_set(MemoryException, msg, val)
+#define ex_badtype(msg,val)     exception_set(TypeException, msg, val)
 
 typedef struct _exceptionobject {
     OB_HEAD;
@@ -17,6 +19,13 @@ typedef struct _exceptionobject {
 } EmExceptionObject;
 
 extern EmTypeObject Exceptiontype;
+
+extern EmObject *MemoryException;
+extern EmObject *SystemException;
+extern EmObject *TypeException;
+extern EmObject *KeyException;
+extern EmObject *IndexException;
+extern EmObject *RuntimeException;
 
 extern EmObject *last_exception;
 
