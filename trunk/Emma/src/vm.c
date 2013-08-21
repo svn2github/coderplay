@@ -9,7 +9,6 @@
 #define DEFAULT_VALUESTACK_SIZE     50
 
 static VM *vm;
-Environment *topenv;
 
 Environment *
 newenv(Environment *parent) {
@@ -42,6 +41,13 @@ env_get(Environment *env, EmObject *name) {
 
 void env_set(Environment *env, EmObject *name, EmObject *val) {
     env->binding = hashobject_insert(env->binding, name, val);
+}
+
+void env_set_by_string(Environment *env, char *name, EmObject *val) {
+    EmObject *nameob;
+    nameob = newstringobject(name);
+    env_set(env, nameob, val);
+    DECREF(nameob);
 }
 
 void env_free(Environment *env) {
@@ -122,7 +128,7 @@ int vm_init() {
     vm->curframe = NULL;
     vm->curtry = NULL;
 
-    if ((topenv = newenv(NULL)) == NULL) {
+    if ((vm->topenv = newenv(NULL)) == NULL) {
         DEL(vm);
         return 0;
     }
@@ -133,14 +139,14 @@ int vm_init() {
     EmObject *name, *val;
     name = newstringobject("stdout");
     val = newfileobject(stdout, "stdout");
-    env_set(topenv, name, val);
+    env_set(vm->topenv, name, val);
     DECREF(name);
     DECREF(val);
 
     /*
      * bltin methods
      */
-    bltin_init();
+    bltin_init(vm->topenv);
 
     return 1;
 }
@@ -148,8 +154,8 @@ int vm_init() {
 void vm_free() {
     executionframe_free(vm->curframe);
     tryframe_free(vm->curtry);
+    env_free(vm->topenv);
     DEL(vm);
-    env_free(topenv);
 }
 
 
@@ -188,7 +194,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
     EmObject *u, *v, *w, *ob;
 
     if (env == NULL)
-        env = newenv(topenv);
+        env = newenv(vm->topenv);
 
     ExecutionFrame *f = newexecutionframe(vm->curframe, co, env);
     vm->curframe = f;

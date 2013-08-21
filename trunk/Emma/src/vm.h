@@ -34,9 +34,8 @@ typedef struct _try_frame {
 typedef struct _vm {
     ExecutionFrame *curframe;   // currently running frame
     TryFrame *curtry; // currently working try frame
+    Environment *topenv; // user code is running in descent of topenv
 } VM;
-
-extern Environment *topenv;
 
 EmObject* run_codeobject(EmCodeObject *co, Environment *env);
 
