@@ -36,6 +36,8 @@ env_get(Environment *env, EmObject *name) {
         else
             return val;
     } while(env != NULL);
+
+    ex_runtime_with_val("undefined name", getstringvalue(name));
     return NULL;
 }
 
