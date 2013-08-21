@@ -342,13 +342,18 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             case OP_PRINT:
                 v = POP(); // list
                 u = POP(); // destination
-                for (ii=0;ii<v->nitems;ii++) {
-                    w = listobject_get(v,ii);
-                    printobj(w, getfp(u));
-                    fprintf(getfp(u), " ");
-                    DECREF(w);
+                if (u->type != &Filetype) {
+                    ex_type("output stream not a file object");
+                    ok = 0;
+                } else {
+                    for (ii=0;ii<v->nitems;ii++) {
+                        w = listobject_get(v,ii);
+                        printobj(w, getfp(u));
+                        fprintf(getfp(u), " ");
+                        DECREF(w);
+                    }
+                    fprintf(getfp(u), "\n");
                 }
-                fprintf(getfp(u), "\n");
                 DECREF(u);
                 DECREF(v);
                 break;
