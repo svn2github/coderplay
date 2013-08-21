@@ -25,6 +25,7 @@
 #include "fileobject.h"
 #include "moduleobject.h"
 #include "bltinmethodobject.h"
+#include "exceptionobject.h"
 
 
 #endif /* ALLOBJECT_H_ */

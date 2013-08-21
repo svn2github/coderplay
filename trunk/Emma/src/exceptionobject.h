@@ -18,8 +18,9 @@ typedef struct _exceptionobject {
 
 extern EmTypeObject Exceptiontype;
 
-EmObject *newexceptionobject(char *errtype, char *message);
 
+EmObject *newexceptionobject(char *errtype, char *message);
+void exceptionobject_free(EmObject *ob);
 
 
 #endif /* EXCEPTIONOBJECT_H_ */

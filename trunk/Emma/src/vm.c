@@ -187,7 +187,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
     EmObject *u, *v, *w, *ob;
 
     if (env == NULL)
-        env = topenv;
+        env = newenv(topenv);
 
     ExecutionFrame *f = newexecutionframe(vm->curframe, co, env);
     vm->curframe = f;

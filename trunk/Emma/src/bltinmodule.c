@@ -125,14 +125,37 @@ static Methodlist bltin_methods[] = {
         {NULL, NULL},
 };
 
+EmObject *last_exception = NULL;
+
+EmObject *MemoryException;
+EmObject *SystemException;
+EmObject *TypeException;
+EmObject *KeyException;
+EmObject *IndexException;
+EmObject *RuntimeException;
+
+void initerrors() {
+    MemoryException = newexceptionobject("MemoryException", "no memory");
+    SystemException = newexceptionobject("SystemException", "internal error");
+    TypeException = newexceptionobject("TypeException", "wrong type");
+    KeyException = newexceptionobject("KeyException", "invalid key");
+    IndexException = newexceptionobject("IndexException", "invalid index");
+    RuntimeException = newexceptionobject("RuntimeException", "runtime error");
+}
+
 void bltin_init() {
     Methodlist *ml;
     EmObject *v;
     for (ml = bltin_methods; ml->name != NULL; ml++) {
         v = newbltinmethodobject(ml->name, ml->meth, NULL);
-        topenv->binding = hashobject_insert_by_string(topenv->binding, ml->name, v);
+        topenv->binding = hashobject_insert_by_string(topenv->binding,
+                ml->name, v);
         DECREF(v);
     }
+    initerrors();
+    topenv->binding = hashobject_insert_by_string(topenv->binding,
+            "MemoryException", MemoryException);
+    DECREF(MemoryException);
 }
 
 

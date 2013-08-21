@@ -74,6 +74,7 @@ void exception_set(EmObject *ob, char *value) {
 
 
 
+
 EmTypeObject Exceptiontype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
         0,                              // nitems

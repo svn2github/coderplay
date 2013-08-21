@@ -14,5 +14,14 @@ typedef struct _bltinmethod_params_desc {
     char keywords[200]; // keywords separated by whitespace
 }BltinmethodParamsDesc;
 
+extern EmObject *last_exception;
+
+extern EmObject *MemoryException;
+extern EmObject *SystemException;
+extern EmObject *TypeException;
+extern EmObject *KeyException;
+extern EmObject *IndexException;
+extern EmObject *RuntimeException;
+
 
 #endif /* BLTINMODULE_H_ */
