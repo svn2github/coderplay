@@ -40,6 +40,7 @@ typedef struct _vm {
 extern VM *vm;
 
 Environment *newenv(Environment *parent);
+void env_free(Environment *env);
 
 EmObject* run_codeobject(EmCodeObject *co, Environment *env);
 

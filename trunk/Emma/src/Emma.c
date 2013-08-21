@@ -133,6 +133,7 @@ int run_prompt() {
             }
         }
     }
+    env_free(env);
 
     return 1;
 }
