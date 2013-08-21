@@ -149,6 +149,7 @@ void vm_free() {
     executionframe_free(vm->curframe);
     tryframe_free(vm->curtry);
     DEL(vm);
+    env_free(topenv);
 }
 
 
