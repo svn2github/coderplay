@@ -135,9 +135,10 @@ EmObject *IndexException;
 EmObject *RuntimeException;
 
 int initerror(Environment *env, char *type, char *message) {
-    EmObject *eo, *name;
+    EmObject *eo;
     eo = newexceptionobject(type, message);
     env_set_by_string(env, type, eo);
+    DECREF(eo);
     return 1;
 }
 
