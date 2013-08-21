@@ -212,6 +212,7 @@ hashobject_rehash(EmHashObject *ho)
                     oldtable[i]->key, oldtable[i]->val);
             DECREF(oldtable[i]->key);
             DECREF(oldtable[i]->val);
+            DEL(oldtable[i]); // free the entry root
         }
     }
     DEL(oldtable);
