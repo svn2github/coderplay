@@ -358,6 +358,9 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 u = POP(); // the func
                 if (u->type == &Bltinmethodtype) {
                     x = (*((EmBltinmethodObject *)u)->method)(NULL, v);
+                } else {
+                    ex_type("not callable object");
+                    x = NULL;
                 }
                 PUSH(x);
                 DECREF(u);
