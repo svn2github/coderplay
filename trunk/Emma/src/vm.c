@@ -14,13 +14,13 @@ Environment *
 newenv(Environment *parent) {
     Environment *e = (Environment *) malloc(sizeof(Environment));
     if (e == NULL) {
-        log_error(MEMORY_ERROR, "no memory for new environment");
+        ex_mem("no memory for new environment");
         return NULL;
     }
     e->parent = parent;
     if ((e->binding = newhashobject()) == NULL) {
         DEL(e);
-        log_error(MEMORY_ERROR, "no memory for environment binding");
+        ex_mem("no memory for environment binding");
         return NULL;
     }
     return e;
@@ -62,7 +62,7 @@ newexecutionframe(ExecutionFrame *prev, EmCodeObject *co, Environment *env) {
     ExecutionFrame *f;
     f = (ExecutionFrame *) malloc(sizeof(ExecutionFrame));
     if (f == NULL) {
-        log_error(MEMORY_ERROR, "no memory for new execution frame");
+        ex_mem("no memory for new execution frame");
         return NULL;
     }
     f->prev = prev;
@@ -72,7 +72,7 @@ newexecutionframe(ExecutionFrame *prev, EmCodeObject *co, Environment *env) {
             sizeof(EmObject *) * DEFAULT_VALUESTACK_SIZE);
     if (f->valuestack == NULL) {
         DEL(f);
-        log_error(MEMORY_ERROR, "no memory for value stack");
+        ex_mem("no memory for value stack");
         return NULL;
     }
     f->vs_size = DEFAULT_VALUESTACK_SIZE;
@@ -80,15 +80,19 @@ newexecutionframe(ExecutionFrame *prev, EmCodeObject *co, Environment *env) {
     return f;
 }
 
-void resizevaluestack(ExecutionFrame *f) {
+int resizevaluestack(ExecutionFrame *f) {
     int newsize = f->vs_size + DEFAULT_VALUESTACK_SIZE;
+
     f->valuestack = (EmObject **) realloc(f->valuestack,
             newsize * sizeof(EmObject *));
+
     if (f->valuestack == NULL) {
-        log_error(MEMORY_ERROR, "no memory to resize value stack");
-    } else {
-        f->vs_size = newsize;
+        ex_mem("no memory to resize value stack");
+        return 0;
     }
+
+    f->vs_size = newsize;
+    return 1;
 }
 
 void executionframe_free(ExecutionFrame *f) {
@@ -106,12 +110,13 @@ TryFrame *
 newtryframe(TryFrame *prev, ExecutionFrame *f, int pc) {
     TryFrame *t;
     if ((t = (TryFrame *) malloc(sizeof(TryFrame))) == NULL) {
-        log_error(MEMORY_ERROR, "no memory for new try frame");
+        ex_mem("no memory for new try frame");
         return NULL;
     }
     t->prev = prev;
     t->f = f;
     t->pc = pc;
+    return t;
 }
 
 void tryframe_free(TryFrame *t) {
@@ -124,7 +129,7 @@ void tryframe_free(TryFrame *t) {
 
 int vm_init() {
     if ((vm = (VM *) malloc(sizeof(VM))) == NULL) {
-        log_error(MEMORY_ERROR, "no memory for virtual machine");
+        ex_mem("no memory for virtual machine");
         return 0;
     }
     vm->curframe = NULL;
@@ -168,7 +173,7 @@ add(EmObject *u, EmObject *v) {
     } else if (u->type->tp_as_sequence != NULL) {
         return (*u->type->tp_as_sequence->concate)(u,v);
     } else {
-        log_error(TYPE_ERROR, "operator + not supported for operands");
+        ex_type("operator + not supported for operands");
         return NULL;
     }
 }
@@ -185,7 +190,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                         f->valuestack[f->vs_top++] = v;
 
 #define POP()       ((f->vs_top <= 0) ? \
-                        log_error(MEMORY_ERROR, "value stack underflow") : \
+                        NULL : \
                         f->valuestack[--f->vs_top])
 
 #define N_VSTACK()  f->vs_top
@@ -379,7 +384,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 break;
 
             default:
-                printf("Unhandled OP code\n");
+                ex_system_with_val("Unknown opcode", opcode_types[opcode]);
                 ok = 0;
                 break;
         } // endswitch

@@ -8,10 +8,13 @@
 #ifndef EXCEPTIONOBJECT_H_
 #define EXCEPTIONOBJECT_H_
 
-#define ex_nomem(msg)           set_exception(MemoryException, msg, NULL)
-#define ex_badtype(msg)         set_exception(TypeException, msg, NULL)
+#define ex_mem(msg)             set_exception(MemoryException, msg, NULL)
+#define ex_type(msg)            set_exception(TypeException, msg, NULL)
 #define ex_index(msg)           set_exception(IndexException, msg, NULL)
 #define ex_runtime(msg)         set_exception(RuntimeException, msg, NULL)
+#define ex_key(msg)             set_exception(KeyException, msg, NULL)
+
+#define ex_system_with_val(msg,val)     set_exception(SystemException,msg,val)
 
 typedef struct _exceptionobject {
     OB_HEAD;

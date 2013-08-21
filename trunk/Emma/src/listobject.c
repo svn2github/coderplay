@@ -23,7 +23,7 @@ newlistobject(unsigned int size) {
     if ((lo->list = (EmObject **) calloc(lo->size, sizeof(EmObject *)))
             == NULL) {
         DEL(lo);
-        ex_nomem("not enough memory for list");
+        ex_mem("not enough memory for list");
         return NULL;
     }
     return (EmObject *)lo;
@@ -94,7 +94,7 @@ listobject_concate(EmObject *ob1, EmObject *ob2) {
 
 EmObject *listobject_get(EmObject *ob, int idx) {
     if (!is_EmListObject(ob)) {
-        ex_badtype("wrong type for list set");
+        ex_type("wrong type for list get");
         return NULL;
     }
     EmListObject *lo = (EmListObject *)ob;
@@ -111,7 +111,7 @@ EmObject *listobject_get(EmObject *ob, int idx) {
 
 int listobject_set(EmObject *ob, int idx, EmObject *val) {
     if (!is_EmListObject(ob)) {
-        ex_badtype("wrong type for list set");
+        ex_type("wrong type for list set");
         return 0;
     }
     EmListObject *lo = (EmListObject *)ob;
@@ -271,7 +271,7 @@ static int listobject_resize(EmListObject *lo) {
     EmObject ** tmp;
     tmp = (EmObject **) realloc(lo->list, newnitems * sizeof(EmObject *));
     if (tmp == NULL) {
-        ex_nomem("no memory to resize list");
+        ex_mem("no memory to resize list");
         return 0;
     } else {
         size_t newsize, oldsize;

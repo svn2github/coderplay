@@ -30,8 +30,10 @@ newhashobject_from_size(unsigned int size_req) {
     EmHashObject *ht;
     unsigned int size;
 
-    if (!(size = ht_getprime(size_req)))
-        return log_error(MEMORY_ERROR, "hash table size overflow");
+    if (!(size = ht_getprime(size_req))) {
+        ex_mem("hash table size overflow");
+        return NULL;
+    }
 
     if ((ht = NEWOBJ(EmHashObject, &Hashtype)) == NULL)
         return NULL;
@@ -42,7 +44,8 @@ newhashobject_from_size(unsigned int size_req) {
     if ((ht->table = (EmHashEntry **) calloc(ht->size, sizeof(EmHashEntry *)))
             == NULL) {
         DEL(ht);
-        return log_error(MEMORY_ERROR, "not enough memory for hashtable");
+        ex_mem("not enough memory for hashtable");
+        return NULL;
     }
     return (EmObject *)ht;
 }
@@ -51,7 +54,7 @@ EmObject *
 newhashobject_from_list(EmObject *ob) {
     int size = listobject_len(ob);
     if (size % 2 != 0) {
-        log_error(RUNTIME_ERROR, "number of list items must be even");
+        ex_runtime("number of list items must be even");
         return NULL;
     }
     EmObject *ho = newhashobject_from_size(0);
@@ -77,10 +80,6 @@ newhashobject() {
 void
 hashobject_free(EmObject * ob)
 {
-    if (!is_EmHashObject(ob)) {
-        log_error(TYPE_ERROR, "hash free on non-hash object");
-        return;
-    }
     int i;
     EmHashObject *ho = (EmHashObject *)ob;
     for(i=0;i<ho->size;i++) {
@@ -96,10 +95,7 @@ hashobject_free(EmObject * ob)
 }
 
 void hashobject_print(EmObject * ob, FILE *fp) {
-    if (!is_EmHashObject(ob)) {
-        log_error(TYPE_ERROR, "hash print on non-hash object");
-        return;
-    }
+
     EmHashObject *ho = (EmHashObject *)ob;
 
     int i;
@@ -156,7 +152,7 @@ __hashobject_lookup(EmHashObject *ho, EmObject *key, unsigned int *idx)
 EmObject *
 hashobject_lookup(EmObject *ob, EmObject *key) {
     if (!is_EmHashObject(ob)) {
-        ex_badtype("wrong type for hash lookup");
+        ex_type("wrong type for hash lookup");
         return NULL;
     }
 
@@ -223,7 +219,7 @@ int
 hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
 
     if (!is_EmHashObject(ob)) {
-        ex_badtype("wrong type for hash insert");
+        ex_type("wrong type for hash insert");
         return 0;
     }
     EmHashObject *ho = (EmHashObject *)ob;
@@ -244,7 +240,7 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
     if (new == NULL) { // create new entry
         new = (EmHashEntry*) malloc(sizeof(EmHashEntry));
         if (new == NULL) {
-            log_error(MEMORY_ERROR, "No memory to create new entry of hash");
+            ex_mem("No memory to create new entry of hash");
             return 0;
         }
         new->key = key;
@@ -266,7 +262,7 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
 int
 hashobject_delete(EmObject *ob, EmObject *key) {
     if (!is_EmHashObject(ob)) {
-        log_error(TYPE_ERROR, "hash free on non-hash object");
+        ex_type("wrong type for hash entry delete");
         return 0;
     }
     unsigned int idx;
@@ -278,7 +274,7 @@ hashobject_delete(EmObject *ob, EmObject *key) {
         DEL(found);
         return 1;
     } else {
-        log_error(KEY_ERROR, "key not found");
+        ex_key("key not found");
         return 0;
     }
 }
