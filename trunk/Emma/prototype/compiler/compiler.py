@@ -3,6 +3,7 @@ from utils.utils import filepath, srcdir
 opcode_string = \
 '''
 end
+
 add
 sub
 mul
@@ -48,6 +49,8 @@ setup_for
 for
 
 hasarg
+
+set_row
 
 push
 pushc
