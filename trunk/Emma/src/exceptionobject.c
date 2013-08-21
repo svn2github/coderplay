@@ -64,16 +64,21 @@ int exceptionobject_boolean(EmObject *ob) {
     return 1;
 }
 
-
-void exception_set(EmObject *ob, char *value) {
+void exception_set(EmObject *ob, char *message, char *value) {
     EmExceptionObject *eo = (EmExceptionObject *)ob;
+    if (eo->message) {
+        DECREF(eo->message);
+    }
+    eo->message = newstringobject(message);
+
     if (eo->value)
         DECREF(eo->value);
-    eo->value = newstringobject(value);
+    if (value) {
+        eo->value = newstringobject(value);
+    } else {
+        eo->value = NULL;
+    }
 }
-
-
-
 
 EmTypeObject Exceptiontype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1

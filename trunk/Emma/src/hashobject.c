@@ -61,7 +61,7 @@ newhashobject_from_list(EmObject *ob) {
     for (ii = 0; ii < size; ii += 2) {
         k = listobject_get(ob, ii);
         v = listobject_get(ob, ii+1);
-        ho = hashobject_insert(ho, k, v);
+        hashobject_insert(ho, k, v);
         DECREF(k);
         DECREF(v);
     }
@@ -181,34 +181,49 @@ hashobject_haskey(EmObject *ob, EmObject *key) {
         return 1;
 }
 
-static EmHashObject *
+static int
 hashobject_rehash(EmHashObject *ho)
 {
-    EmObject * newho;
-    unsigned int size;
-    int i;
+    unsigned int newsize, oldsize;
+    EmHashEntry **newtable, **oldtable;
 
     /* calculate new hash table size based on load factor */
-    size = ho->nitems * 2u;  // 50% load
-    newho = newhashobject_from_size(size);
+    newsize = ht_getprime(ho->nitems * 2u);  // 50% load
+
+    printf("here\n");
+    newtable = (EmHashEntry **) calloc(newsize, sizeof(EmHashEntry *));
+    if (newtable == NULL) {
+        return 0;
+    }
+
+    oldtable = ho->table;
+    oldsize = ho->size;
+
+    ho->table = newtable;
+    ho->size = newsize;
+    ho->nitems = 0;
+
 
     /* rehash the values on the old hash table */
-    for (i = 0; i < ho->size; i++) {
-        if (ho->table[i] != NULL) {
-            newho = hashobject_insert(newho,
-                    ho->table[i]->key, ho->table[i]->val);
+    int i;
+    for (i = 0; i < oldsize; i++) {
+        if (oldtable[i] != NULL) {
+            hashobject_insert((EmObject *)ho,
+                    oldtable[i]->key, oldtable[i]->val);
+            DECREF(oldtable[i]->key);
+            DECREF(oldtable[i]->val);
         }
     }
-    hashobject_free((EmObject *)ho);
-    return (EmHashObject *)newho;
+    DEL(oldtable);
+    return 1;
 }
 
-EmObject *
+int
 hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
 
     if (!is_EmHashObject(ob)) {
         log_error(TYPE_ERROR, "hash free on non-hash object");
-        return NULL;
+        return 0;
     }
     EmHashObject *ho = (EmHashObject *)ob;
 
@@ -218,7 +233,9 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
 
     /* rehash if too full */
     if( ho->nitems*3 > ho->size*2) {
-        ho = hashobject_rehash(ho);
+        if (hashobject_rehash(ho) == 0) {
+            return 0;
+        }
     }
 
     new = __hashobject_lookup(ho, key, &idx);
@@ -227,7 +244,7 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
         new = (EmHashEntry*) malloc(sizeof(EmHashEntry));
         if (new == NULL) {
             log_error(MEMORY_ERROR, "No memory to create new entry of hash");
-            return (EmObject *)ho;
+            return 0;
         }
         new->key = key;
         new->val = val;
@@ -242,7 +259,7 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
         INCREF(val);
     }
 
-    return (EmObject *)ho;
+    return 1;
 }
 
 int
@@ -285,7 +302,6 @@ hashobject_keys(EmObject *ob) {
 }
 
 
-
 /*
  * Convenience function for String keys
  */
@@ -305,12 +321,13 @@ hashobject_haskey_by_string(EmObject *ho, char *key) {
     return res;
 }
 
-EmObject *
+int
 hashobject_insert_by_string(EmObject *ho, char *key, EmObject *val) {
     EmObject *obkey = newstringobject(key);
-    ho = hashobject_insert(ho, obkey, val);
+    int retval;
+    retval = hashobject_insert(ho, obkey, val);
     DECREF(obkey);
-    return ho;
+    return retval;
 }
 
 int

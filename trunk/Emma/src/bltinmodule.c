@@ -127,13 +127,6 @@ static Methodlist bltin_methods[] = {
 
 EmObject *last_exception = NULL;
 
-EmObject *MemoryException;
-EmObject *SystemException;
-EmObject *TypeException;
-EmObject *KeyException;
-EmObject *IndexException;
-EmObject *RuntimeException;
-
 int initerror(Environment *env, char *type, char *message) {
     EmObject *eo;
     eo = newexceptionobject(type, message);
@@ -145,6 +138,7 @@ int initerror(Environment *env, char *type, char *message) {
 void bltin_init(Environment *env) {
     Methodlist *ml;
     EmObject *v;
+
     for (ml = bltin_methods; ml->name != NULL; ml++) {
         v = newbltinmethodobject(ml->name, ml->meth, NULL);
         env_set_by_string(env, ml->name, v);

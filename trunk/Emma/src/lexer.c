@@ -89,7 +89,7 @@ process_fraction(int intpart, int length) {
     }
     if (hashobject_haskey_by_string(literalTable, lexeme) == 0) {
         ob = newfloatobject(fval);
-        literalTable = hashobject_insert_by_string(literalTable, lexeme, ob);
+        hashobject_insert_by_string(literalTable, lexeme, ob);
         DECREF(ob);
     }
     return FLOAT;
@@ -192,8 +192,7 @@ get_token() {
                 lexeme[length] = '\0';
                 if (hashobject_haskey_by_string(literalTable, lexeme) == 0) {
                     ob = newintobject(ival);
-                    literalTable = hashobject_insert_by_string(literalTable, lexeme,
-                            ob);
+                    hashobject_insert_by_string(literalTable, lexeme, ob);
                     DECREF(ob);
                 }
                 return INTEGER;
@@ -234,8 +233,7 @@ get_token() {
                 // Now add the quote to use as key
                 lexeme[length - 1] = quote;
                 lexeme[length] = '\0';
-                literalTable = hashobject_insert_by_string(literalTable, lexeme,
-                        ob);
+                hashobject_insert_by_string(literalTable, lexeme, ob);
                 DECREF(ob);
             }
 

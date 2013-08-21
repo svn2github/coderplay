@@ -34,20 +34,20 @@ void init_all(int argc, char **argv) {
     literalTable = newhashobject();
     // Add commonly used literals
     ob = newintobject(1);
-    literalTable = hashobject_insert_by_string(literalTable, "1", ob);
+    hashobject_insert_by_string(literalTable, "1", ob);
     DECREF(ob);
     ob = newintobject(-1);
-    literalTable = hashobject_insert_by_string(literalTable, "-1", ob);
+    hashobject_insert_by_string(literalTable, "-1", ob);
     DECREF(ob);
     ob = newintobject(0);
-    literalTable = hashobject_insert_by_string(literalTable, "0", ob);
+    hashobject_insert_by_string(literalTable, "0", ob);
     DECREF(ob);
 
     ob = newstringobject("*");
-    literalTable = hashobject_insert_by_string(literalTable, "*", ob);
+    hashobject_insert_by_string(literalTable, "*", ob);
     DECREF(ob);
 
-    literalTable = hashobject_insert_by_string(literalTable, "null", &nulobj);
+    hashobject_insert_by_string(literalTable, "null", &nulobj);
 
 
     // initialize the lexer

@@ -250,7 +250,7 @@ static int idx_in_consts(char *key) {
         DECREF(ob);
         idx = listobject_len(cu->consts) - 1;
         ob = newintobject(idx);
-        compiler.symtab = hashobject_insert(compiler.symtab, keyob, ob);
+        hashobject_insert(compiler.symtab, keyob, ob);
         DECREF(ob);
     }
     DECREF(keyob);
@@ -271,7 +271,7 @@ static int idx_in_names(char *name) {
         listobject_append(cu->names, nameob);
         idx = listobject_len(cu->names) - 1;
         ob = newintobject(idx);
-        compiler.symtab = hashobject_insert(compiler.symtab, nameob, ob);
+        hashobject_insert(compiler.symtab, nameob, ob);
         DECREF(ob);
     }
     DECREF(nameob);

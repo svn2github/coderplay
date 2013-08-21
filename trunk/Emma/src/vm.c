@@ -39,8 +39,8 @@ env_get(Environment *env, EmObject *name) {
     return NULL;
 }
 
-void env_set(Environment *env, EmObject *name, EmObject *val) {
-    env->binding = hashobject_insert(env->binding, name, val);
+int env_set(Environment *env, EmObject *name, EmObject *val) {
+    return hashobject_insert(env->binding, name, val);
 }
 
 void env_set_by_string(Environment *env, char *name, EmObject *val) {
@@ -191,15 +191,15 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
 
     int ii;
-    EmObject *u, *v, *w, *ob;
+    EmObject *u, *v, *w, *x;
+    int pc = 0;
+    int opcode, arg;
 
     if (env == NULL)
         env = newenv(vm->topenv);
 
     ExecutionFrame *f = newexecutionframe(vm->curframe, co, env);
     vm->curframe = f;
-    int pc = 0;
-    int opcode, arg;
 
     /*
      * Variables obtained from POP() requires DECREF if it is no
@@ -232,27 +232,27 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             case OP_ADD:
                 v = POP();
                 u = POP();
-                w = add(u, v);
-                PUSH(w);
+                x = add(u, v);
+                PUSH(x);
                 DECREF(u);
                 DECREF(v);
                 break;
 
             case OP_PUSHC:
-                v = GET_CONST(arg);
-                PUSH(v);
+                x = GET_CONST(arg);
+                PUSH(x);
                 break;
 
             case OP_PUSH:
                 u = GET_NAME(arg);
-                v = env_get(f->env, u);
-                PUSH(v);
+                x = env_get(f->env, u);
+                PUSH(x);
                 DECREF(u);
                 break;
 
             case OP_PUSHN:
-                v = GET_NAME(arg);
-                PUSH(v);
+                x = GET_NAME(arg);
+                PUSH(x);
                 break;
 
             case OP_POP:
@@ -264,13 +264,13 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 break;
 
             case OP_MKLIST:
-                ob = newlistobject_of_null(arg);
+                x = newlistobject_of_null(arg);
                 for (ii=0;ii<arg;ii++) {
                     v = POP();
-                    listobject_set(ob, arg-1-ii, v);
+                    listobject_set(x, arg-1-ii, v);
                     DECREF(v);
                 }
-                PUSH(ob);
+                PUSH(x);
                 break;
 
             case OP_MKHASH:
@@ -278,7 +278,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 for (ii=0; ii<2*arg; ii+=2) {
                     v = POP();
                     u = POP();
-                    w = hashobject_insert(w, u, v);
+                    hashobject_insert(w, u, v);
                     DECREF(u);
                     DECREF(v);
                 }
@@ -378,9 +378,9 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             default:
                 printf("Unhandled OP code\n");
                 break;
-        }
+        } // endswitch
 
-    }
+    } // endwhile
 
     return NULL;
 }
