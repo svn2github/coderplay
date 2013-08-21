@@ -136,11 +136,11 @@ EmObject *RuntimeException;
 
 void initerrors() {
     MemoryException = newexceptionobject("MemoryException", "no memory");
-    SystemException = newexceptionobject("SystemException", "internal error");
-    TypeException = newexceptionobject("TypeException", "wrong type");
-    KeyException = newexceptionobject("KeyException", "invalid key");
-    IndexException = newexceptionobject("IndexException", "invalid index");
-    RuntimeException = newexceptionobject("RuntimeException", "runtime error");
+    //SystemException = newexceptionobject("SystemException", "internal error");
+    //TypeException = newexceptionobject("TypeException", "wrong type");
+    //KeyException = newexceptionobject("KeyException", "invalid key");
+    //IndexException = newexceptionobject("IndexException", "invalid index");
+    //RuntimeException = newexceptionobject("RuntimeException", "runtime error");
 }
 
 void bltin_init() {
