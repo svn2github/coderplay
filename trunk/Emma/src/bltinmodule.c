@@ -23,11 +23,11 @@ static int check_params(BltinmethodParamsDesc *desc, EmObject *ob) {
 
     npparams = listobject_len(pparams);
     if (npparams > desc->nargs && desc->nargs >= 0) {
-        log_error(RUNTIME_ERROR, "incorrect number of arguments");
+        ex_runtime("incorrect number of arguments");
         retval = 0;
     }
     if (npparams < desc->nreq_args) {
-        log_error(RUNTIME_ERROR, "fewer arguments than required");
+        ex_runtime("fewer arguments than required");
         retval = 0;
     }
     DECREF(pparams);
@@ -42,7 +42,7 @@ static int check_params(BltinmethodParamsDesc *desc, EmObject *ob) {
             match = strstr(desc->keywords, getstringvalue(kw));
             DECREF(kw);
             if (match == NULL) {
-                log_error(RUNTIME_ERROR, "unknown keyword parameter");
+                ex_runtime("unknown keyword parameter");
                 retval = 0;
             }
         }
@@ -105,16 +105,21 @@ bltin_list(EmObject *self, EmObject *v) {
 EmObject *
 bltin_hash(EmObject *self, EmObject *v) {
     static BltinmethodParamsDesc desc = { -1, 0, ""};
+
     if (check_params(&desc, v) == 0) {
         return NULL;
     }
 
-    EmObject *pparams;
     EmObject *retval;
+    EmObject *pparams;
 
-    pparams = listobject_get(v, 0);
-    retval = newhashobject_from_list(pparams);
-    DECREF(pparams);
+    if (v == &nulobj) {
+        retval = newhashobject();
+    } else {
+        pparams = listobject_get(v, 0);
+        retval = newhashobject_from_list(pparams);
+        DECREF(pparams);
+    }
 
     return retval;
 }

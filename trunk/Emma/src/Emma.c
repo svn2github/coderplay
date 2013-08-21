@@ -82,7 +82,6 @@ int run_file() {
 
         run_codeobject(co, NULL);
 
-
         freetree(ptree);
         freestree(stree);
 
@@ -96,16 +95,27 @@ int run_prompt() {
 
     Node *ptree;
     AstNode *stree;
+    EmCodeObject *co;
+    Environment *env;
+
+    env = newenv(vm->topenv);
 
     while (1) {
         ptree = parse();
         if (ptree) {
 
             if (ptree->type != MAGIC_COMMAND) {
-                printtree(ptree);
+                // printtree(ptree);
+
                 stree = ast_from_ptree(ptree);
+
+                // printstree(stree);
+
+                co = compile_ast_tree(stree);
+                run_codeobject(co, env);
+                freeobj((EmObject *)co);
+
                 freetree(ptree);
-                printstree(stree);
                 freestree(stree);
 
             } else { // MAGIC_COMMAND

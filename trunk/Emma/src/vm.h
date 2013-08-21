@@ -37,6 +37,10 @@ typedef struct _vm {
     Environment *topenv; // user code is running in descent of topenv
 } VM;
 
+extern VM *vm;
+
+Environment *newenv(Environment *parent);
+
 EmObject* run_codeobject(EmCodeObject *co, Environment *env);
 
 

@@ -8,7 +8,7 @@
 
 #define DEFAULT_VALUESTACK_SIZE     50
 
-static VM *vm;
+VM *vm;
 
 Environment *
 newenv(Environment *parent) {

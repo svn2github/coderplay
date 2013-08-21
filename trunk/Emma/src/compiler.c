@@ -752,6 +752,11 @@ static void compile_ast_node(AstNode *sn) {
                 SET_I_ROWCOL(instr, sn);
             }
         }
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_MKLIST;
+        SET_I_ARG(instr, sn->size);
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_IMPORT;
         break;
 
     case AST_INDEX:
