@@ -34,8 +34,8 @@ int listobject_set_slice(EmObject *ob, EmObject *slice, EmObject *val);
 int listobject_set_idxlist(EmObject *ob, EmObject *idxlist, EmObject *val);
 
 int listobject_set(EmObject *ob, int idx, EmObject *val);
-EmObject *listobject_append(EmObject *ob, EmObject *val);
-EmObject *listobject_insert(EmObject *ob, int idx, EmObject *val);
+int listobject_append(EmObject *ob, EmObject *val);
+int listobject_insert(EmObject *ob, int idx, EmObject *val);
 EmObject *listobject_delete(EmObject *ob, int idx);
 EmObject *listobject_pop(EmObject *ob);
 EmObject *listobject_shift(EmObject *ob);

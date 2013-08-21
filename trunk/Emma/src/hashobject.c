@@ -156,7 +156,7 @@ __hashobject_lookup(EmHashObject *ho, EmObject *key, unsigned int *idx)
 EmObject *
 hashobject_lookup(EmObject *ob, EmObject *key) {
     if (!is_EmHashObject(ob)) {
-        ex_badtype("wrong type for hash lookup", NULL);
+        ex_badtype("wrong type for hash lookup");
         return NULL;
     }
 
@@ -223,7 +223,7 @@ int
 hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
 
     if (!is_EmHashObject(ob)) {
-        ex_badtype("wrong type for hash insert", NULL);
+        ex_badtype("wrong type for hash insert");
         return 0;
     }
     EmHashObject *ho = (EmHashObject *)ob;

@@ -23,7 +23,8 @@ newlistobject(unsigned int size) {
     if ((lo->list = (EmObject **) calloc(lo->size, sizeof(EmObject *)))
             == NULL) {
         DEL(lo);
-        return log_error(MEMORY_ERROR, "not enough memory for list");
+        ex_nomem("not enough memory for list");
+        return NULL;
     }
     return (EmObject *)lo;
 }
@@ -93,14 +94,16 @@ listobject_concate(EmObject *ob1, EmObject *ob2) {
 
 EmObject *listobject_get(EmObject *ob, int idx) {
     if (!is_EmListObject(ob)) {
-        ex_badtype("wrong type for list set", NULL);
+        ex_badtype("wrong type for list set");
         return NULL;
     }
     EmListObject *lo = (EmListObject *)ob;
     if (idx < 0)
         idx += lo->nitems;
+
     if (idx >= lo->nitems) {
-        return log_error(INDEX_ERROR, "index out of list boundary");
+        ex_index("index out of list boundary");
+        return NULL;
     }
     INCREF(lo->list[idx]);
     return lo->list[idx];
@@ -108,14 +111,15 @@ EmObject *listobject_get(EmObject *ob, int idx) {
 
 int listobject_set(EmObject *ob, int idx, EmObject *val) {
     if (!is_EmListObject(ob)) {
-        ex_badtype("wrong type for list set", NULL);
+        ex_badtype("wrong type for list set");
         return 0;
     }
     EmListObject *lo = (EmListObject *)ob;
     if (idx < 0)
         idx += lo->nitems;
+
     if (idx >= lo->nitems) {
-        log_error(INDEX_ERROR, "index out of list boundary");
+        ex_index("index out of list boundary");
         return 0;
     }
     if (lo->list[idx]) // check for NULL
@@ -131,8 +135,11 @@ EmObject *listobject_slice(EmObject *ob, int start, int end, int step) {
         start += lo->nitems;
     if (end < 0)
         end += lo->nitems;
-    if (start >= lo->nitems || end >= lo->nitems)
-        return log_error(INDEX_ERROR, "slice out of list boundary");
+
+    if (start >= lo->nitems || end >= lo->nitems) {
+        ex_index("slice out of list boundary");
+        return NULL;
+    }
 
     int nitems = (int) (fabs((start - end)/step) + 1);
     EmListObject *newlo = (EmListObject *) newlistobject(nitems);
@@ -190,7 +197,7 @@ int listobject_set_slice(EmObject *ob, EmObject *slice, EmObject *val) {
         end += nitems_0;
 
     if (start >= nitems_0 || end >= nitems_0) {
-        log_error(INDEX_ERROR, "slice out of list boundary");
+        ex_index("slice out of list boundary");
         retval = 0;
         goto end_listobject_set_slice;
     }
@@ -198,7 +205,7 @@ int listobject_set_slice(EmObject *ob, EmObject *slice, EmObject *val) {
     nitems = (int) (fabs((start - end)/step) + 1);
 
     if (nitems != listobject_len(val)) {
-        log_error(RUNTIME_ERROR, "number of items do not match for assignment");
+        ex_runtime("number of items do not match for assignment");
         retval = 0;
         goto end_listobject_set_slice;
     }
@@ -243,7 +250,7 @@ EmObject *listobject_idxlist(EmObject *ob, EmObject *idxlist) {
 
 int listobject_set_idxlist(EmObject *ob, EmObject *idxlist, EmObject *val) {
     if (listobject_len(idxlist) != listobject_len(val)) {
-        log_error(RUNTIME_ERROR, "number of items do not match for assignment");
+        ex_runtime("number of items do not match for assignment");
         return 0;
     }
     int ii;
@@ -259,12 +266,13 @@ int listobject_set_idxlist(EmObject *ob, EmObject *idxlist, EmObject *val) {
 }
 
 
-EmListObject *listobject_resize(EmListObject *lo) {
+static int listobject_resize(EmListObject *lo) {
     int newnitems = lo->nitems * 2u; // 50% load
     EmObject ** tmp;
     tmp = (EmObject **) realloc(lo->list, newnitems * sizeof(EmObject *));
     if (tmp == NULL) {
-        log_error(MEMORY_ERROR, "no memory to resize list");
+        ex_nomem("no memory to resize list");
+        return 0;
     } else {
         size_t newsize, oldsize;
         oldsize = lo->size * sizeof(EmObject *);
@@ -274,45 +282,49 @@ EmListObject *listobject_resize(EmListObject *lo) {
         lo->list = tmp;
         lo->size = newnitems;
     }
-    return lo;
+    return 1;
 }
 
-EmObject *listobject_append(EmObject *ob, EmObject *val) {
+int listobject_append(EmObject *ob, EmObject *val) {
     EmListObject *lo = (EmListObject *) ob;
     if (lo->nitems * 3 > lo->size * 2) {
-        lo = listobject_resize(lo);
+        if (listobject_resize(lo) == 0)
+            return 0;
     }
     INCREF(val);
     lo->list[lo->nitems] = val;
     lo->nitems++;
-    return (EmObject *)lo;
+    return 1;
 }
 
-EmObject *listobject_insert(EmObject *ob, int idx, EmObject *val) {
+int listobject_insert(EmObject *ob, int idx, EmObject *val) {
     EmListObject *lo = (EmListObject *)ob;
     if (idx < 0)
         idx += lo->nitems;
+
     if (idx >= lo->nitems) {
-        log_error(INDEX_ERROR, "index out of list boundary");
-        return NULL;
+        ex_index("index out of list boundary");
+        return 0;
     }
     if (lo->nitems * 3 > lo->size * 2) {
-        lo = listobject_resize(lo);
+        if (listobject_resize(lo) == 0)
+            return 0;
     }
     INCREF(val);
     memmove(lo->list[idx+1], lo->list[idx],
             sizeof(EmObject *) * (lo->nitems - 1 - idx));
     lo->list[idx] = val;
     lo->nitems++;
-    return (EmObject *)lo;
+    return 1;
 }
 
 EmObject *listobject_delete(EmObject *ob, int idx) {
     EmListObject *lo = (EmListObject *) ob;
     if (idx < 0)
         idx += lo->nitems;
+
     if (idx >= lo->nitems) {
-        log_error(INDEX_ERROR, "index out of list boundary");
+        ex_index("index out of list boundary");
         return NULL;
     }
     EmObject *val = lo->list[idx];
