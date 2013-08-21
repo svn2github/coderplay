@@ -156,9 +156,10 @@ __hashobject_lookup(EmHashObject *ho, EmObject *key, unsigned int *idx)
 EmObject *
 hashobject_lookup(EmObject *ob, EmObject *key) {
     if (!is_EmHashObject(ob)) {
-        log_error(TYPE_ERROR, "hash lookup on non-hash object");
+        ex_badtype("wrong type for hash lookup", NULL);
         return NULL;
     }
+
     unsigned int idx;
     EmHashObject *ho = (EmHashObject *)ob;
     EmHashEntry * ent = __hashobject_lookup(ho, key, &idx);
@@ -190,7 +191,6 @@ hashobject_rehash(EmHashObject *ho)
     /* calculate new hash table size based on load factor */
     newsize = ht_getprime(ho->nitems * 2u);  // 50% load
 
-    printf("here\n");
     newtable = (EmHashEntry **) calloc(newsize, sizeof(EmHashEntry *));
     if (newtable == NULL) {
         return 0;
@@ -223,7 +223,7 @@ int
 hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
 
     if (!is_EmHashObject(ob)) {
-        log_error(TYPE_ERROR, "hash free on non-hash object");
+        ex_badtype("wrong type for hash insert", NULL);
         return 0;
     }
     EmHashObject *ho = (EmHashObject *)ob;

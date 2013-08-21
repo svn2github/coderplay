@@ -17,7 +17,11 @@ newexceptionobject(char *errtype, char *message) {
     ob->errtype = newstringobject(errtype);
     ob->message = newstringobject(message);
     if (ob->errtype == NULL || ob->message == NULL) {
-        exceptionobject_free((EmObject*) ob);
+        if (ob->errtype)
+            DECREF(ob->errtype);
+        if (ob->message)
+            DECREF(ob->message);
+        DEL(ob);
         return NULL;
     }
     ob->value = NULL;
@@ -27,11 +31,11 @@ newexceptionobject(char *errtype, char *message) {
 void exceptionobject_free(EmObject *ob) {
     if (ob == NULL)
         return;
-    EmExceptionObject *eo = (EmExceptionObject *)ob;
+    EmExceptionObject *eo = (EmExceptionObject *) ob;
     if (eo->errtype)
         DECREF(eo->errtype);
     if (eo->message)
-                DECREF(eo->message);
+        DECREF(eo->message);
     if (eo->value)
         DECREF(eo->value);
     free(eo);
@@ -64,7 +68,7 @@ int exceptionobject_boolean(EmObject *ob) {
     return 1;
 }
 
-void exception_set(EmObject *ob, char *message, char *value) {
+void set_exception(EmObject *ob, char *message, char *value) {
     EmExceptionObject *eo = (EmExceptionObject *)ob;
 
     if (eo->message) {
@@ -81,6 +85,17 @@ void exception_set(EmObject *ob, char *message, char *value) {
     }
 
     last_exception = ob;
+}
+
+void print_exception() {
+    if (last_exception != NULL) {
+        printobj(last_exception, stderr);
+    }
+    fprintf(stderr, "\n");
+}
+
+void clear_exception() {
+    last_exception = NULL;
 }
 
 EmTypeObject Exceptiontype = {

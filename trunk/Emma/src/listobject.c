@@ -92,6 +92,10 @@ listobject_concate(EmObject *ob1, EmObject *ob2) {
 
 
 EmObject *listobject_get(EmObject *ob, int idx) {
+    if (!is_EmListObject(ob)) {
+        ex_badtype("wrong type for list set", NULL);
+        return NULL;
+    }
     EmListObject *lo = (EmListObject *)ob;
     if (idx < 0)
         idx += lo->nitems;
@@ -103,6 +107,10 @@ EmObject *listobject_get(EmObject *ob, int idx) {
 }
 
 int listobject_set(EmObject *ob, int idx, EmObject *val) {
+    if (!is_EmListObject(ob)) {
+        ex_badtype("wrong type for list set", NULL);
+        return 0;
+    }
     EmListObject *lo = (EmListObject *)ob;
     if (idx < 0)
         idx += lo->nitems;

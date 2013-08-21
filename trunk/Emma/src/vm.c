@@ -196,6 +196,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
     int ii, ok = 1;
     EmObject *u, *v, *w, *x = &nulobj;
+    EmObject *retval;
     int pc = 0;
     int opcode, arg;
 
@@ -385,6 +386,9 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
         // Check for exception
         if (x == NULL || ok == 0) {
+            print_exception();
+            clear_exception();
+            retval = NULL;
             while (N_VSTACK() != 0) {
                 x = POP();
                 if (x != NULL)
@@ -392,10 +396,10 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             }
             x = &nulobj;
             ok = 1;
-
+            break;
         }
 
     } // endwhile
 
-    return NULL;
+    return retval;
 }
