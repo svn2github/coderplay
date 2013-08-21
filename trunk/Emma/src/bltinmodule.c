@@ -152,10 +152,10 @@ void bltin_init() {
                 ml->name, v);
         DECREF(v);
     }
-    initerrors();
-    topenv->binding = hashobject_insert_by_string(topenv->binding,
-            "MemoryException", MemoryException);
-    DECREF(MemoryException);
+    //initerrors();
+    //topenv->binding = hashobject_insert_by_string(topenv->binding,
+    //        "MemoryException", MemoryException);
+    //DECREF(MemoryException);
 }
 
 
