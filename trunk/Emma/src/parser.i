@@ -13,6 +13,7 @@ char *node_types[] = {
         "CONTINUE_STMT",
         "BREAK_STMT",
         "RETURN_STMT",
+        "DEL_STMT",
         "PACKAGE_STMT",
         "IMPORT_STMT",
         "RAISE_STMT",

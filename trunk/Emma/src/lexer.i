@@ -21,6 +21,7 @@ char *token_types[] = {
         "OR",
         "XOR",
         "NOT",
+        "DELETE",
         "IMPORT",
         "PACKAGE",
         "TRY",
@@ -69,6 +70,8 @@ int match_keyword() {
         return XOR;
     else if (strcmp(lexeme, "not") == 0)
         return NOT;
+    else if (strcmp(lexeme, "del") == 0)
+        return DELETE;
     else if (strcmp(lexeme, "import") == 0)
         return IMPORT;
     else if (strcmp(lexeme, "package") == 0)

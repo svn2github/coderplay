@@ -705,6 +705,20 @@ static void compile_ast_node(AstNode *sn) {
     case AST_READ:
         break;
 
+    case AST_DEL:
+        /*
+         * Note the list has to be pushed by the variable names
+         * instead of the contents. So following code does not
+         * work ...
+         */
+        compile_ast_node(AST_GET_MEMBER(sn,0)); // the list
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_MKLIST;
+        SET_I_ARG(instr, AST_GET_MEMBER(sn,0)->size);
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_DEL;
+        break;
+
     case AST_FUNCDEF:
         // Compile parameters
         compile_paramlist(AST_GET_MEMBER(sn,1));

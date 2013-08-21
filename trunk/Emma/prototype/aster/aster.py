@@ -39,6 +39,7 @@ pow
 print
 read
 return
+del
 package
 import
 raise

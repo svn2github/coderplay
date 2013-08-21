@@ -279,6 +279,13 @@ Node *parse_return_stmt(Node *p) {
     return n;
 }
 
+Node *parse_del_stmt(Node *p) {
+    Node *n = addchild(p, DEL_STMT, NULL, source.row, source.pos);
+    parse_token(n, DELETE, NULL);
+    parse_expr_list(n);
+    return n;
+}
+
 Node *parse_package_stmt(Node *p) {
     Node *n = addchild(p, PACKAGE_STMT, NULL, source.row, source.pos);
     parse_token(n, PACKAGE, NULL);

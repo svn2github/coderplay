@@ -30,6 +30,9 @@ rot_three
 print
 read
 
+return
+del
+
 package
 import
 
@@ -58,7 +61,6 @@ pushn
 pop
 funcdef
 classdef
-return
 jump
 fjump
 tjump

@@ -224,6 +224,11 @@ ast_from_pnode(Node *pn) {
         }
         break;
 
+    case DEL_STMT:
+        sn = newastnode(AST_DEL, 1, pn->row, pn->col);
+        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
+        break;
+
     case PACKAGE_STMT:
         sn = newastnode(AST_PACKAGE, 1, pn->row, pn->col);
         AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));

@@ -117,6 +117,7 @@ class WordsTable(object):
         self.reserve(Word('or', Tag.OR))
         self.reserve(Word('xor', Tag.XOR))
         self.reserve(Word('not', Tag.NOT))
+        self.reserve(Word('del', Tag.DELETE))
         self.reserve(Word('import', Tag.IMPORT))
         self.reserve(Word('package', Tag.PACKAGE))
         self.reserve(Word('try', Tag.TRY))
@@ -440,30 +441,4 @@ class Lexer(object):
         sys.stderr.write(header)
         sys.stderr.write(text+'\n\n')
         raise LexError(msg)
-
-
-def gen_c_code():
-    wtable = WordsTable()
-    outs = open(filepath('lexer.i',root=srcdir), 'w')
-
-    outs.write('#define WT_RESERVE(lexeme,tag) wt_install(wt, new_word(lexeme, tag))\n\n')
-    outs.write('#define WT_RESERVE_KEYWORDS() ');
-
-    keys = wtable.table.keys()
-    outs.write('WT_RESERVE("%s", %d)' % (keys[0], wtable.table[keys[0]].tag))
-    for key in keys[1:]:
-        tag = wtable.table[key].tag
-        outs.write('; \\\n    WT_RESERVE("%s", %d)' % (key, tag))
-    outs.write('\n\n')
-
-    outs.write('#define WT_RESERVE_COMPOSITE_OP() ');
-    outs.write('WT_RESERVE("%s", %d)' % (W_dstar.lexeme, W_dstar.tag))
-    outs.write('; \\\n    WT_RESERVE("%s", %d)' % (W_le.lexeme, W_le.tag))
-    outs.write('; \\\n    WT_RESERVE("%s", %d)' % (W_eq.lexeme, W_eq.tag))
-    outs.write('; \\\n    WT_RESERVE("%s", %d)' % (W_ge.lexeme, W_ge.tag))
-    outs.write('; \\\n    WT_RESERVE("%s", %d)' % (W_ne.lexeme, W_ne.tag))
-    outs.write('\n')
-
-    outs.close()
-
 

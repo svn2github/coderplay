@@ -16,6 +16,7 @@ read_stmt
 continue_stmt
 break_stmt
 return_stmt
+del_stmt
 package_stmt
 import_stmt
 raise_stmt

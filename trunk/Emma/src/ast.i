@@ -31,6 +31,7 @@ char *snode_types[] = {
         "PRINT",
         "READ",
         "RETURN",
+        "DEL",
         "PACKAGE",
         "IMPORT",
         "RAISE",

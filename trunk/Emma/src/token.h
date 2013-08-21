@@ -30,17 +30,18 @@
 #define OR              275
 #define XOR             276
 #define NOT             277
-#define IMPORT          278
-#define PACKAGE         279
-#define TRY             280
-#define RAISE           281
-#define CATCH           282
-#define FINALLY         283
-#define SELF            284
-#define INTEGER         285
-#define FLOAT           286
-#define STRING          287
-#define IDENT           288
+#define DELETE          278
+#define IMPORT          279
+#define PACKAGE         280
+#define TRY             281
+#define RAISE           282
+#define CATCH           283
+#define FINALLY         284
+#define SELF            285
+#define INTEGER         286
+#define FLOAT           287
+#define STRING          288
+#define IDENT           289
 
 extern char *token_types[];
 

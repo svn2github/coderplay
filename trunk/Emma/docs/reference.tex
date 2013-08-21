@@ -553,6 +553,7 @@ following grammar as LL(1).}
 	\alt <continue_stmt>
 	\alt <break_stmt>
 	\alt <return_stmt>
+    \alt <del_stmt>
 	\alt <package_stmt>
 	\alt <import_stmt>
     \alt <raise_stmt>
@@ -570,6 +571,8 @@ following grammar as LL(1).}
 <break_stmt> ::= `break'
 
 <return_stmt> ::= `return' [<expr>]
+
+<del_stmt>  :: `del' [<expr_list>]
 
 <package_stmt> ::= `package' "IDENT"
 
