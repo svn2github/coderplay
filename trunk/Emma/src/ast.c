@@ -146,10 +146,32 @@ ast_from_pnode(Node *pn) {
              * Always assign stand alone expression value to special
              * variable "_".
              */
-            sn = newastnode(AST_ASSIGN, 2, pn->row, pn->col);
-            AST_SET_MEMBER(sn, 0, newastnode(AST_IDENT, 0, pn->row, pn->col));
-            AST_GET_MEMBER(sn,0)->v.lexeme = get_strp("_");
-            AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn, 0)));
+            if (source.type == SOURCE_TYPE_PROMPT) {
+                sn = newastnode(AST_SEQ, 2, pn->row, pn->col);
+                sn_temp = newastnode(AST_ASSIGN, 2, pn->row, pn->col);
+                AST_SET_MEMBER(sn_temp, 0,
+                        newastnode(AST_IDENT, 0, pn->row, pn->col));
+                AST_GET_MEMBER(sn_temp,0)->v.lexeme = get_strp("_");
+                AST_SET_MEMBER(sn_temp, 1, ast_from_pnode(CHILD(pn, 0)));
+                AST_SET_MEMBER(sn, 0, sn_temp);
+
+                sn_temp = newastnode(AST_PRINT, 2, pn->row, pn->col);
+                AST_SET_MEMBER(sn_temp, 0,
+                        newastnode(AST_IDENT, 0, pn->row, pn->col));
+                AST_GET_MEMBER(sn_temp, 0)->v.lexeme = get_strp("stdout");
+                AST_SET_MEMBER(sn, 1, sn_temp);
+                sn_temp = newastnode(AST_LIST, 1, pn->row, pn->col);
+                AST_SET_MEMBER(sn_temp, 0,
+                        newastnode(AST_IDENT, 0, pn->row, pn->col));
+                AST_GET_MEMBER(sn_temp, 0)->v.lexeme = get_strp("_");
+                AST_SET_MEMBER(AST_GET_MEMBER(sn, 1), 1, sn_temp);
+            } else {
+                sn = newastnode(AST_ASSIGN, 2, pn->row, pn->col);
+                AST_SET_MEMBER(sn, 0,
+                        newastnode(AST_IDENT, 0, pn->row, pn->col));
+                AST_GET_MEMBER(sn,0)->v.lexeme = get_strp("_");
+                AST_SET_MEMBER(sn, 1, ast_from_pnode(CHILD(pn, 0)));
+            }
         } else {
             sn = ast_from_pnode(CHILD(pn, 0));
         }

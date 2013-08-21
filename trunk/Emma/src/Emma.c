@@ -113,7 +113,7 @@ int run_prompt() {
 
                 co = compile_ast_tree(stree);
                 run_codeobject(co, env);
-                freeobj((EmObject *)co);
+                vm_reset_for_prompt();
 
                 freetree(ptree);
                 freestree(stree);

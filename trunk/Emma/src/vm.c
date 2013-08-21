@@ -100,8 +100,12 @@ void executionframe_free(ExecutionFrame *f) {
         return;
     if (f->prev != NULL)
         executionframe_free(f->prev);
-    freeobj((EmObject *) f->co);
-    env_free(f->env);
+    if (f->co) {
+        freeobj((EmObject *) f->co);
+        f->co = NULL;
+    }
+    if (f->env)
+        env_free(f->env);
     DEL(f->valuestack);
     DEL(f);
 }
@@ -156,6 +160,21 @@ int vm_init() {
     bltin_init(vm->topenv);
 
     return 1;
+}
+
+void vm_reset_for_prompt() {
+    ExecutionFrame *f;
+    f = vm->curframe;
+    while (f->prev != NULL) {
+        f = f->prev;
+    }
+    // set f->env to NULL so it will not be freed.
+    // The env is still referenced by env from run_prompt, so it does not leak.
+    f->env = NULL;
+    executionframe_free(vm->curframe);
+    tryframe_free(vm->curtry);
+    vm->curframe = NULL;
+    vm->curtry = NULL;
 }
 
 void vm_free() {
