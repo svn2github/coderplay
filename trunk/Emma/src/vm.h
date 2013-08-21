@@ -23,6 +23,7 @@ typedef struct _execution_frame {
     EmObject **valuestack;
     int vs_size; // size of the value stack
     int vs_top;  // the top idx of value stack
+    int cur_row;
 } ExecutionFrame;
 
 typedef struct _try_frame {

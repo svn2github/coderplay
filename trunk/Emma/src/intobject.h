@@ -17,6 +17,7 @@ typedef struct _intobject {
 extern EmTypeObject Inttype;
 
 EmObject *newintobject(long ival);
+long getintvalue(EmObject *ob);
 
 
 #endif /* INTOBJECT_H_ */

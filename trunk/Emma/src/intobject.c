@@ -22,6 +22,10 @@ void intobject_free(EmObject *ob) {
     DEL(iob);
 }
 
+long getintvalue(EmObject *ob) {
+    return ((EmIntObject *) ob)->ival;
+}
+
 void intobject_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "%ld", ((EmIntObject *)ob)->ival);
 }
@@ -50,8 +54,21 @@ int intobject_boolean(EmObject *ob) {
 
 static EmObject *
 intobject_add(EmObject *u, EmObject *v) {
-    long x = ((EmIntObject *)u)->ival + ((EmIntObject *)v)->ival;
-    return newintobject(x);
+    if (v->type == &Inttype) {
+        long x = getintvalue(u) + getintvalue(v);
+        return newintobject(x);
+    } else if (v->type == &Floattype) {
+        double x = getintvalue(u) + getfloatvalue(v);
+        return newfloatobject(x);
+    } else {
+        ex_type("operator + not supported by operands");
+        return NULL;
+    }
+}
+
+static EmObject *
+intobject_neg(EmObject *ob) {
+    return newintobject(-getintvalue(ob));
 }
 
 static EmNumberMethods int_as_number = {
@@ -61,13 +78,9 @@ static EmNumberMethods int_as_number = {
         0,
         0,
         0,
-        0,
+        intobject_neg,
 };
 
-
-int getintvalue(EmObject *ob) {
-    return ((EmIntObject *) ob)->ival;
-}
 
 
 EmTypeObject Inttype = {

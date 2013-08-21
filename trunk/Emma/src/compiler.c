@@ -72,6 +72,7 @@
 
 static Compiler compiler;
 static jmp_buf __compile_buf;
+static int cur_row;
 
 static Instr *
 newinstr(int size) {
@@ -563,6 +564,13 @@ static void compile_ast_node(AstNode *sn) {
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
 
+    if (sn->row > cur_row) {
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_SET_ROW;
+        SET_I_ARG(instr, sn->row);
+        cur_row = sn->row;
+    }
+
     switch (sn->type) {
     case AST_SEQ:
         for (ii = 0; ii < sn->size; ii++) {
@@ -822,6 +830,7 @@ compile_ast_unit(AstNode *sn) {
 }
 
 static int compiler_init() {
+    cur_row = 0;
     compiler.cu = newcompiledunit();
     compiler.symtab = newhashobject();
     return 1;

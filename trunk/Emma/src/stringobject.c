@@ -40,6 +40,12 @@ void stringobject_free(EmObject *ob) {
     DEL(sob);
 }
 
+
+char *getstringvalue(EmObject *ob) {
+    return ((EmStringObject *)ob)->sval;
+}
+
+
 void stringobject_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "%s", ((EmStringObject *)ob)->sval);
 }
@@ -107,10 +113,6 @@ static EmSequenceMethods string_as_sequence = {
         0,
 };
 
-
-char *getstringvalue(EmObject *ob) {
-    return ((EmStringObject *)ob)->sval;
-}
 
 
 EmTypeObject Stringtype = {

@@ -36,6 +36,7 @@ char *opcode_types[] = {
         "OP_SETUP_FOR",
         "OP_FOR",
         "OP_HASARG",
+        "OP_SET_ROW",
         "OP_PUSH",
         "OP_PUSHC",
         "OP_PUSHN",

@@ -200,6 +200,17 @@ add(EmObject *u, EmObject *v) {
 }
 
 EmObject *
+minus(EmObject *u) {
+    if (u->type->tp_as_number != NULL)
+        return (*u->type->tp_as_number->neg)(u);
+    else {
+        ex_type("negative operation not support for operand");
+        return NULL;
+    }
+}
+
+
+EmObject *
 run_codeobject(EmCodeObject *co, Environment *env) {
 
 
@@ -260,6 +271,10 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 }
                 break;
 
+            case OP_SET_ROW:
+                f->cur_row = arg;
+                break;
+
             case OP_ADD:
                 v = POP();
                 u = POP();
@@ -267,6 +282,14 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 PUSH(x);
                 DECREF(u);
                 DECREF(v);
+                break;
+
+
+            case OP_MINUS:
+                u = POP();
+                x = minus(u);
+                PUSH(x);
+                DECREF(u);
                 break;
 
             case OP_PUSHC:
@@ -346,8 +369,12 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 w = POP(); // the list/hash object
                 if (is_EmListObject(w))
                     x = listobject_get(w, getintvalue(u));
-                else
+                else if (is_EmHashObject(w))
                     x = hashobject_lookup(w, u);
+                else {
+                    ex_type("cannot index non-sequence type object");
+                    x = NULL;
+                }
                 PUSH(x);
                 DECREF(u);
                 DECREF(w);
@@ -377,8 +404,12 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 v = POP(); // the value
                 if (is_EmListObject(w))
                     ok = listobject_set(w, getintvalue(u), v);
-                else
+                else if (is_EmHashObject(w))
                     ok = hashobject_insert(w, u, v);
+                else {
+                    ex_type("cannot index non-sequence type object");
+                    ok = 0;
+                }
                 DECREF(u);
                 DECREF(v);
                 DECREF(w);
@@ -412,6 +443,8 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
         // Check for exception
         if (x == NULL || ok == 0) {
+            fprintf(stderr, "\n");
+
             print_exception();
             clear_exception();
             retval = NULL;
@@ -422,6 +455,9 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             }
             x = &nulobj;
             ok = 1;
+
+            fprintf(stderr, "Stack backtrace:\n");
+            fprintf(stderr, "line %d\n", f->cur_row);
             break;
         }
 

@@ -98,15 +98,19 @@ void hashobject_print(EmObject * ob, FILE *fp) {
 
     EmHashObject *ho = (EmHashObject *)ob;
 
-    int i;
+    int i, count;
+    fprintf(fp, "{");
     for (i = 0; i < ho->size; i++) {
         if (ho->table[i] != NULL) {
+            count++;
             printobj(ho->table[i]->key, fp);
             fprintf(fp, ":    ");
             printobj(ho->table[i]->val, fp);
-            fprintf(fp, "\n");
+            if (count < ho->nitems)
+                fprintf(fp, ", ");
         }
     }
+    fprintf(fp,"}");
 }
 
 /*

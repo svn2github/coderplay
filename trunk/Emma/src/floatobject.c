@@ -21,6 +21,10 @@ void floatobject_free(EmObject *ob) {
     DEL(fob);
 }
 
+double getfloatvalue(EmObject *ob) {
+    return ((EmFloatObject *) ob)->fval;
+}
+
 void floatobject_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "%f", ((EmFloatObject *)ob)->fval);
 }
@@ -40,6 +44,37 @@ int floatobject_boolean(EmObject *ob) {
     return ((EmFloatObject *)ob)->fval != 0.0 ? 1 : 0;
 }
 
+static EmObject *
+floatobject_add(EmObject *u, EmObject *v) {
+    if (v->type == &Inttype) {
+        double x = getfloatvalue(u) + getintvalue(v);
+        return newfloatobject(x);
+    } else if (v->type == &Floattype) {
+        double x = getfloatvalue(u) + getfloatvalue(v);
+        return newfloatobject(x);
+    } else {
+        ex_type("operator + not supported by operands");
+        return NULL;
+    }
+}
+
+static EmObject *
+floatobject_neg(EmObject *ob) {
+    return newfloatobject(-getfloatvalue(ob));
+}
+
+
+static EmNumberMethods float_as_number = {
+        floatobject_add,
+        0,
+        0,
+        0,
+        0,
+        0,
+        floatobject_neg,
+};
+
+
 EmTypeObject Floattype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
         0,                              // nitems
@@ -56,7 +91,7 @@ EmTypeObject Floattype = {
         0,                              // tp_hashfunc
         floatobject_boolean,            // tp_boolean
 
-        0,                              // tp_as_number
+        &float_as_number,               // tp_as_number
         0,                              // tp_as_sequence
         0,                              // tp_as_mapping
 };
