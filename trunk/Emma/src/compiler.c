@@ -21,8 +21,6 @@
 
 #define SET_I_ARG(instr,a)    instr->v.arg = a
 #define SET_I_TARGET(instr,t)   instr->v.target = t
-#define SET_I_ROWCOL(instr,sn)  instr->row=sn->row; \
-                                    instr->col=sn->col
 
 #define SET_NEW_BLOCK(cu,b)     (cu)->curblock->next = b; \
                                     (cu)->curblock = b
@@ -406,8 +404,6 @@ static void compile_arglist(AstNode *sn) {
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
-        SET_I_ROWCOL(instr, sn)
-        ;
     } else { // non-empty list
         /*
          * Regular positional parameter first
@@ -464,7 +460,6 @@ static void compile_extra_p_k(AstNode *sn) {
         instr->opcode = OP_PUSHN;
     }
     SET_I_ARG(instr, idx);
-    SET_I_ROWCOL(instr, sn);
 }
 
 static void compile_paramlist(AstNode *sn) {
@@ -503,7 +498,6 @@ static void compile_identifier(AstNode *sn, int opcode) {
     instr = next_instr(cu->curblock);
     instr->opcode = opcode;
     SET_I_ARG(instr, idx);
-    SET_I_ROWCOL(instr, sn);
 }
 
 static void compile_assign(AstNode *sn) {
@@ -592,8 +586,6 @@ static void compile_ast_node(AstNode *sn) {
         compile_arglist(AST_GET_MEMBER(sn,1)); // the parameter
         instr = next_instr(cu->curblock);
         instr->opcode = OP_CALL;
-        SET_I_ROWCOL(instr, sn)
-        ;
         break;
 
     case AST_LITERAL:
@@ -601,8 +593,6 @@ static void compile_ast_node(AstNode *sn) {
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
-        SET_I_ROWCOL(instr, sn)
-        ;
         break;
 
     case AST_LIST:
@@ -742,8 +732,6 @@ static void compile_ast_node(AstNode *sn) {
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
-        SET_I_ROWCOL(instr, sn)
-        ;
         // function name
         compile_identifier(AST_GET_MEMBER(sn,0), OP_FUNCDEF);
         break;
@@ -752,14 +740,12 @@ static void compile_ast_node(AstNode *sn) {
         compile_ast_node(AST_GET_MEMBER(sn,0));
         instr = next_instr(cu->curblock);
         instr->opcode = OP_RETURN;
-        SET_I_ROWCOL(instr, sn);
         break;
 
     case AST_PACKAGE:
         compile_identifier(AST_GET_MEMBER(sn,0), OP_PUSHN);
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PACKAGE;
-        SET_I_ROWCOL(instr, sn);
         break;
 
     case AST_IMPORT:
@@ -771,7 +757,6 @@ static void compile_ast_node(AstNode *sn) {
                 instr = next_instr(cu->curblock);
                 instr->opcode = OP_PUSHC;
                 SET_I_ARG(instr, idx);
-                SET_I_ROWCOL(instr, sn);
             }
         }
         instr = next_instr(cu->curblock);

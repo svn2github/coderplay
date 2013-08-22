@@ -16,8 +16,6 @@ typedef struct _instr {
         int arg;
         struct _basic_block *target;
     } v;
-    int row;
-    int col;
 } Instr;
 
 typedef struct _basic_block {
