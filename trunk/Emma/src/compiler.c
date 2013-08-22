@@ -399,14 +399,16 @@ static void compile_arglist(AstNode *sn) {
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
+
     if (sn->size == 0) { // empty list
         idx = idx_in_consts("null");
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
+
     } else { // non-empty list
         /*
-         * Regular positional parameter first
+         * Regular positional arguments first
          */
         count = 0;
         for (ii = 0; ii < sn->size; ii++) {
@@ -420,7 +422,7 @@ static void compile_arglist(AstNode *sn) {
         SET_I_ARG(instr, count);
 
         /*
-         * Process any keyword style params
+         * Process any keyword style arguments
          */
         if (count != sn->size) { // still have keyword args
             count = 0;
@@ -439,27 +441,61 @@ static void compile_arglist(AstNode *sn) {
             instr->opcode = OP_PUSHC;
             SET_I_ARG(instr, idx);
         }
+
+        // make a single list for both position and keyword args
         instr = next_instr(cu->curblock);
         instr->opcode = OP_MKLIST;
         SET_I_ARG(instr, 2);
     }
 }
 
-static void compile_extra_p_k(AstNode *sn) {
-    int idx;
+static void compile_regular_params(AstNode *sn) {
+    int ii, idx, count;
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
+    AstNode *sn_temp;
 
-    instr = next_instr(cu->curblock);
-    if (sn->size == 0) {
-        idx = idx_in_consts("null");
-        instr->opcode = OP_PUSHC;
+    if (sn->size == 0) { // no regular parameters
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_REFUSE_POSARGS;
+
     } else {
-        idx = idx_in_names(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn,0)));
-        instr->opcode = OP_PUSHN;
+        /*
+         * Process any keyword params first
+         */
+        count = 0;
+        for (ii = 0; ii < sn->size; ii++) {
+            if (AST_GET_MEMBER(sn,ii)->type == AST_KVPAIR) {
+                sn_temp = AST_GET_MEMBER(sn,ii);
+                compile_ast_node(AST_GET_MEMBER(sn_temp,1));
+                compile_identifier(AST_GET_MEMBER(sn_temp,0),OP_POP);
+                count++;
+            }
+        }
+
+        /*
+         * Regular positional parameters if any
+         */
+        if (count != sn->size) { // still have keyword args
+            count = 0;
+            for (ii = 0; ii < sn->size; ii++) {
+                if (AST_GET_MEMBER(sn,ii)->type != AST_KVPAIR) {
+                    compile_identifier(AST_GET_MEMBER(sn,ii), OP_PUSHN);
+                    count++;
+                }
+            }
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_MKLIST;
+            SET_I_ARG(instr, count);
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_GET_POSARGS;
+
+        } else {
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_REFUSE_POSARGS;
+        }
     }
-    SET_I_ARG(instr, idx);
 }
 
 static void compile_paramlist(AstNode *sn) {
@@ -467,25 +503,50 @@ static void compile_paramlist(AstNode *sn) {
     EmObject *ob;
     CompiledUnit *cu = compiler.cu;
     Instr *instr;
-    AstNode *m;
+    AstNode *sn_sub;
 
     if (sn->size == 0) {
-        // empty paramlist, push 3 null
-        idx = idx_in_consts("null");
-        for (ii = 0; ii < 3; ii++) {
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_PUSHC;
-            SET_I_ARG(instr, idx);
-        }
-        return;
-    }
+        // empty paramlist
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_REFUSE_POSARGS;
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_NO_EXTRAP;
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_NO_EXTRAK;
 
-    // positional and keyword parameters
-    compile_arglist(AST_GET_MEMBER(sn,0));
-    // extra p
-    compile_extra_p_k(AST_GET_MEMBER(sn,1));
-    // extra k;
-    compile_extra_p_k(AST_GET_MEMBER(sn,2));
+    } else {
+
+        // positional and keyword parameters
+        compile_regular_params(AST_GET_MEMBER(sn,0));
+
+        // extra p
+        sn_sub = AST_GET_MEMBER(sn,1);
+        if (sn_sub->size == 0) {
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_NO_EXTRAP;
+        } else {
+            idx = idx_in_names(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn_sub,0)));
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_PUSHN;
+            SET_I_ARG(instr, idx);
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_SET_EXTRAP;
+        }
+
+        // extra k;
+        sn_sub = AST_GET_MEMBER(sn,2);
+        if (sn_sub->size == 0) {
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_NO_EXTRAK;
+        } else {
+            idx = idx_in_names(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn_sub,0)));
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_PUSHN;
+            SET_I_ARG(instr, idx);
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_SET_EXTRAK;
+        }
+    }
 }
 
 static void compile_identifier(AstNode *sn, int opcode) {
@@ -711,15 +772,18 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_FUNCDEF:
-        // Compile parameters
-        compile_paramlist(AST_GET_MEMBER(sn,1));
 
         // Create a new compiled unit for the function body
         compiler.cu = newcompiledunit();
         EmObject *symtab = compiler.symtab;
         compiler.symtab = newhashobject();
+
+        // Compile parameters
+        compile_paramlist(AST_GET_MEMBER(sn,1));
+
         // compile the body of function
         ob = (EmObject *) compile_ast_unit(AST_GET_MEMBER(sn,2));
+
         // restore to the parent compiled unit
         compiler.cu = cu;
         compiler.symtab = symtab;

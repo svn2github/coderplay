@@ -8,19 +8,21 @@
 #ifndef FUNCOBJECT_H_
 #define FUNCOBJECT_H_
 
+struct _environment;
+extern void env_free(struct _environment *);
+
 typedef struct _funcobject {
     OB_HEAD;
     EmObject *co;
     EmObject *extrap; // the variable name for extrap
     EmObject *extrak; // the variable name for extrak
-    EmObject *env; // the environment where the function is defined
+    struct _environment *env; // the environment where the function is defined
 
 } EmFuncObject;
 
-extern EmFuncObject Functype;
+extern EmTypeObject Functype;
 
-EmObject *newfuncobject(EmObject *co, EmObject *env, EmObject *extrap, EmObject *extrak);
-
+EmObject *newfuncobject(EmObject *co, struct _environment *env);
 
 
 #endif /* FUNCOBJECT_H_ */

@@ -194,6 +194,21 @@ void vm_free() {
     DEL(vm);
 }
 
+EmObject *
+call_function(EmObject *func, EmObject *args) {
+    EmFuncObject *fo = (EmFuncObject *)func;
+    EmObject *retval;
+
+    retval = run_codeobject((EmCodeObject *)fo->co,
+            newenv(vm->curframe->env));
+
+    ExecutionFrame *f = vm->curframe;
+    vm->curframe = f->prev;
+    env_free(f->env);
+    DEL(f->valuestack);
+    DEL(f);
+    return retval;
+}
 
 EmObject *
 add(EmObject *u, EmObject *v) {
@@ -273,6 +288,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                  * we return a null object.
                  */
                 if (f->prev != NULL) {
+                    INCREF(&nulobj);
                     return &nulobj;
                 } else {
                     return NULL;
@@ -368,9 +384,12 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
             case OP_FUNCDEF:
                 v = POP(); // the func codeobject
-                u = POP(); // extra k
-                w = POP(); // extra p
-
+                w = newfuncobject(v, f->env);
+                u = GET_NAME(arg);
+                env_set(f->env, u, w);
+                DECREF(u);
+                DECREF(w);
+                DECREF(v);
                 break;
 
             case OP_CALL:
@@ -378,6 +397,8 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 u = POP(); // the func
                 if (u->type == &Bltinmethodtype) {
                     x = (*((EmBltinmethodObject *)u)->method)(NULL, v);
+                } else if (u->type == &Functype) {
+                    x = call_function(u, v);
                 } else {
                     ex_type("not callable object");
                     x = NULL;
@@ -385,6 +406,13 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 PUSH(x);
                 DECREF(u);
                 DECREF(v);
+                break;
+
+            case OP_REFUSE_POSARGS:
+                break;
+
+            case OP_RETURN:
+                retval = POP(); // the return value
                 break;
 
             case OP_DEL:
@@ -478,8 +506,6 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
         // Check for exception
         if (x == NULL || ok == 0) {
-            fprintf(stderr, "\n");
-
             print_exception();
             clear_exception();
             retval = NULL;

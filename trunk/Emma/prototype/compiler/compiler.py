@@ -36,6 +36,13 @@ del
 package
 import
 
+refuse_posargs
+get_posargs
+no_extrap
+set_extrap
+no_extrak
+set_extrak
+
 call
 
 get_field
