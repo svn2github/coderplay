@@ -366,6 +366,13 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 DECREF(v);
                 break;
 
+            case OP_FUNCDEF:
+                v = POP(); // the func codeobject
+                u = POP(); // extra k
+                w = POP(); // extra p
+
+                break;
+
             case OP_CALL:
                 v = POP(); // the params list
                 u = POP(); // the func
