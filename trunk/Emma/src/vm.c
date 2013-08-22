@@ -45,6 +45,14 @@ int env_set(Environment *env, EmObject *name, EmObject *val) {
     return hashobject_insert(env->binding, name, val);
 }
 
+int env_del(Environment *env, EmObject *name) {
+    if (hashobject_delete(env->binding, name) == 0) {
+        ex_runtime_with_val("undefined name", getstringvalue(name));
+        return 0;
+    }
+    return 1;
+}
+
 int env_set_by_string(Environment *env, char *name, EmObject *val) {
     EmObject *nameob;
     int retval;
@@ -369,6 +377,18 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 }
                 PUSH(x);
                 DECREF(u);
+                DECREF(v);
+                break;
+
+            case OP_DEL:
+                v = POP(); // the list of variables to delete
+                for (ii=0; ii<listobject_len(v);ii++) {
+                    u = listobject_get(v, ii);
+                    ok = env_del(f->env, u);
+                    DECREF(u);
+                    if (ok == 0)
+                        break;
+                }
                 DECREF(v);
                 break;
 

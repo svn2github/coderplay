@@ -209,6 +209,8 @@ Node *parse_simple_stmt(Node *p) {
         parse_break_stmt(n);
     } else if (tag == RETURN) {
         parse_return_stmt(n);
+    } else if (tag == DELETE) {
+        parse_del_stmt(n);
     } else if (tag == PACKAGE) {
         parse_package_stmt(n);
     } else if (tag == IMPORT) {
@@ -282,7 +284,11 @@ Node *parse_return_stmt(Node *p) {
 Node *parse_del_stmt(Node *p) {
     Node *n = addchild(p, DEL_STMT, NULL, source.row, source.pos);
     parse_token(n, DELETE, NULL);
-    parse_expr_list(n);
+    parse_token(n, IDENT, lexeme);
+    while (tag == ',') {
+        parse_token(n, ',', NULL);
+        parse_token(n, IDENT, lexeme);
+    }
     return n;
 }
 

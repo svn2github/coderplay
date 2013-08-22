@@ -225,8 +225,10 @@ ast_from_pnode(Node *pn) {
         break;
 
     case DEL_STMT:
-        sn = newastnode(AST_DEL, 1, pn->row, pn->col);
-        AST_SET_MEMBER(sn, 0, ast_from_pnode(CHILD(pn,1)));
+        sn = newastnode(AST_DEL, NCH(pn)/2, pn->row, pn->col);
+        for (ii=1, jj=0; jj<sn->size; ii+=2, jj++ ) {
+            AST_SET_MEMBER(sn, jj, ast_from_pnode(CHILD(pn,ii)));
+        }
         break;
 
     case PACKAGE_STMT:
@@ -656,7 +658,6 @@ ast_from_pnode(Node *pn) {
     default:
         fatal("unknown parse node when constructing AST");
         break;
-
     }
     return sn;
 }

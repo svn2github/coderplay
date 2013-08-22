@@ -698,13 +698,14 @@ static void compile_ast_node(AstNode *sn) {
     case AST_DEL:
         /*
          * Note the list has to be pushed by the variable names
-         * instead of the contents. So following code does not
-         * work ...
+         * instead of the contents.
          */
-        compile_ast_node(AST_GET_MEMBER(sn,0)); // the list
+        for (ii=0; ii<sn->size; ii++) {
+            compile_identifier(AST_GET_MEMBER(sn,ii), OP_PUSHN);
+        }
         instr = next_instr(cu->curblock);
         instr->opcode = OP_MKLIST;
-        SET_I_ARG(instr, AST_GET_MEMBER(sn,0)->size);
+        SET_I_ARG(instr, sn->size);
         instr = next_instr(cu->curblock);
         instr->opcode = OP_DEL;
         break;

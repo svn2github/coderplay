@@ -8,8 +8,6 @@
 #ifndef COMPILER_H_
 #define COMPILER_H_
 
-
-
 typedef struct _instr {
     int opcode;
     union {

@@ -572,7 +572,7 @@ following grammar as LL(1).}
 
 <return_stmt> ::= `return' [<expr>]
 
-<del_stmt>  :: `del' [<expr_list>]
+<del_stmt>  :: `del' "IDENT" (`,' "IDENT")*
 
 <package_stmt> ::= `package' "IDENT"
 

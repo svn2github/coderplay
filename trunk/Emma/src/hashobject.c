@@ -276,6 +276,8 @@ hashobject_delete(EmObject *ob, EmObject *key) {
         DECREF(found->key);
         DECREF(found->val);
         DEL(found);
+        ho->table[idx] = NULL;
+        ho->nitems--;
         return 1;
     } else {
         ex_key("key not found");

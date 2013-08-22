@@ -8,7 +8,6 @@
 #ifndef VM_H_
 #define VM_H_
 
-
 typedef struct _environment {
     struct _environment *parent;
     // hash object that saves the bindings, i.e. name and the content the
