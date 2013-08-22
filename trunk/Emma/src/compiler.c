@@ -473,11 +473,18 @@ static void compile_regular_params(AstNode *sn) {
                 count++;
             }
         }
+        if (count > 0) {
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_GET_KWARGS;
+        } else {
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_REFUSE_KWARGS;
+        }
 
         /*
          * Regular positional parameters if any
          */
-        if (count != sn->size) { // still have keyword args
+        if (count != sn->size) { // still have positional parameters
             count = 0;
             for (ii = 0; ii < sn->size; ii++) {
                 if (AST_GET_MEMBER(sn,ii)->type != AST_KVPAIR) {
@@ -490,7 +497,6 @@ static void compile_regular_params(AstNode *sn) {
             SET_I_ARG(instr, count);
             instr = next_instr(cu->curblock);
             instr->opcode = OP_GET_POSARGS;
-
         } else {
             instr = next_instr(cu->curblock);
             instr->opcode = OP_REFUSE_POSARGS;
@@ -509,6 +515,8 @@ static void compile_paramlist(AstNode *sn) {
         // empty paramlist
         instr = next_instr(cu->curblock);
         instr->opcode = OP_REFUSE_POSARGS;
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_REFUSE_KWARGS;
         instr = next_instr(cu->curblock);
         instr->opcode = OP_NO_EXTRAP;
         instr = next_instr(cu->curblock);

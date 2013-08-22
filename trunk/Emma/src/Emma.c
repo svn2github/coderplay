@@ -68,6 +68,7 @@ int run_file() {
     Node *ptree;
     AstNode *stree;
     EmCodeObject *co;
+    EmObject *retval;
 
     ptree = parse();
     if (ptree) {
@@ -76,11 +77,12 @@ int run_file() {
         stree = ast_from_ptree(ptree);
         printstree(stree);
 
-
         co = compile_ast_tree(stree);
         printobj((EmObject *)co, stdout);
 
-        run_codeobject(co, NULL);
+        INCREF(&nulobj);
+        retval = run_codeobject(co, NULL, &nulobj);
+        DECREF(retval);
 
         freetree(ptree);
         freestree(stree);
@@ -97,6 +99,7 @@ int run_prompt() {
     AstNode *stree;
     EmCodeObject *co;
     Environment *env;
+    EmObject *retval;
 
     env = newenv(vm->topenv);
 
@@ -112,7 +115,11 @@ int run_prompt() {
                 // printstree(stree);
 
                 co = compile_ast_tree(stree);
-                run_codeobject(co, env);
+
+                INCREF(&nulobj);
+                retval = run_codeobject(co, env, &nulobj);
+                DECREF(retval);
+
                 vm_reset_for_prompt();
 
                 freetree(ptree);

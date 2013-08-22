@@ -87,6 +87,7 @@ newexecutionframe(ExecutionFrame *prev, EmCodeObject *co, Environment *env) {
     }
     f->vs_size = DEFAULT_VALUESTACK_SIZE;
     f->vs_top = 0;
+    f->cur_row = 0;
     return f;
 }
 
@@ -200,7 +201,7 @@ call_function(EmObject *func, EmObject *args) {
     EmObject *retval;
 
     retval = run_codeobject((EmCodeObject *)fo->co,
-            newenv(vm->curframe->env));
+            newenv(vm->curframe->env), args);
 
     ExecutionFrame *f = vm->curframe;
     vm->curframe = f->prev;
@@ -234,7 +235,7 @@ minus(EmObject *u) {
 
 
 EmObject *
-run_codeobject(EmCodeObject *co, Environment *env) {
+run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
 
 
 #define NEXT_OPCODE()           (co)->code[pc++]
@@ -254,7 +255,7 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 #define GET_NAME(i)     listobject_get(co->names,i)
 
 
-    int ii, ok = 1;
+    int ii, ok = 1, done = 0;
     EmObject *u, *v, *w, *x = &nulobj;
     EmObject *retval;
     int pc = 0;
@@ -280,19 +281,16 @@ run_codeobject(EmCodeObject *co, Environment *env) {
 
         switch (opcode) {
             case OP_END:
-                /*
+                 /*
                  * If code reaches OP_END, it means not return statement has been
                  * ran (otherwise, the code will return before reaching OP_END).
                  * If the code does not belong to top level frame, it must return
                  * a value even when the user does not specify one. In this case,
                  * we return a null object.
                  */
-                if (f->prev != NULL) {
-                    INCREF(&nulobj);
-                    return &nulobj;
-                } else {
-                    return NULL;
-                }
+                INCREF(&nulobj);
+                retval = &nulobj;
+                done = 1;
                 break;
 
             case OP_SET_ROW:
@@ -409,10 +407,22 @@ run_codeobject(EmCodeObject *co, Environment *env) {
                 break;
 
             case OP_REFUSE_POSARGS:
+                if (args != &nulobj) {
+                    u = listobject_get(args, 0);
+                    ok = args == &nulobj;
+                    if (!ok)
+                        ex_runtime("positional parameters not allowed");
+                    DECREF(u);
+                }
+                break;
+
+            case OP_NO_EXTRAP:
+            case OP_NO_EXTRAK:
                 break;
 
             case OP_RETURN:
                 retval = POP(); // the return value
+                done = 1;
                 break;
 
             case OP_DEL:
@@ -521,8 +531,11 @@ run_codeobject(EmCodeObject *co, Environment *env) {
             fprintf(stderr, "line %d\n", f->cur_row);
             break;
         }
-
+        if (done == 1) {
+            break;
+        }
     } // endwhile
 
+    DECREF(args);
     return retval;
 }

@@ -38,6 +38,8 @@ import
 
 refuse_posargs
 get_posargs
+refuse_kwargs
+get_kwargs
 no_extrap
 set_extrap
 no_extrak

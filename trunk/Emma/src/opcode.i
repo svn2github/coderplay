@@ -28,6 +28,8 @@ char *opcode_types[] = {
         "OP_IMPORT",
         "OP_REFUSE_POSARGS",
         "OP_GET_POSARGS",
+        "OP_REFUSE_KWARGS",
+        "OP_GET_KWARGS",
         "OP_NO_EXTRAP",
         "OP_SET_EXTRAP",
         "OP_NO_EXTRAK",
