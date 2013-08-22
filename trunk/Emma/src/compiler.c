@@ -720,6 +720,7 @@ static void compile_ast_node(AstNode *sn) {
         compiler.symtab = newhashobject();
         // compile the body of function
         ob = (EmObject *) compile_ast_unit(AST_GET_MEMBER(sn,2));
+        // restore to the parent compiled unit
         compiler.cu = cu;
         compiler.symtab = symtab;
         // Simply add the body code object to the end of the consts list.
