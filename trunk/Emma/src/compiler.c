@@ -417,9 +417,16 @@ static void compile_arglist(AstNode *sn) {
                 count++;
             }
         }
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
-        SET_I_ARG(instr, count);
+        if (count > 0) {
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_MKLIST;
+            SET_I_ARG(instr, count);
+        } else {
+            idx = idx_in_consts("null");
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_PUSHC;
+            SET_I_ARG(instr, idx);
+        }
 
         /*
          * Process any keyword style arguments

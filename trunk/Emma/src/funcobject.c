@@ -13,6 +13,7 @@ newfuncobject(EmObject *co, struct _environment *env) {
     if ((ob = NEWOBJ(EmFuncObject, &Functype)) == NULL)
         return NULL;
     ob->co = co;
+    INCREF(co);
     ob->env = env;
     ob->extrap = NULL;
     ob->extrak = NULL;

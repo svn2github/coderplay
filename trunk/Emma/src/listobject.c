@@ -311,7 +311,7 @@ int listobject_insert(EmObject *ob, int idx, EmObject *val) {
             return 0;
     }
     INCREF(val);
-    memmove(lo->list[idx+1], lo->list[idx],
+    memmove(&lo->list[idx+1], &lo->list[idx],
             sizeof(EmObject *) * (lo->nitems - 1 - idx));
     lo->list[idx] = val;
     lo->nitems++;
@@ -323,17 +323,19 @@ EmObject *listobject_delete(EmObject *ob, int idx) {
     if (idx < 0)
         idx += lo->nitems;
 
-    if (idx >= lo->nitems) {
+    if (idx < 0 || idx >= lo->nitems) {
         ex_index("index out of list boundary");
         return NULL;
     }
+
     EmObject *val = lo->list[idx];
     if (idx < lo->nitems - 1) { // not last entry
-        memmove(lo->list[idx], lo->list[idx + 1],
+        memmove(&lo->list[idx], &lo->list[idx + 1],
                 sizeof(EmObject *) * (lo->nitems - 1 - idx));
     }
     lo->list[lo->nitems - 1] = NULL;
     lo->nitems--;
+
     return val;
 }
 

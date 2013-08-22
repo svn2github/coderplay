@@ -45,6 +45,13 @@ int env_set(Environment *env, EmObject *name, EmObject *val) {
     return hashobject_insert(env->binding, name, val);
 }
 
+int env_set_if_exists(Environment *env, EmObject *name, EmObject *val) {
+    if (hashobject_haskey(env->binding, name)) {
+        return env_set(env, name, val);
+    }
+    return 0;
+}
+
 int env_del(Environment *env, EmObject *name) {
     if (hashobject_delete(env->binding, name) == 0) {
         ex_runtime_with_val("undefined name", getstringvalue(name));
@@ -255,11 +262,12 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
 #define GET_NAME(i)     listobject_get(co->names,i)
 
 
-    int ii, ok = 1, done = 0;
+    int ii, count, ok = 1, done = 0;
     EmObject *u, *v, *w, *x = &nulobj;
+    EmObject *name, *val;
     EmObject *retval;
     int pc = 0;
-    int opcode, arg;
+    int opcode, oparg;
 
     if (env == NULL)
         env = newenv(vm->topenv);
@@ -277,7 +285,7 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
     while (1) {
         opcode = NEXT_OPCODE();
         if (HASARG(opcode))
-        arg = NEXT_ARG();
+        oparg = NEXT_ARG();
 
         switch (opcode) {
             case OP_END:
@@ -294,7 +302,7 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 break;
 
             case OP_SET_ROW:
-                f->cur_row = arg;
+                f->cur_row = oparg;
                 break;
 
             case OP_ADD:
@@ -315,24 +323,24 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 break;
 
             case OP_PUSHC:
-                x = GET_CONST(arg);
+                x = GET_CONST(oparg);
                 PUSH(x);
                 break;
 
             case OP_PUSH:
-                u = GET_NAME(arg);
+                u = GET_NAME(oparg);
                 x = env_get(f->env, u);
                 PUSH(x);
                 DECREF(u);
                 break;
 
             case OP_PUSHN:
-                x = GET_NAME(arg);
+                x = GET_NAME(oparg);
                 PUSH(x);
                 break;
 
             case OP_POP:
-                u = GET_NAME(arg);
+                u = GET_NAME(oparg);
                 v = POP();
                 ok = env_set(f->env, u, v);
                 DECREF(u);
@@ -340,18 +348,18 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 break;
 
             case OP_MKLIST:
-                x = newlistobject_of_null(arg);
-                for (ii=0;ii<arg;ii++) {
+                x = newlistobject_of_null(oparg);
+                for (ii=0;ii<oparg;ii++) {
                     v = POP();
-                    ok = listobject_set(x, arg-1-ii, v);
+                    ok = listobject_set(x, oparg-1-ii, v);
                     DECREF(v);
                 }
                 PUSH(x);
                 break;
 
             case OP_MKHASH:
-                x = newhashobject_from_size(arg);
-                for (ii=0; ii<2*arg; ii+=2) {
+                x = newhashobject_from_size(oparg);
+                for (ii=0; ii<2*oparg; ii+=2) {
                     v = POP();
                     u = POP();
                     ok = hashobject_insert(x, u, v);
@@ -383,10 +391,15 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
             case OP_FUNCDEF:
                 v = POP(); // the func codeobject
                 w = newfuncobject(v, f->env);
-                u = GET_NAME(arg);
-                env_set(f->env, u, w);
-                DECREF(u);
-                DECREF(w);
+                if (w == NULL) {
+                    ex_mem("no memory for function object");
+                    ok = 0;
+                } else {
+                    u = GET_NAME(oparg);
+                    env_set(f->env, u, w);
+                    DECREF(u);
+                    DECREF(w);
+                }
                 DECREF(v);
                 break;
 
@@ -409,15 +422,115 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
             case OP_REFUSE_POSARGS:
                 if (args != &nulobj) {
                     u = listobject_get(args, 0);
-                    ok = args == &nulobj;
+                    ok = (u == &nulobj);
                     if (!ok)
-                        ex_runtime("positional parameters not allowed");
+                        ex_runtime("positional arguments not allowed");
                     DECREF(u);
                 }
                 break;
 
+            case OP_REFUSE_KWARGS:
+                break;
+
             case OP_NO_EXTRAP:
+                if (args != &nulobj) {
+                    u = listobject_get(args, 0);
+                    ok = (u == &nulobj || listobject_len(u) == 0);
+                    if (!ok)
+                        ex_runtime("extra positional arguments not allowed");
+                    DECREF(u);
+                }
+                break;
+
             case OP_NO_EXTRAK:
+                if (args != &nulobj) {
+                    u = listobject_get(args, 1);
+                    ok = (u == &nulobj || hashobject_len(u) == 0);
+                    if (!ok)
+                        ex_runtime("extra keyword arguments not allowed");
+                    DECREF(u);
+                }
+                break;
+
+
+            case OP_GET_POSARGS:
+                u = POP(); // the positional parameter names
+                if (args != &nulobj) {
+                    v = listobject_get(args, 0); // the positional args
+                    count = listobject_len(u);
+                    count = listobject_len(v)<count?listobject_len(v):count;
+                    for (ii=0; ii<count; ii++) {
+                        name = listobject_get(u, ii);
+                        val = listobject_get(v, 0);
+                        env_set(f->env, name, val);
+                        DECREF(name);
+                        DECREF(val);
+                        DECREF(listobject_shift(v)); // remove the 1st element
+                    }
+                    DECREF(v);
+                }
+                DECREF(u);
+                break;
+
+            case OP_GET_KWARGS:
+
+                if (args != &nulobj) {
+                    w = listobject_get(args, 1); // the keyword args, hashobject
+
+                    if (w != &nulobj) {
+                        u = hashobject_keys(w); // the keyword arg names, listobject
+
+                        for (ii=0; ii<listobject_len(u); ii++) {
+                            name = listobject_get(u, ii);
+                            val = hashobject_lookup(w, name);
+                            count = env_set_if_exists(f->env, name, val);
+                            DECREF(name);
+                            DECREF(val);
+                            if (count)
+                                hashobject_delete(w, name);
+                        }
+                        DECREF(u);
+                    }
+                    DECREF(w);
+                }
+                break;
+
+            case OP_SET_EXTRAP:
+                u = POP(); // the name of the extra p
+                if (args != &nulobj) {
+                    if ((w = listobject_get(args,0)) != &nulobj) {
+                        ok = env_set(f->env, u, w);
+                    }
+                    DECREF(w);
+                }
+                DECREF(u);
+                break;
+
+            case OP_SET_EXTRAK:
+                u = POP(); // the name of the extra k
+                x = newhashobject();
+
+                if (args != &nulobj) {
+                    if ((w = listobject_get(args,1)) != &nulobj) {
+                        v = hashobject_keys(w);
+                        for (ii=0; ii<listobject_len(v); ii++) {
+                            name = listobject_get(v, ii);
+                            val = hashobject_lookup(w, name);
+                            ok = hashobject_insert(x, name, val);
+                            DECREF(name);
+                            DECREF(val);
+                            if (!ok) {
+                                ex_runtime("error on setting extra k");
+                                break;
+                            }
+                        }
+                        DECREF(v);
+                    }
+                    DECREF(w);
+                }
+                ok = env_set(f->env, u, x);
+                DECREF(x);
+                DECREF(u);
                 break;
 
             case OP_RETURN:

@@ -82,7 +82,9 @@ int run_file() {
 
         INCREF(&nulobj);
         retval = run_codeobject(co, NULL, &nulobj);
-        DECREF(retval);
+
+        if (retval)
+            DECREF(retval);
 
         freetree(ptree);
         freestree(stree);

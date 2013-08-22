@@ -11,7 +11,6 @@
 #define is_EmListObject(ob) ((ob)->type == &Listtype)
 #define DEFAULT_LIST_SIZE       1u
 
-
 typedef struct _listobject {
     OB_HEAD;
     unsigned int size;
