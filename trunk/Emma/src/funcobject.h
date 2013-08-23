@@ -14,8 +14,6 @@ extern void env_free(struct _environment *);
 typedef struct _funcobject {
     OB_HEAD;
     EmObject *co;
-    EmObject *extrap; // the variable name for extrap
-    EmObject *extrak; // the variable name for extrak
     struct _environment *env; // the environment where the function is defined
 
 } EmFuncObject;

@@ -15,17 +15,11 @@ newfuncobject(EmObject *co, struct _environment *env) {
     ob->co = co;
     INCREF(co);
     ob->env = env;
-    ob->extrap = NULL;
-    ob->extrak = NULL;
     return (EmObject *)ob;
 }
 
 void funcobject_free(EmObject *ob) {
     EmFuncObject *fo = (EmFuncObject *)ob;
-    if (fo->extrap)
-        DECREF(fo->extrap);
-    if (fo->extrak)
-        DECREF(fo->extrak);
 
     DECREF(fo->co);
     DEL(fo);
