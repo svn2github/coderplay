@@ -80,14 +80,20 @@ int run_file() {
         co = compile_ast_tree(stree);
         printobj((EmObject *)co, stdout);
 
+
         INCREF(&nulobj);
         retval = run_codeobject(co, NULL, &nulobj);
+
 
         if (retval)
             DECREF(retval);
 
+
         freetree(ptree);
+        printf("almost done.\n");
         freestree(stree);
+        printf("almost done.\n");
+
 
     }
     fclose(source.fp);

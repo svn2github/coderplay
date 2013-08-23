@@ -33,6 +33,7 @@ typedef struct _try_frame {
 
 typedef struct _vm {
     ExecutionFrame *curframe;   // currently running frame
+    int nframes;
     TryFrame *curtry; // currently working try frame
     Environment *topenv; // user code is running in descent of topenv
 } VM;

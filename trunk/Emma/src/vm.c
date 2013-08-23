@@ -156,6 +156,7 @@ int vm_init() {
     }
     vm->curframe = NULL;
     vm->curtry = NULL;
+    vm->nframes = 0;
 
     if ((vm->topenv = newenv(NULL)) == NULL) {
         DEL(vm);
@@ -206,15 +207,27 @@ EmObject *
 call_function(EmObject *func, EmObject *args) {
     EmFuncObject *fo = (EmFuncObject *)func;
     EmObject *retval;
+    Environment *env;
+    ExecutionFrame *f;
 
+    printf("calling ... %d\n", vm->nframes);
+
+    env = newenv(fo->env);
+
+    //printf("frame info %d  --> %d\n", vm->curframe, vm->curframe->prev);
     retval = run_codeobject((EmCodeObject *)fo->co,
-            newenv(vm->curframe->env), args);
+            env, args);
 
-    ExecutionFrame *f = vm->curframe;
+    f = vm->curframe;
     vm->curframe = f->prev;
-    env_free(f->env);
+    vm->nframes--;
+
+    env_free(env);
     DEL(f->valuestack);
     DEL(f);
+
+    //printf("frame info %d  --> %d\n", vm->curframe, vm->curframe->prev);
+    printf("calling done ... %d\n", vm->nframes);
     return retval;
 }
 
@@ -284,6 +297,7 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
 
     ExecutionFrame *f = newexecutionframe(vm->curframe, co, env);
     vm->curframe = f;
+    vm->nframes++;
 
     /*
      * Variables obtained from POP() requires DECREF if it is no
@@ -455,9 +469,12 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                     ex_type("not callable object");
                     x = NULL;
                 }
+                printobj(x, stdout);
+                printf("   now push x, ref = %d\n", x->refcnt);
                 PUSH(x);
                 DECREF(u);
                 DECREF(v);
+                printf("about out of OP_CALL\n");
                 break;
 
             case OP_REFUSE_POSARGS:

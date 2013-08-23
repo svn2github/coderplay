@@ -35,8 +35,10 @@ newhashobject_from_size(unsigned int size_req) {
         return NULL;
     }
 
-    if ((ht = NEWOBJ(EmHashObject, &Hashtype)) == NULL)
+    if ((ht = NEWOBJ(EmHashObject, &Hashtype)) == NULL) {
+        printf("no memory for new hash\n");
         return NULL;
+    }
 
     ht->size = size;
     ht->nitems = 0;
