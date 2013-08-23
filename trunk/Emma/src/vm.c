@@ -210,7 +210,7 @@ call_function(EmObject *func, EmObject *args) {
     Environment *env;
     ExecutionFrame *f;
 
-    printf("calling ... %d\n", vm->nframes);
+    //printf("calling ... %d\n", vm->nframes);
 
     env = newenv(fo->env);
 
@@ -227,7 +227,7 @@ call_function(EmObject *func, EmObject *args) {
     DEL(f);
 
     //printf("frame info %d  --> %d\n", vm->curframe, vm->curframe->prev);
-    printf("calling done ... %d\n", vm->nframes);
+    //printf("calling done ... %d\n", vm->nframes);
     return retval;
 }
 
@@ -469,12 +469,12 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                     ex_type("not callable object");
                     x = NULL;
                 }
-                printobj(x, stdout);
-                printf("   now push x, ref = %d\n", x->refcnt);
+                //printobj(x, stdout);
+                //printf("   now push x, ref = %d\n", x->refcnt);
                 PUSH(x);
                 DECREF(u);
                 DECREF(v);
-                printf("about out of OP_CALL\n");
+                //printf("about out of OP_CALL\n");
                 break;
 
             case OP_REFUSE_POSARGS:
