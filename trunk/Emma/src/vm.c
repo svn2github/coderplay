@@ -225,7 +225,17 @@ add(EmObject *u, EmObject *v) {
     } else if (u->type->tp_as_sequence != NULL) {
         return (*u->type->tp_as_sequence->concate)(u,v);
     } else {
-        ex_type("operator + not supported for operands");
+        ex_type("operator + not supported by operands");
+        return NULL;
+    }
+}
+
+EmObject *
+sub(EmObject *u, EmObject *v) {
+    if (u->type->tp_as_number != NULL) {
+        return (*u->type->tp_as_number->sub)(u,v);
+    } else {
+        ex_type("operator - not supported by operands");
         return NULL;
     }
 }
@@ -305,6 +315,17 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 f->cur_row = oparg;
                 break;
 
+            case OP_JUMP:
+                pc = oparg;
+                break;
+
+            case OP_FJUMP:
+                v = POP();
+                if (boolobj(v) == 0)
+                    pc = oparg;
+                DECREF(v);
+                break;
+
             case OP_ADD:
                 v = POP();
                 u = POP();
@@ -314,12 +335,32 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 DECREF(v);
                 break;
 
+            case OP_SUB:
+                v = POP();
+                u = POP();
+                x = sub(u, v);
+                PUSH(x);
+                DECREF(u);
+                DECREF(v);
+                break;
 
             case OP_MINUS:
                 u = POP();
                 x = minus(u);
                 PUSH(x);
                 DECREF(u);
+                break;
+
+            case OP_EQ:
+                u = POP();
+                v = POP();
+                if (cmpobj(u,v) == 0)
+                    x = newintobject(1);
+                else
+                    x = newintobject(0);
+                PUSH(x);
+                DECREF(u);
+                DECREF(v);
                 break;
 
             case OP_PUSHC:

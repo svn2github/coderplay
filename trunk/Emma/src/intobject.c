@@ -49,7 +49,7 @@ long intobject_hash(EmObject *ob) {
 }
 
 int intobject_boolean(EmObject *ob) {
-    return ((EmIntObject *)ob)->ival != 0 ? 1 : 0;
+    return getintvalue(ob) != 0 ? 1 : 0;
 }
 
 static EmObject *
@@ -67,13 +67,27 @@ intobject_add(EmObject *u, EmObject *v) {
 }
 
 static EmObject *
+intobject_sub(EmObject *u, EmObject *v) {
+    if (v->type == &Inttype) {
+        long x = getintvalue(u) - getintvalue(v);
+        return newintobject(x);
+    } else if (v->type == &Floattype) {
+        double x = getintvalue(u) + getfloatvalue(v);
+        return newfloatobject(x);
+    } else {
+        ex_type("operator - not supported by operands");
+        return NULL;
+    }
+}
+
+static EmObject *
 intobject_neg(EmObject *ob) {
     return newintobject(-getintvalue(ob));
 }
 
 static EmNumberMethods int_as_number = {
         intobject_add,
-        0,
+        intobject_sub,
         0,
         0,
         0,
