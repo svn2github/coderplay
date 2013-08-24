@@ -34,15 +34,14 @@ EmObject *newobj(EmTypeObject *tp) {
 void freeobj(EmObject *ob) {
     if (ob == NULL)
         return;
-    if (ob->type->tp_dealloc)
-        ob->type->tp_dealloc(ob);
+    (*ob->type->tp_dealloc)(ob);
 }
 
 void printobj(EmObject *ob, FILE *fp) {
     if (ob->type->tp_print == NULL) {
         object_print(ob, fp);
     } else {
-        ob->type->tp_print(ob, fp);
+        (*ob->type->tp_print)(ob, fp);
     }
 }
 
@@ -50,7 +49,7 @@ char *tostrobj(EmObject *ob) {
     if (ob->type->tp_tostr == NULL) {
         return object_tostr(ob);
     } else {
-        return ob->type->tp_tostr(ob);
+        return (*ob->type->tp_tostr)(ob);
     }
 }
 
@@ -103,7 +102,7 @@ int cmpobj(EmObject *ob1, EmObject *ob2) {
         return (ob1 < ob2) ? -1 : 1;
 
     // Normal comparison using the compare function defined for the object type.
-    return ((*tp->tp_compare)(ob1, ob2));
+    return (*tp->tp_compare)(ob1, ob2);
 }
 
 unsigned long hashobj(EmObject *ob) {

@@ -699,6 +699,5 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
         }
     } // endwhile
 
-    DECREF(args);
     return retval;
 }
