@@ -121,7 +121,9 @@ int run_prompt() {
 
                 INCREF(&nulobj);
                 retval = run_codeobject(co, env, &nulobj);
-                DECREF(retval);
+
+                if (retval)
+                    DECREF(retval);
 
                 vm_reset_for_prompt();
 
