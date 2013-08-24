@@ -14,6 +14,8 @@
 #define ex_runtime(msg)         set_exception(RuntimeException, msg, NULL)
 #define ex_key(msg)             set_exception(KeyException, msg, NULL)
 
+#define ex_mem_with_val(msg,val)        set_exception(MemoryException,msg,val)
+#define ex_type_with_val(msg,val)       set_exception(TypeException, msg, NULL)
 #define ex_runtime_with_val(msg,val)    set_exception(RuntimeException,msg,val)
 #define ex_system_with_val(msg,val)     set_exception(SystemException,msg,val)
 

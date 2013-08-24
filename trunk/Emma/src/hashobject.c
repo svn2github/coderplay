@@ -9,14 +9,14 @@
  *    filled entries.
  */
 
-static unsigned int prime_numbers[] = {
+static int prime_numbers[] = {
     7, 13, 31, 61, 127, 251, 509, 1021, 2017, 4093,
     5987, 9551, 15683, 19609, 31397, // 59999,
 };
 
-static unsigned int npnumbers = sizeof(prime_numbers) / sizeof(unsigned int);
+static int npnumbers = sizeof(prime_numbers) / sizeof(int);
 
-unsigned int ht_getprime(unsigned int size) {
+int ht_getprime(int size) {
     int ii;
     for (ii=0; ii< npnumbers; ii++) {
         if (prime_numbers[ii] >= size)
@@ -26,9 +26,9 @@ unsigned int ht_getprime(unsigned int size) {
 }
 
 EmObject *
-newhashobject_from_size(unsigned int size_req) {
+newhashobject_from_size(int size_req) {
     EmHashObject *ht;
-    unsigned int size;
+    int size;
 
     if (!(size = ht_getprime(size_req))) {
         ex_mem("hash table size overflow");
@@ -119,10 +119,10 @@ void hashobject_print(EmObject * ob, FILE *fp) {
  * This is the internal lookup function used by other wrapper function.
  */
 static EmHashEntry *
-__hashobject_lookup(EmHashObject *ho, EmObject *key, unsigned int *idx)
+__hashobject_lookup(EmHashObject *ho, EmObject *key, int *idx)
 {
     unsigned long hashval;
-    unsigned int incr;
+    int incr;
 
     // calculate the hash
     hashval = hashobj(key);
@@ -162,7 +162,7 @@ hashobject_lookup(EmObject *ob, EmObject *key) {
         return NULL;
     }
 
-    unsigned int idx;
+    int idx;
     EmHashObject *ho = (EmHashObject *)ob;
     EmHashEntry * ent = __hashobject_lookup(ho, key, &idx);
     if (ent == NULL)
@@ -175,7 +175,7 @@ hashobject_lookup(EmObject *ob, EmObject *key) {
 
 int
 hashobject_haskey(EmObject *ob, EmObject *key) {
-    unsigned int idx;
+    int idx;
     EmHashObject *ho = (EmHashObject *) ob;
     EmHashEntry * ent = __hashobject_lookup(ho, key, &idx);
     if (ent == NULL)
@@ -187,7 +187,7 @@ hashobject_haskey(EmObject *ob, EmObject *key) {
 static int
 hashobject_rehash(EmHashObject *ho)
 {
-    unsigned int newsize, oldsize;
+    int newsize, oldsize;
     EmHashEntry **newtable, **oldtable;
 
     /* calculate new hash table size based on load factor */
@@ -231,7 +231,7 @@ hashobject_insert(EmObject *ob, EmObject *key, EmObject *val) {
     EmHashObject *ho = (EmHashObject *)ob;
 
     unsigned long hashval;
-    unsigned int idx;
+    int idx;
     EmHashEntry* new;
 
     /* rehash if too full */
@@ -271,7 +271,7 @@ hashobject_delete(EmObject *ob, EmObject *key) {
         ex_type("wrong type for hash entry delete");
         return 0;
     }
-    unsigned int idx;
+    int idx;
     EmHashObject *ho = (EmHashObject *)ob;
     EmHashEntry *found = __hashobject_lookup(ho, key, &idx);
     if (found) {
@@ -347,7 +347,7 @@ hashobject_delete_by_string(EmObject *ho, char *key) {
 /*
  * Mapping functions
  */
-unsigned int
+int
 hashobject_mp_len(EmObject *ob) {
     return ((EmHashObject *)ob)->nitems;
 }

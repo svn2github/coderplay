@@ -13,14 +13,14 @@
 
 typedef struct _listobject {
     OB_HEAD;
-    unsigned int size;
+    int size;
     EmObject **list;
 } EmListObject;
 
 extern EmTypeObject Listtype;
 
-EmObject *newlistobject(unsigned int size);
-EmObject *newlistobject_of_null(unsigned int size);
+EmObject *newlistobject(int size);
+EmObject *newlistobject_of_null(int size);
 void listobject_free(EmObject *ob);
 void listobject_print(EmObject *ob, FILE *fp);
 

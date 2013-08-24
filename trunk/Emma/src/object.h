@@ -2,8 +2,8 @@
 #define OBJECT_H
 
 #define OB_HEAD struct _typeobject *type; \
-    unsigned int refcnt; \
-    unsigned int nitems
+    int refcnt; \
+    int nitems
 
 #define OB_HEAD_INIT(type)      type, 1
 
@@ -60,7 +60,7 @@ typedef struct {
  * Methods for mappings like hash
  */
 typedef struct {
-    unsigned int (*len) (EmObject *);
+    int (*len) (EmObject *);
     EmObject *(*get) (EmObject *, EmObject *);
     int (*set) (EmObject *, EmObject *, EmObject *);
 } EmMappingMethods;
@@ -74,8 +74,8 @@ typedef struct {
 typedef struct _typeobject {
     OB_HEAD;
     char *tp_name;
-    unsigned int tp_size;
-    unsigned int tp_itemsize;
+    size_t tp_size;
+    size_t tp_itemsize;
 
     void (*tp_dealloc)(EmObject *);
     void (*tp_print)(EmObject *, FILE*);
@@ -83,7 +83,7 @@ typedef struct _typeobject {
     EmObject *(*tp_getattr)(EmObject *, char *);
     int (*tp_setattr)(EmObject *, char *, EmObject *);
     int (*tp_compare)(EmObject *, EmObject *);
-    long (*tp_hashfunc)(EmObject *);
+    unsigned long (*tp_hashfunc)(EmObject *);
     int (*tp_boolean)(EmObject *);
 
     EmNumberMethods *tp_as_number;
@@ -105,7 +105,7 @@ char *tostrobj(EmObject *);
 EmObject *getattr(EmObject *, char *);
 int setattr(EmObject *, char *, EmObject *);
 int cmpobj(EmObject *, EmObject *);
-long hashobj(EmObject *);
+unsigned long hashobj(EmObject *);
 int boolobj(EmObject *);
 
 

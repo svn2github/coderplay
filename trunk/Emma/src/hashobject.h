@@ -18,14 +18,14 @@ typedef struct {
 
 typedef struct _hashobject {
     OB_HEAD; // nitems included
-    unsigned int size; // size of the hash including unused spots
+    int size; // size of the hash including unused spots
     EmHashEntry **table; // the entry array
 } EmHashObject;
 
 extern EmTypeObject Hashtype;
 
 EmObject *newhashobject();
-EmObject *newhashobject_from_size(unsigned int size);
+EmObject *newhashobject_from_size(int size);
 EmObject *newhashobject_from_list(EmObject *ob);
 
 EmObject* hashobject_lookup(EmObject *ho, EmObject *key);

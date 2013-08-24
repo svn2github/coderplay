@@ -49,7 +49,7 @@ get_strp(char *s) {
 }
 
 static AstNode *
-newastnode(int type, int size, unsigned int row, unsigned int col) {
+newastnode(int type, int size, int row, int col) {
     AstNode *n;
     if ((n = (AstNode *) malloc(sizeof(AstNode))) == NULL) {
         log_error(MEMORY_ERROR, "not enough memory for new AST node");

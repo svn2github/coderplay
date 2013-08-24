@@ -23,8 +23,8 @@
 
 typedef struct _ast_node {
     int type;
-    unsigned int row;
-    unsigned int col;
+    int row;
+    int col;
     int size;
 
     union {

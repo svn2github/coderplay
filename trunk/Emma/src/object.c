@@ -21,8 +21,10 @@ char *object_tostr(EmObject *ob) {
 
 EmObject *newobj(EmTypeObject *tp) {
     EmObject *ob = (EmObject *) malloc(tp->tp_size);
-    if (ob == NULL)
-        return log_error(MEMORY_ERROR, "not enough memory");
+    if (ob == NULL) {
+        ex_mem_with_val("no memory for object type", tp->tp_name);
+        return NULL;
+    }
     ob->type = tp;
     ob->nitems = 0;
     NEWREF(ob);
@@ -55,7 +57,7 @@ char *tostrobj(EmObject *ob) {
 EmObject *
 getattr(EmObject *ob, char *name) {
     if (ob->type->tp_getattr == NULL) {
-        log_error(TYPE_ERROR, "attribute-less object");
+        ex_type("attribute-less object");
         return NULL;
     } else {
         return (*ob->type->tp_getattr)(ob, name);
@@ -65,9 +67,9 @@ getattr(EmObject *ob, char *name) {
 int setattr(EmObject *ob, char *name, EmObject *attr) {
     if (ob->type->tp_setattr == NULL) {
         if (ob->type->tp_getattr == NULL) {
-            log_error(TYPE_ERROR, "attribute-less object");
+            ex_type("attribute-less object");
         } else {
-            log_error(TYPE_ERROR, "read-only attributes\n");
+            ex_type_with_val("read-only attributes", name);
         }
         return 0;
     } else {
@@ -104,9 +106,9 @@ int cmpobj(EmObject *ob1, EmObject *ob2) {
     return ((*tp->tp_compare)(ob1, ob2));
 }
 
-long hashobj(EmObject *ob) {
+unsigned long hashobj(EmObject *ob) {
     if (ob->type->tp_hashfunc == NULL) {
-        log_error(TYPE_ERROR, "unhashable type");
+        ex_type_with_val("unhashable type", ob->type->tp_name);
         return -1;
     }
     return (*ob->type->tp_hashfunc)(ob);

@@ -35,9 +35,6 @@ void moduleobject_print(EmObject *ob, FILE *fp) {
             getstringvalue(((EmModuleObject *)ob)->name));
 }
 
-long moduleobject_hash(EmObject *ob) {
-    return 0;
-}
 
 EmTypeObject Moduletype = {
         OB_HEAD_INIT(&Typetype),        // set type and refcnt to 1
@@ -48,11 +45,11 @@ EmTypeObject Moduletype = {
 
         moduleobject_free,                 // tp_dealloc
         moduleobject_print,                // tp_print
-        0,                // tp_tostr
+        0,                              // tp_tostr
         0,                              // tp_getattr
         0,                              // tp_setattr
         0,                              // tp_compare
-        moduleobject_hash,              // tp_hashfunc
+        0,                              // tp_hashfunc
         0,                              // tp_boolean
 
         0,                              // tp_as_number

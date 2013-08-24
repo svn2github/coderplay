@@ -9,17 +9,18 @@
 EmObject *
 newstringobject(char *sval) {
     char *tval;
-    if ((tval = (char *) malloc(sizeof(char)*strlen(sval)+1)) == NULL) {
-        return log_error(MEMORY_ERROR, "no memory to create new string");
+    if ((tval = (char *) malloc(sizeof(char) * strlen(sval) + 1)) == NULL) {
+        ex_mem("no memory for new string");
+        return NULL;
     }
     strcpy(tval, sval);
     EmStringObject *ob;
     if ((ob = NEWOBJ(EmStringObject, &Stringtype)) == NULL) {
-        DEL(tval);
+        free(tval);
         return NULL;
     }
     ob->sval = tval;
-    return (EmObject *)ob;
+    return (EmObject *) ob;
 }
 
 EmObject *
@@ -36,8 +37,8 @@ newstringobject_from_float(double fval) {
 
 void stringobject_free(EmObject *ob) {
     EmStringObject * sob = (EmStringObject *)ob;
-    DEL(sob->sval);
-    DEL(sob);
+    free(sob->sval);
+    free(sob);
 }
 
 
@@ -75,8 +76,8 @@ int stringobject_compare(EmObject *a, EmObject *b) {
         return (lu < lv) ? -1 : 1;
 }
 
-long stringobject_hash(EmObject *ob) {
-    unsigned char *p = (unsigned char *) (((EmStringObject *)ob)->sval);
+unsigned long stringobject_hash(EmObject *ob) {
+    unsigned char *p = (unsigned char *) getstringvalue(ob);
     long hashval = *p << 7;
     while (*p != '\0')
         hashval = hashval + hashval + *p++;
@@ -84,11 +85,11 @@ long stringobject_hash(EmObject *ob) {
 }
 
 int stringobject_boolean(EmObject *ob) {
-    return strlen(((EmStringObject *)ob)->sval) > 0 ? 1 : 0;
+    return strlen(((EmStringObject *) ob)->sval) > 0 ? 1 : 0;
 }
 
 int stringobject_len(EmObject *ob) {
-    return strlen(((EmStringObject *)ob)->sval);
+    return strlen(((EmStringObject *) ob)->sval);
 }
 
 EmObject *
@@ -96,8 +97,8 @@ stringobject_concate(EmObject *a, EmObject *b) {
     int i = stringobject_len(a);
     int j = stringobject_len(b);
     char *s = (char *) malloc(sizeof(char) * (i + j + 1));
-    strcpy(s, ((EmStringObject *)a)->sval);
-    strcat(s, ((EmStringObject *)b)->sval);
+    strcpy(s, ((EmStringObject *) a)->sval);
+    strcat(s, ((EmStringObject *) b)->sval);
     EmObject *ob = newstringobject(s);
     free(s);
     return ob;

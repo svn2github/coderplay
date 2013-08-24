@@ -26,8 +26,8 @@ typedef struct _source {
     char lastPeek;          // The last look ahead char
     int nulcb;              // number of unbalanced left curly bracket
     int isContinue;         // If set, the following reading are for line continuation
-    unsigned int row;       // The current line number of the input line
-    unsigned int pos;       // The current column number of the input line
+    int row;       // The current line number of the input line
+    int pos;       // The current column number of the input line
     char PS1[10];           // prompt 1
     char PS2[10];           // prompt 2
 } EmSource;

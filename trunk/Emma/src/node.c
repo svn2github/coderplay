@@ -27,7 +27,7 @@ Node *newparsetree(int type) {
     return n;
 }
 
-Node *addchild(Node *p, int type, char *lexeme, unsigned int row, unsigned int col) {
+Node *addchild(Node *p, int type, char *lexeme, int row, int col) {
     Node *c; // child node
 
     // parent node

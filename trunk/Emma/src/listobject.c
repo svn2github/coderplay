@@ -8,7 +8,7 @@
 #include "allobject.h"
 
 EmObject *
-newlistobject(unsigned int size) {
+newlistobject(int size) {
     EmListObject *lo;
 
     if (size == 0)
@@ -22,20 +22,28 @@ newlistobject(unsigned int size) {
 
     if ((lo->list = (EmObject **) calloc(lo->size, sizeof(EmObject *)))
             == NULL) {
-        DEL(lo);
-        ex_mem("not enough memory for list");
+        free(lo);
+        ex_mem("no memory for list");
         return NULL;
     }
     return (EmObject *)lo;
 }
 
 EmObject *
-newlistobject_of_null(unsigned int size) {
+newlistobject_of_null(int size) {
     EmObject *ob = newlistobject(size);
+    if (ob == NULL)
+        return NULL;
     ob->nitems = size;
-    int ii;
-    for (ii=0;ii<size;ii++)
-        listobject_set(ob, ii, &nulobj);
+    int ii, ok;
+    for (ii = 0; ii < size; ii++) {
+        ok = listobject_set(ob, ii, &nulobj);
+        if (!ok) {
+            ex_runtime("fail to create list of null values");
+            listobject_free(ob);
+            return NULL;
+        }
+    }
     return ob;
 }
 
@@ -43,19 +51,20 @@ void listobject_free(EmObject *ob) {
     EmListObject *lo = (EmListObject *)ob;
     int i;
     for (i=0;i<lo->size;i++) {
-        if (lo->list[i]) {
+        if (lo->list[i] != NULL) {
             DECREF(lo->list[i]);
         }
     }
-    DEL(lo->list);
-    DEL(lo);
+    if (lo->list != NULL)
+        free(lo->list);
+    free(lo);
 }
 
 void listobject_print(EmObject *ob, FILE *fp) {
-    EmListObject *lo = (EmListObject *)ob;
+    EmListObject *lo = (EmListObject *) ob;
     int i;
     fprintf(fp, "[");
-    for (i=0;i<lo->nitems;i++) {
+    for (i = 0; i < lo->nitems; i++) {
         printobj(lo->list[i], fp);
         if (i < lo->nitems - 1)
             fprintf(fp, ", ");

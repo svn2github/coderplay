@@ -41,7 +41,7 @@ int intobject_compare(EmObject *a, EmObject *b) {
     return (u < v) ? -1 : ((u > v) ? 1 : 0);
 }
 
-long intobject_hash(EmObject *ob) {
+unsigned long intobject_hash(EmObject *ob) {
     long hashval = ((EmIntObject *)ob)->ival;
     if (hashval == -1)
         hashval = -2;
