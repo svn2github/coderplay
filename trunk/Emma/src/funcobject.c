@@ -28,7 +28,7 @@ void funcobject_free(EmObject *ob) {
 void funcobject_print(EmObject *ob, FILE *fp) {
 }
 
-char *funcobject_tostr(EmObject *ob) {
+EmObject *funcobject_tostr(EmObject *ob) {
     return NULL;
 }
 

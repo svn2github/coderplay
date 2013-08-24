@@ -30,9 +30,8 @@ void intobject_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "%ld", ((EmIntObject *)ob)->ival);
 }
 
-char *intobject_tostr(EmObject *ob) {
-    sprintf(asString, "%ld", ((EmIntObject *)ob)->ival);
-    return asString;
+EmObject *intobject_tostr(EmObject *ob) {
+    return newstringobject_from_int(getintvalue(ob));
 }
 
 int intobject_compare(EmObject *a, EmObject *b) {

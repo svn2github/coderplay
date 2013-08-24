@@ -192,42 +192,6 @@ void freecompiledunit(CompiledUnit *cu) {
     ;
 }
 
-void printcompiledunit(CompiledUnit *cu) {
-    int ii;
-    int opcode;
-    Basicblock *b;
-    Instr *instr;
-    EmObject *ob;
-    for (b = cu->block; b != NULL; b = b->next) {
-        printf("block at <0x%08x>\n", b);
-        for (ii = 0; ii < b->inxt; ii++) {
-            instr = INSTR_AT(b,ii);
-            printf("%-20s",
-            I_STR(instr));
-            if (I_HASARG(instr)) {
-                if (I_ISJUMP(instr)) {
-                    printf("0x%08x", I_TARGET(instr));
-                } else {
-                    printf("%d ", instr->v.arg);
-                    if (instr->opcode == OP_PUSHC) {
-                        ob = listobject_get(cu->consts, I_ARG(instr));
-                        printf("(%s)", tostrobj(ob));
-                        DECREF(ob);
-
-                    } else if (instr->opcode == OP_PUSH
-                            || instr->opcode == OP_POP) {
-                        ob = listobject_get(cu->names, I_ARG(instr));
-                        printf("(%s)", tostrobj(ob));
-                        DECREF(ob);
-                    }
-                }
-            }
-            printf("\n");
-        }
-        printf("\n");
-    }
-}
-
 static EmCodeObject *compile_ast_unit(AstNode *sn);
 static void compile_ast_node(AstNode *sn);
 static void compile_assign(AstNode *sn);

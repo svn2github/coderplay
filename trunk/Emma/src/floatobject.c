@@ -29,9 +29,8 @@ void floatobject_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "%f", ((EmFloatObject *)ob)->fval);
 }
 
-char *floatobject_tostr(EmObject *ob) {
-    sprintf(asString, "%f", ((EmFloatObject *)ob)->fval);
-    return asString;
+EmObject *floatobject_tostr(EmObject *ob) {
+    return newstringobject_from_float(getfloatvalue(ob));
 }
 
 int floatobject_compare(EmObject *a, EmObject *b) {
@@ -46,17 +45,34 @@ int floatobject_boolean(EmObject *ob) {
 
 static EmObject *
 floatobject_add(EmObject *u, EmObject *v) {
+    double x;
     if (v->type == &Inttype) {
-        double x = getfloatvalue(u) + getintvalue(v);
+        x = getfloatvalue(u) + getintvalue(v);
         return newfloatobject(x);
     } else if (v->type == &Floattype) {
-        double x = getfloatvalue(u) + getfloatvalue(v);
+        x = getfloatvalue(u) + getfloatvalue(v);
         return newfloatobject(x);
     } else {
         ex_type("operator + not supported by operands");
         return NULL;
     }
 }
+
+static EmObject *
+floatobject_sub(EmObject *u, EmObject *v) {
+    double x;
+    if (v->type == &Inttype) {
+        x = getfloatvalue(u) - getintvalue(v);
+        return newfloatobject(x);
+    } else if (v->type == &Floattype) {
+        x = getfloatvalue(u) - getfloatvalue(v);
+        return newfloatobject(x);
+    } else {
+        ex_type("operator - not supported by operands");
+        return NULL;
+    }
+}
+
 
 static EmObject *
 floatobject_neg(EmObject *ob) {
@@ -66,7 +82,7 @@ floatobject_neg(EmObject *ob) {
 
 static EmNumberMethods float_as_number = {
         floatobject_add,
-        0,
+        floatobject_sub,
         0,
         0,
         0,

@@ -49,7 +49,7 @@ void exceptionobject_print(EmObject *ob, FILE *fp) {
         fprintf(fp, ": %s", getstringvalue(eo->value));
 }
 
-char *exceptionobject_tostr(EmObject *ob) {
+EmObject *exceptionobject_tostr(EmObject *ob) {
     return NULL;
 }
 

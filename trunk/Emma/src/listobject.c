@@ -72,7 +72,7 @@ void listobject_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "]");
 }
 
-char *listobject_tostr(EmObject *ob) {
+EmObject *listobject_tostr(EmObject *ob) {
     EmListObject *lo = (EmListObject *)ob;
     int ii;
     for (ii=0;ii<lo->nitems;ii++) {
@@ -91,6 +91,7 @@ listobject_concate(EmObject *ob1, EmObject *ob2) {
     EmListObject *newlo = (EmListObject *) newlistobject(
             ob1->nitems + ob2->nitems);
     int i;
+    newlo->nitems = ob1->nitems + ob2->nitems;
     for (i=0;i<ob1->nitems;i++) {
         newlo->list[i] = listobject_get(ob1, i);
     }
@@ -110,7 +111,7 @@ EmObject *listobject_get(EmObject *ob, int idx) {
     if (idx < 0)
         idx += lo->nitems;
 
-    if (idx >= lo->nitems) {
+    if (idx < 0 || idx >= lo->nitems) {
         ex_index("index out of list boundary");
         return NULL;
     }

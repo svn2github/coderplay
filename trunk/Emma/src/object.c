@@ -10,9 +10,10 @@ void object_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "<%s object at 0x%08x>\n", ob->type->tp_name, (long)ob);
 }
 
-char *object_tostr(EmObject *ob) {
-    sprintf(asString, "<%s object at 0x%08x>", ob->type->tp_name, (long)ob);
-    return asString;
+EmObject *object_tostr(EmObject *ob) {
+    char s[200];
+    sprintf(s, "<%s object at 0x%08x>", ob->type->tp_name, (long)ob);
+    return newstringobject(s);
 }
 
 /*
@@ -45,7 +46,7 @@ void printobj(EmObject *ob, FILE *fp) {
     }
 }
 
-char *tostrobj(EmObject *ob) {
+EmObject *tostrobj(EmObject *ob) {
     if (ob->type->tp_tostr == NULL) {
         return object_tostr(ob);
     } else {
@@ -128,8 +129,8 @@ void null_print(EmObject *ob, FILE *fp) {
     fprintf(fp, "null");
 }
 
-char *null_tostr(EmObject *ob) {
-    return "null";
+EmObject *null_tostr(EmObject *ob) {
+    return newstringobject("null");
 }
 
 int null_boolean(EmObject *ob) {

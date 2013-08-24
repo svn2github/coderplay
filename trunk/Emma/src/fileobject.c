@@ -28,14 +28,16 @@ void fileobject_free(EmObject *ob) {
 }
 
 void fileobject_print(EmObject *ob, FILE *fp) {
-    fprintf(fp, "<file object: %s>", tostrobj(((EmFileObject *)ob)->name));
+    fprintf(fp, "<file object: %s>",
+            getstringvalue(((EmFileObject *) ob)->name));
 }
 
-char *fileobject_tostr(EmObject *ob) {
-    sprintf(asString, "<file object: %s>", tostrobj(((EmFileObject *)ob)->name));
-    return asString;
+EmObject *fileobject_tostr(EmObject *ob) {
+    char s[200];
+    sprintf(s, "<file object: %s>",
+            getstringvalue(((EmFileObject *) ob)->name));
+    return newstringobject(s);
 }
-
 
 int fileobject_boolean(EmObject *ob) {
     return 1;

@@ -48,11 +48,11 @@ char *getstringvalue(EmObject *ob) {
 
 
 void stringobject_print(EmObject *ob, FILE *fp) {
-    fprintf(fp, "%s", ((EmStringObject *)ob)->sval);
+    fprintf(fp, "'%s'", ((EmStringObject *)ob)->sval);
 }
 
-char *stringobject_tostr(EmObject *ob) {
-    return ((EmStringObject *)ob)->sval;
+EmObject *stringobject_tostr(EmObject *ob) {
+    return NULL;
 }
 
 /*

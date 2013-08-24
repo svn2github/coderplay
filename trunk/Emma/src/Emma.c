@@ -84,16 +84,11 @@ int run_file() {
         INCREF(&nulobj);
         retval = run_codeobject(co, NULL, &nulobj);
 
-
         if (retval)
             DECREF(retval);
 
-
         freetree(ptree);
-        //printf("almost done.\n");
         freestree(stree);
-        //printf("almost done.\n");
-
 
     }
     fclose(source.fp);
@@ -164,9 +159,6 @@ int main(int argc, char **argv) {
     } else { // SOURCE_TYPE_PROMPT
         run_prompt();
     }
-
-    //printobj(literalTable, stdout);
-    //printf("literalTable = %s\n", tostrobj(literalTable));
 
     cleanup();
 

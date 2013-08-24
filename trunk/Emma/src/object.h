@@ -79,7 +79,7 @@ typedef struct _typeobject {
 
     void (*tp_dealloc)(EmObject *);
     void (*tp_print)(EmObject *, FILE*);
-    char *(*tp_tostr)(EmObject *);
+    EmObject *(*tp_tostr)(EmObject *);
     EmObject *(*tp_getattr)(EmObject *, char *);
     int (*tp_setattr)(EmObject *, char *, EmObject *);
     int (*tp_compare)(EmObject *, EmObject *);
@@ -101,7 +101,7 @@ typedef struct _typeobject {
 EmObject *newobj(EmTypeObject *);
 void freeobj(EmObject *);
 void printobj(EmObject *, FILE *);
-char *tostrobj(EmObject *);
+EmObject *tostrobj(EmObject *);
 EmObject *getattr(EmObject *, char *);
 int setattr(EmObject *, char *, EmObject *);
 int cmpobj(EmObject *, EmObject *);

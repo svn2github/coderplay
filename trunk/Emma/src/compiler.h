@@ -44,7 +44,6 @@ typedef struct _compiler {
 
 
 void freecompiledunit(CompiledUnit *cu);
-void printcompiledunit(CompiledUnit *cu);
 EmCodeObject *compile_ast_tree(AstNode *);
 
 #endif /* COMPILER_H_ */
