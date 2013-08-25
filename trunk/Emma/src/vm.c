@@ -477,12 +477,13 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
             case OP_CLASSDEF:
                 u = POP(); // the code to define attr
                 v = POP(); // the base
-                w = build_class(u);
+                w = build_class(u); // the attr
                 if (v == &nulobj) {
                     DECREF(v);
                     v = NULL;
                 }
                 x = newclassobject(v, w);
+                DECREF(w);
                 PUSH(x);
                 break;
 
