@@ -25,8 +25,10 @@ newclassobject(EmObject *base, EmObject *attr) {
 
 void classobject_free(EmObject *ob) {
     EmClassObject *clo = (EmClassObject *)ob;
-    DECREF(clo->base);
+    if (clo->base)
+        DECREF(clo->base);
     DECREF(clo->attr);
+    free(clo);
 }
 
 EmObject *

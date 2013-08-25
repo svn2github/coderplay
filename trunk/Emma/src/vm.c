@@ -476,19 +476,25 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
 
             case OP_CLASSDEF:
                 u = POP(); // the code to define attr
+                v = POP(); // the base
+
+                w = build_class(u); // the attr
+                DECREF(u);
+
                 if (v == &nulobj) {
                     DECREF(v);
                     v = NULL;
                 }
-                v = POP(); // the base
-                w = build_class(u); // the attr
                 x = newclassobject(v, w);
+                if (v != NULL)
+                    DECREF(v);
                 DECREF(w);
-                DECREF(u);
+
                 u = GET_NAME(oparg);
                 ok = env_set(f->env, u, x);
                 DECREF(u);
                 DECREF(x);
+
                 break;
 
             case OP_PUSH_ENV:
