@@ -475,11 +475,15 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 break;
 
             case OP_CLASSDEF:
-                u = POP();
-                x = build_class(u);
-                printf("\n\n\n");
-                printobj(x, stdout);
-                printf("\n");
+                u = POP(); // the code to define attr
+                v = POP(); // the base
+                w = build_class(u);
+                if (v == &nulobj) {
+                    DECREF(v);
+                    v = NULL;
+                }
+                x = newclassobject(v, w);
+                PUSH(x);
                 break;
 
             case OP_PUSH_ENV:
