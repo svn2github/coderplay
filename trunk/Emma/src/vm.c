@@ -459,6 +459,11 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 DECREF(v);
                 break;
 
+                /*
+                 * It is better to split the funcdef/classdef and the subsequent
+                 * store to function/class name.
+                 *
+                 */
             case OP_FUNCDEF:
                 v = POP(); // the func codeobject
                 w = newfuncobject(v, f->env);
@@ -478,7 +483,7 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 u = POP(); // the code to define attr
                 v = POP(); // the base
 
-                w = build_class(u); // the attr
+                w = build_class(u); // build the attr
                 DECREF(u);
 
                 if (v == &nulobj) {
