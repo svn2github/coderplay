@@ -70,7 +70,7 @@ int env_set_by_string(Environment *env, char *name, EmObject *val) {
 }
 
 void env_free(Environment *env) {
-    hashobject_free(env->binding);
+    DECREF(env->binding);
     free(env);
 }
 
@@ -225,6 +225,27 @@ call_function(EmObject *func, EmObject *args) {
 
     return retval;
 }
+
+EmObject *
+build_class(EmObject *co) {
+    EmObject *retval;
+    Environment *env;
+    ExecutionFrame *f;
+
+    env = newenv(vm->curframe->env);
+    retval = run_codeobject((EmCodeObject *)co, env, &nulobj);
+
+    f = vm->curframe;
+    vm->curframe = f->prev;
+    vm->nframes--;
+
+    env_free(env);
+    DEL(f->valuestack);
+    DEL(f);
+
+    return retval;
+}
+
 
 EmObject *
 add(EmObject *u, EmObject *v) {
@@ -451,6 +472,20 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                     DECREF(w);
                 }
                 DECREF(v);
+                break;
+
+            case OP_CLASSDEF:
+                u = POP();
+                x = build_class(u);
+                printf("\n\n\n");
+                printobj(x, stdout);
+                printf("\n");
+                break;
+
+            case OP_PUSH_ENV:
+                x = f->env->binding;
+                INCREF(x);
+                PUSH(x);
                 break;
 
             case OP_CALL:

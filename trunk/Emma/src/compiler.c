@@ -258,14 +258,14 @@ static void compile_if(AstNode *sn) {
         instr = next_instr(cu->curblock);
         instr->opcode = OP_JUMP;
         SET_I_TARGET(instr, endblock);
-        cu->curblock->next = elseblock;
-        cu->curblock = elseblock;
+        // start new block for else
+        SET_NEW_BLOCK(cu, elseblock);
         compile_ast_node(AST_GET_MEMBER(sn,2));
     } else { // empty else clause
         endblock = elseblock;
     }
-    cu->curblock->next = endblock;
-    cu->curblock = endblock;
+    // start new block for things after the if-else
+    SET_NEW_BLOCK(cu, endblock);
 }
 
 static void compile_while(AstNode *sn) {
@@ -857,7 +857,7 @@ static void compile_ast_node(AstNode *sn) {
          * However, I am not sure how this should work.
          * So for simplicity, I am going to ignore Object as a superclass.
          */
-        if (strcmp(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn,1)),"Object")!=0) {
+        if (strcmp(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn,1)), "Object") != 0) {
             compile_identifier(AST_GET_MEMBER(sn,1), OP_PUSH);
         } else {
             idx = idx_in_consts("null");

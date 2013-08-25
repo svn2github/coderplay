@@ -39,7 +39,7 @@ void xxxobject_free(EmObject *ob) {
 void xxxobject_print(EmObject *ob, FILE *fp) {
 }
 
-char *xxxobject_tostr(EmObject *ob) {
+EmObject *xxxobject_tostr(EmObject *ob) {
     return NULL;
 }
 
