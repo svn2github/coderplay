@@ -44,20 +44,21 @@
 #define OP_SET_IDXLIST       43
 #define OP_SETUP_FOR         44
 #define OP_FOR               45
+#define OP_PUSH_ENV          46
 
-#define OP_HASARG            46
+#define OP_HASARG            47
 
-#define OP_SET_ROW           47
-#define OP_PUSH              48
-#define OP_PUSHC             49
-#define OP_PUSHN             50
-#define OP_POP               51
-#define OP_FUNCDEF           52
-#define OP_CLASSDEF          53
-#define OP_JUMP              54
-#define OP_FJUMP             55
-#define OP_TJUMP             56
-#define OP_MKLIST            57
-#define OP_MKHASH            58
+#define OP_SET_ROW           48
+#define OP_PUSH              49
+#define OP_PUSHC             50
+#define OP_PUSHN             51
+#define OP_POP               52
+#define OP_FUNCDEF           53
+#define OP_CLASSDEF          54
+#define OP_JUMP              55
+#define OP_FJUMP             56
+#define OP_TJUMP             57
+#define OP_MKLIST            58
+#define OP_MKHASH            59
 
 extern char *opcode_types[];

@@ -60,6 +60,8 @@ set_idxlist
 setup_for
 for
 
+push_env
+
 hasarg
 
 set_row

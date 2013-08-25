@@ -45,6 +45,7 @@ char *opcode_types[] = {
         "OP_SET_IDXLIST",
         "OP_SETUP_FOR",
         "OP_FOR",
+        "OP_PUSH_ENV",
         "OP_HASARG",
         "OP_SET_ROW",
         "OP_PUSH",

@@ -192,7 +192,7 @@ void freecompiledunit(CompiledUnit *cu) {
     ;
 }
 
-static EmCodeObject *compile_ast_unit(AstNode *sn);
+static EmCodeObject *compile_ast_unit(AstNode *sn, int saveEnv);
 static void compile_ast_node(AstNode *sn);
 static void compile_assign(AstNode *sn);
 static void compile_identifier(AstNode *sn, int opcode);
@@ -761,11 +761,12 @@ static void compile_ast_node(AstNode *sn) {
         compile_paramlist(AST_GET_MEMBER(sn,1));
 
         // compile the body of function
-        ob = (EmObject *) compile_ast_unit(AST_GET_MEMBER(sn,2));
+        ob = (EmObject *) compile_ast_unit(AST_GET_MEMBER(sn,2),0);
 
         // restore to the parent compiled unit
         compiler.cu = cu;
         compiler.symtab = symtab;
+
         // Simply add the body code object to the end of the consts list.
         // This assumes no duplicate function definitions.
         // Although duplicate function defs are legal, it makes no sense
@@ -851,6 +852,41 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_CLASSDEF:
+        /*
+         * I planed to have every user class to be subclasses of "Object".
+         * However, I am not sure how this should work.
+         * So for simplicity, I am going to ignore Object as a superclass.
+         */
+        if (strcmp(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn,1)),"Object")!=0) {
+            compile_identifier(AST_GET_MEMBER(sn,1), OP_PUSH);
+        } else {
+            idx = idx_in_consts("null");
+            instr = next_instr(cu->curblock);
+            instr->opcode = OP_PUSHC;
+            SET_I_ARG(instr, idx);
+        }
+        // class body
+        compiler.cu = newcompiledunit();
+        symtab = compiler.symtab;
+        compiler.symtab = newhashobject();
+
+        // Note we save the environment where the attributes, methods are defined
+        ob = (EmObject *) compile_ast_unit(AST_GET_MEMBER(sn,2),1);
+
+        // restore parent compiled unit
+        compiler.cu = cu;
+        compiler.symtab = symtab;
+
+        listobject_append(cu->consts, ob);
+        idx = listobject_len(cu->consts) - 1;
+        DECREF(ob);
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_PUSHC;
+        SET_I_ARG(instr, idx);
+
+        // class name
+        compile_identifier(AST_GET_MEMBER(sn,0), OP_CLASSDEF);
+
         break;
 
     default:
@@ -862,11 +898,20 @@ static void compile_ast_node(AstNode *sn) {
 static EmCodeObject *assemble(CompiledUnit *cu);
 
 static EmCodeObject *
-compile_ast_unit(AstNode *sn) {
+compile_ast_unit(AstNode *sn, int saveEnv) {
     int ii;
     for (ii = 0; ii < sn->size; ii++) {
         compile_ast_node(AST_GET_MEMBER(sn,ii));
     }
+
+    if (saveEnv) {
+        Instr *instr;
+        instr = next_instr(compiler.cu->curblock);
+        instr->opcode = OP_PUSH_ENV;
+        instr = next_instr(compiler.cu->curblock);
+        instr->opcode = OP_RETURN;
+    }
+
     EmCodeObject *co = assemble(compiler.cu);
     freecompiledunit(compiler.cu);
     freeobj(compiler.symtab);
@@ -887,7 +932,7 @@ compile_ast_tree(AstNode *stree) {
     compiler_init();
 
     if (setjmp(__compile_buf) == 0) {
-        co = compile_ast_unit(stree);
+        co = compile_ast_unit(stree, 0);
     } else {
         fatal("compiler error");
         fprintf(stderr, "ERROR compile\n");

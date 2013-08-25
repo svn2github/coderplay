@@ -37,11 +37,10 @@
 #define RAISE           282
 #define CATCH           283
 #define FINALLY         284
-#define SELF            285
-#define INTEGER         286
-#define FLOAT           287
-#define STRING          288
-#define IDENT           289
+#define INTEGER         285
+#define FLOAT           286
+#define STRING          287
+#define IDENT           288
 
 extern char *token_types[];
 

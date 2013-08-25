@@ -28,7 +28,6 @@ char *token_types[] = {
         "RAISE",
         "CATCH",
         "FINALLY",
-        "SELF",
         "INTEGER",
         "FLOAT",
         "STRING",
@@ -84,8 +83,6 @@ int match_keyword() {
         return CATCH;
     else if (strcmp(lexeme, "finally") == 0)
         return FINALLY;
-    else if (strcmp(lexeme, "self") == 0)
-        return SELF;
     else
         return ENDMARK;
 }
