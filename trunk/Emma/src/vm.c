@@ -226,26 +226,6 @@ call_function(EmObject *func, EmObject *args) {
     return retval;
 }
 
-EmObject *
-build_class(EmObject *co) {
-    EmObject *retval;
-    Environment *env;
-    ExecutionFrame *f;
-
-    env = newenv(vm->curframe->env);
-    retval = run_codeobject((EmCodeObject *)co, env, &nulobj);
-
-    f = vm->curframe;
-    vm->curframe = f->prev;
-    vm->nframes--;
-
-    env_free(env);
-    DEL(f->valuestack);
-    DEL(f);
-
-    return retval;
-}
-
 
 EmObject *
 add(EmObject *u, EmObject *v) {
@@ -472,22 +452,12 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 break;
 
             case OP_CLASSDEF:
-                u = POP(); // the code to define attr
+                u = POP(); // the env
                 v = POP(); // the base
-
-                w = build_class(u); // build the attr
+                x = newclassobject(v, u);
+                DECREF(v);
                 DECREF(u);
-
-                if (v == &nulobj) {
-                    DECREF(v);
-                    v = NULL;
-                }
-                x = newclassobject(v, w);
-                if (v != NULL)
-                    DECREF(v);
-                DECREF(w);
                 PUSH(x);
-
                 break;
 
             case OP_PUSH_ENV:

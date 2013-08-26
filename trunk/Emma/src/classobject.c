@@ -14,9 +14,13 @@ newclassobject(EmObject *base, EmObject *attr) {
     if ((ob = NEWOBJ(EmClassObject, &Classtype)) == NULL)
         return NULL;
 
-    if (base != NULL)
+    if (base != &nulobj) {
         INCREF(base);
-    ob->base = base;
+        ob->base = base;
+    } else {
+        ob->base = NULL;
+    }
+
     INCREF(attr);
     ob->attr = attr;
 

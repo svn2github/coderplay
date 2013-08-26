@@ -882,12 +882,27 @@ static void compile_ast_node(AstNode *sn) {
         compiler.cu = cu;
         compiler.symtab = symtab;
 
+        // Add the code object that creates the class body
         listobject_append(cu->consts, ob);
         idx = listobject_len(cu->consts) - 1;
         DECREF(ob);
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
+
+        // build a function to run the above code object
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_FUNCDEF;
+
+        // push null arguments
+        idx = idx_in_consts("null");
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_PUSHC;
+        SET_I_ARG(instr, idx);
+
+        // call the function to build class body, i.e. the env made of hash
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_CALL;
 
         // Build the class now
         instr = next_instr(cu->curblock);
