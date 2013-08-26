@@ -8,6 +8,8 @@
 #ifndef FUNCOBJECT_H_
 #define FUNCOBJECT_H_
 
+#define is_EmFuncObject(ob)      ((ob)->type == &Functype)
+
 struct _environment;
 extern void env_free(struct _environment *);
 

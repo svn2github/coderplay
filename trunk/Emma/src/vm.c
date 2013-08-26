@@ -469,10 +469,18 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
             case OP_CALL:
                 v = POP(); // the params list
                 u = POP(); // the func
+
                 if (u->type == &Bltinmethodtype) {
                     x = (*((EmBltinmethodObject *)u)->method)(NULL, v);
+
                 } else if (u->type == &Functype) {
                     x = call_function(u, v);
+
+                } else if (u->type == &Classtype) {
+                    x = newinstanceobject(u);
+                    printobj(x, stdout);
+                    printf("\n");
+
                 } else {
                     ex_type("not callable object");
                     x = NULL;

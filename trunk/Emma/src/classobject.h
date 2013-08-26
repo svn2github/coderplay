@@ -18,7 +18,7 @@ typedef struct _classobject {
 extern EmTypeObject Classtype;
 
 EmObject *newclassobject();
-
+EmObject *classobject_getattr(EmObject *ob, char *name);
 
 
 #endif /* CLASSOBJECT_H_ */
