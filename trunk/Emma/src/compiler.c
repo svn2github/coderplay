@@ -9,6 +9,9 @@
 
 #define DEFAULT_BLOCK_SIZE      16
 
+#define NEW_INSTR(c)        instr = next_instr(cu->curblock); \
+                                instr->opcode = c
+
 #define INSTR_AT(b,i)       (&(b)->instrlist[i])
 #define I_STR(instr)        opcode_types[instr->opcode]
 #define I_HASARG(instr)     (instr)->opcode>OP_HASARG?1:0
@@ -16,6 +19,7 @@
                                 (instr)->opcode == OP_FJUMP || \
                                 (instr)->opcode == OP_TJUMP || \
                                 (instr)->opcode == OP_FOR) ? 1 : 0
+
 #define I_ARG(instr)        instr->v.arg
 #define I_TARGET(instr)     instr->v.target
 
@@ -249,14 +253,12 @@ static void compile_if(AstNode *sn) {
 
     compile_ast_node(AST_GET_MEMBER(sn,0)); // test
     elseblock = newbasicblock();
-    instr = next_instr(cu->curblock);
-    instr->opcode = OP_FJUMP;
+    NEW_INSTR(OP_FJUMP);
     SET_I_TARGET(instr, elseblock);
     compile_ast_node(AST_GET_MEMBER(sn,1));
     if (AST_GET_MEMBER(sn,2)->size > 0) { // non-empty else clause
         endblock = newbasicblock();
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_JUMP;
+        NEW_INSTR(OP_JUMP);
         SET_I_TARGET(instr, endblock);
         // start new block for else
         SET_NEW_BLOCK(cu, elseblock);
@@ -281,8 +283,7 @@ static void compile_while(AstNode *sn) {
     SET_NEW_BLOCK(cu, whileblock);
     // test
     compile_ast_node(AST_GET_MEMBER(sn,0));
-    instr = next_instr(cu->curblock);
-    instr->opcode = OP_FJUMP;
+    NEW_INSTR(OP_FJUMP);
     SET_I_TARGET(instr, endblock);
 
     // manage possible break or continue
@@ -297,8 +298,7 @@ static void compile_while(AstNode *sn) {
     POP_BREAK_BLOCK(cu);
 
     // loop to the start
-    instr = next_instr(cu->curblock);
-    instr->opcode = OP_JUMP;
+    NEW_INSTR(OP_JUMP);
     SET_I_TARGET(instr, whileblock);
 
     // Start new block after while
@@ -317,14 +317,15 @@ static void compile_for(AstNode *sn) {
 
     // The loop variables: start, end, step
     compile_ast_node(AST_GET_MEMBER(sn,1));
-    instr = next_instr(cu->curblock);
+
     // change stack order to step, end, start
-    instr->opcode = OP_ROT_THREE;
+    NEW_INSTR(OP_ROT_THREE);
+
     // Assign start to counter
     compile_assign(AST_GET_MEMBER(sn,0));
+
     // Setup the for loop, including pre-decrease counter
-    instr = next_instr(cu->curblock);
-    instr->opcode = OP_SETUP_FOR;
+    NEW_INSTR(OP_SETUP_FOR);
 
     /*
      * Now the for block
@@ -350,8 +351,7 @@ static void compile_for(AstNode *sn) {
     POP_BREAK_BLOCK(cu);
 
     // loop to the start
-    instr = next_instr(cu->curblock);
-    instr->opcode = OP_JUMP;
+    NEW_INSTR(OP_JUMP);
     SET_I_TARGET(instr, forblock);
 
     // End of the for loop
@@ -366,8 +366,7 @@ static void compile_arglist(AstNode *sn) {
 
     if (sn->size == 0) { // empty list
         idx = idx_in_consts("null");
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_PUSHC;
+        NEW_INSTR(OP_PUSHC);
         SET_I_ARG(instr, idx);
 
     } else { // non-empty list
@@ -382,13 +381,11 @@ static void compile_arglist(AstNode *sn) {
             }
         }
         if (count > 0) {
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_MKLIST;
+            NEW_INSTR(OP_MKLIST);
             SET_I_ARG(instr, count);
         } else {
             idx = idx_in_consts("null");
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_PUSHC;
+            NEW_INSTR(OP_PUSHC);
             SET_I_ARG(instr, idx);
         }
 
@@ -403,19 +400,16 @@ static void compile_arglist(AstNode *sn) {
                     count++;
                 }
             }
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_MKHASH;
+            NEW_INSTR(OP_MKHASH);
             SET_I_ARG(instr, count);
         } else {
             idx = idx_in_consts("null");
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_PUSHC;
+            NEW_INSTR(OP_PUSHC);
             SET_I_ARG(instr, idx);
         }
 
         // make a single list for both position and keyword args
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
+        NEW_INSTR(OP_MKLIST);
         SET_I_ARG(instr, 2);
     }
 }
@@ -428,8 +422,7 @@ static void compile_regular_params(AstNode *sn) {
     AstNode *sn_temp;
 
     if (sn->size == 0) { // no regular parameters
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_REFUSE_POSARGS;
+        NEW_INSTR(OP_REFUSE_POSARGS);
 
     } else {
         /*
@@ -445,11 +438,9 @@ static void compile_regular_params(AstNode *sn) {
             }
         }
         if (count > 0) {
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_GET_KWARGS;
+            NEW_INSTR(OP_GET_KWARGS);
         } else {
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_REFUSE_KWARGS;
+            NEW_INSTR(OP_REFUSE_KWARGS);
         }
 
         /*
@@ -463,14 +454,11 @@ static void compile_regular_params(AstNode *sn) {
                     count++;
                 }
             }
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_MKLIST;
+            NEW_INSTR(OP_MKLIST);
             SET_I_ARG(instr, count);
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_GET_POSARGS;
+            NEW_INSTR(OP_GET_POSARGS);
         } else {
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_REFUSE_POSARGS;
+            NEW_INSTR(OP_REFUSE_POSARGS);
         }
     }
 }
@@ -484,14 +472,13 @@ static void compile_paramlist(AstNode *sn) {
 
     if (sn->size == 0) {
         // empty paramlist
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_REFUSE_POSARGS;
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_REFUSE_KWARGS;
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_NO_EXTRAP;
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_NO_EXTRAK;
+        NEW_INSTR(OP_REFUSE_POSARGS);
+
+        NEW_INSTR(OP_REFUSE_KWARGS);
+
+        NEW_INSTR(OP_NO_EXTRAP);
+
+        NEW_INSTR(OP_NO_EXTRAK);
 
     } else {
 
@@ -501,29 +488,26 @@ static void compile_paramlist(AstNode *sn) {
         // extra p
         sn_sub = AST_GET_MEMBER(sn,1);
         if (sn_sub->size == 0) {
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_NO_EXTRAP;
+            NEW_INSTR(OP_NO_EXTRAP);
+
         } else {
             idx = idx_in_names(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn_sub,0)));
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_PUSHN;
+            NEW_INSTR(OP_PUSHN);
             SET_I_ARG(instr, idx);
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_SET_EXTRAP;
+
+            NEW_INSTR(OP_SET_EXTRAP);
         }
 
         // extra k;
         sn_sub = AST_GET_MEMBER(sn,2);
         if (sn_sub->size == 0) {
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_NO_EXTRAK;
+            NEW_INSTR(OP_NO_EXTRAK);
         } else {
             idx = idx_in_names(AST_GET_LEXEME_SAFE(AST_GET_MEMBER(sn_sub,0)));
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_PUSHN;
+            NEW_INSTR(OP_PUSHN);
             SET_I_ARG(instr, idx);
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_SET_EXTRAK;
+
+            NEW_INSTR(OP_SET_EXTRAK);
         }
     }
 }
@@ -535,8 +519,7 @@ static void compile_identifier(AstNode *sn, int opcode) {
     Instr *instr;
 
     idx = idx_in_names(AST_GET_LEXEME_SAFE(sn));
-    instr = next_instr(cu->curblock);
-    instr->opcode = opcode;
+    NEW_INSTR(opcode);
     SET_I_ARG(instr, idx);
 }
 
@@ -555,35 +538,29 @@ static void compile_assign(AstNode *sn) {
     case AST_FIELD:
         compile_ast_node(AST_GET_MEMBER(sn,0));
         compile_ast_node(AST_GET_MEMBER(sn,1)); // field
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_SET_FIELD;
+        NEW_INSTR(OP_SET_FIELD);
         break;
 
     case AST_INDEX:
         compile_ast_node(AST_GET_MEMBER(sn,0));
         compile_ast_node(AST_GET_MEMBER(sn,1)); // index
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_SET_INDEX;
+        NEW_INSTR(OP_SET_INDEX);
         break;
 
     case AST_SLICE:
         compile_ast_node(AST_GET_MEMBER(sn,0));
         compile_ast_node(AST_GET_MEMBER(sn,1)); // slice
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
+        NEW_INSTR(OP_MKLIST);
         SET_I_ARG(instr, 3);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_SET_SLICE;
+        NEW_INSTR(OP_SET_SLICE);
         break;
 
     case AST_IDXLIST:
         compile_ast_node(AST_GET_MEMBER(sn,0));
         compile_ast_node(AST_GET_MEMBER(sn,1)); // idxlist
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
+        NEW_INSTR(OP_MKLIST);
         SET_I_ARG(instr, AST_GET_MEMBER(sn,1)->size);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_SET_IDXLIST;
+        NEW_INSTR(OP_SET_IDXLIST);
         break;
 
     default:
@@ -599,8 +576,7 @@ static void compile_ast_node(AstNode *sn) {
     Instr *instr;
 
     if (sn->row > cur_row) {
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_SET_ROW;
+        NEW_INSTR(OP_SET_ROW);
         SET_I_ARG(instr, sn->row);
         cur_row = sn->row;
     }
@@ -624,14 +600,12 @@ static void compile_ast_node(AstNode *sn) {
     case AST_CALL:
         compile_ast_node(AST_GET_MEMBER(sn,0)); // the func
         compile_arglist(AST_GET_MEMBER(sn,1)); // the parameter
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_CALL;
+        NEW_INSTR(OP_CALL);
         break;
 
     case AST_LITERAL:
         idx = idx_in_consts(AST_GET_LEXEME_SAFE(sn));
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_PUSHC;
+        NEW_INSTR(OP_PUSHC);
         SET_I_ARG(instr, idx);
         break;
 
@@ -665,8 +639,7 @@ static void compile_ast_node(AstNode *sn) {
     case AST_NE:
         compile_ast_node(AST_GET_MEMBER(sn,0));
         compile_ast_node(AST_GET_MEMBER(sn,1));
-        instr = next_instr(cu->curblock);
-        instr->opcode = BINOP_OF_ASTTYPE(sn->type);
+        NEW_INSTR(BINOP_OF_ASTTYPE(sn->type));
         break;
 
         /*
@@ -676,11 +649,11 @@ static void compile_ast_node(AstNode *sn) {
     case AST_OR:
         compile_ast_node(AST_GET_MEMBER(sn,0));
         Basicblock *sc_block = newbasicblock();
-        instr = next_instr(cu->curblock);
-        if (sn->type == AST_AND)
-            instr->opcode = OP_FJUMP;
-        else
-            instr->opcode = OP_TJUMP;
+        if (sn->type == AST_AND) {
+            NEW_INSTR(OP_FJUMP);
+        } else {
+            NEW_INSTR(OP_TJUMP);
+        }
         SET_I_TARGET(instr, sc_block);
         compile_ast_node(AST_GET_MEMBER(sn,1));
         SET_NEW_BLOCK(cu, sc_block)
@@ -694,8 +667,7 @@ static void compile_ast_node(AstNode *sn) {
     case AST_MINUS:
     case AST_NOT:
         compile_ast_node(AST_GET_MEMBER(sn,0));
-        instr = next_instr(cu->curblock);
-        instr->opcode = UNARYOP_OF_ASTTYPE(sn->type);
+        NEW_INSTR(UNARYOP_OF_ASTTYPE(sn->type));
         break;
 
     case AST_IF:
@@ -711,25 +683,21 @@ static void compile_ast_node(AstNode *sn) {
         break;
 
     case AST_CONTINUE:
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_JUMP;
+        NEW_INSTR(OP_JUMP);
         SET_I_TARGET(instr, GET_CONTINUE_BLOCK(cu));
         break;
 
     case AST_BREAK:
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_JUMP;
+        NEW_INSTR(OP_JUMP);
         SET_I_TARGET(instr, GET_BREAK_BLOCK(cu));
         break;
 
     case AST_PRINT:
         compile_ast_node(AST_GET_MEMBER(sn,0)); // the destination
         compile_ast_node(AST_GET_MEMBER(sn,1)); // the item list
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
+        NEW_INSTR(OP_MKLIST);
         SET_I_ARG(instr, AST_GET_MEMBER(sn,1)->size);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_PRINT;
+        NEW_INSTR(OP_PRINT);
         break;
 
     case AST_READ:
@@ -743,11 +711,10 @@ static void compile_ast_node(AstNode *sn) {
         for (ii=0; ii<sn->size; ii++) {
             compile_identifier(AST_GET_MEMBER(sn,ii), OP_PUSHN);
         }
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
+        NEW_INSTR(OP_MKLIST);
         SET_I_ARG(instr, sn->size);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_DEL;
+
+        NEW_INSTR(OP_DEL);
         break;
 
     case AST_FUNCDEF:
@@ -775,13 +742,11 @@ static void compile_ast_node(AstNode *sn) {
         listobject_append(cu->consts, ob);
         idx = listobject_len(cu->consts) - 1;
         DECREF(ob);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_PUSHC;
+        NEW_INSTR(OP_PUSHC);
         SET_I_ARG(instr, idx);
 
         // build the function
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_FUNCDEF;
+        NEW_INSTR(OP_FUNCDEF);
 
         // store it to a variable name
         compile_identifier(AST_GET_MEMBER(sn,0), OP_POP);
@@ -789,14 +754,12 @@ static void compile_ast_node(AstNode *sn) {
 
     case AST_RETURN:
         compile_ast_node(AST_GET_MEMBER(sn,0));
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_RETURN;
+        NEW_INSTR(OP_RETURN);
         break;
 
     case AST_PACKAGE:
         compile_identifier(AST_GET_MEMBER(sn,0), OP_PUSHN);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_PACKAGE;
+        NEW_INSTR(OP_PACKAGE);
         break;
 
     case AST_IMPORT:
@@ -805,43 +768,41 @@ static void compile_ast_node(AstNode *sn) {
                 compile_identifier(AST_GET_MEMBER(sn,ii), OP_PUSHN);
             else {
                 idx = idx_in_consts("*");
-                instr = next_instr(cu->curblock);
-                instr->opcode = OP_PUSHC;
+                NEW_INSTR(OP_PUSHC);
                 SET_I_ARG(instr, idx);
             }
         }
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
+        NEW_INSTR(OP_MKLIST);
         SET_I_ARG(instr, sn->size);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_IMPORT;
+        NEW_INSTR(OP_IMPORT);
+        break;
+
+    case AST_FIELD:
+        compile_ast_node(AST_GET_MEMBER(sn,0)); // the object
+        compile_identifier(AST_GET_MEMBER(sn,1),OP_PUSHN); // the attr
+        NEW_INSTR(OP_GET_FIELD);
         break;
 
     case AST_INDEX:
         compile_ast_node(AST_GET_MEMBER(sn,0)); // the list/hash
         compile_ast_node(AST_GET_MEMBER(sn,1)); // the index
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_GET_INDEX;
+        NEW_INSTR(OP_GET_INDEX);
         break;
 
     case AST_SLICE:
         compile_ast_node(AST_GET_MEMBER(sn,0)); // the list
         compile_ast_node(AST_GET_MEMBER(sn,1)); // the slice
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
+        NEW_INSTR(OP_MKLIST);
         SET_I_ARG(instr, 3);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_GET_SLICE;
+        NEW_INSTR(OP_GET_SLICE);
         break;
 
     case AST_IDXLIST:
         compile_ast_node(AST_GET_MEMBER(sn,0)); // the list
         compile_ast_node(AST_GET_MEMBER(sn,1)); // the idxlist
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_MKLIST;
+        NEW_INSTR(OP_MKLIST);
         SET_I_ARG(instr, AST_GET_MEMBER(sn,1)->size);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_GET_IDXLIST;
+        NEW_INSTR(OP_GET_IDXLIST);
         break;
 
     case AST_RAISE:
@@ -866,8 +827,7 @@ static void compile_ast_node(AstNode *sn) {
             compile_identifier(AST_GET_MEMBER(sn,1), OP_PUSH);
         } else {
             idx = idx_in_consts("null");
-            instr = next_instr(cu->curblock);
-            instr->opcode = OP_PUSHC;
+            NEW_INSTR(OP_PUSHC);
             SET_I_ARG(instr, idx);
         }
         // class body
@@ -886,27 +846,22 @@ static void compile_ast_node(AstNode *sn) {
         listobject_append(cu->consts, ob);
         idx = listobject_len(cu->consts) - 1;
         DECREF(ob);
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_PUSHC;
+        NEW_INSTR(OP_PUSHC);
         SET_I_ARG(instr, idx);
 
         // build a function to run the above code object
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_FUNCDEF;
+        NEW_INSTR(OP_FUNCDEF);
 
         // push null arguments
         idx = idx_in_consts("null");
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_PUSHC;
+        NEW_INSTR(OP_PUSHC);
         SET_I_ARG(instr, idx);
 
         // call the function to build class body, i.e. the env made of hash
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_CALL;
+        NEW_INSTR(OP_CALL);
 
         // Build the class now
-        instr = next_instr(cu->curblock);
-        instr->opcode = OP_CLASSDEF;
+        NEW_INSTR(OP_CLASSDEF);
 
         // store the class name
         compile_identifier(AST_GET_MEMBER(sn,0), OP_POP);
@@ -924,12 +879,13 @@ static EmCodeObject *assemble(CompiledUnit *cu);
 static EmCodeObject *
 compile_ast_unit(AstNode *sn, int saveEnv) {
     int ii;
+    Instr *instr;
+
     for (ii = 0; ii < sn->size; ii++) {
         compile_ast_node(AST_GET_MEMBER(sn,ii));
     }
 
     if (saveEnv) {
-        Instr *instr;
         instr = next_instr(compiler.cu->curblock);
         instr->opcode = OP_PUSH_ENV;
         instr = next_instr(compiler.cu->curblock);
