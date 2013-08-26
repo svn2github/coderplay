@@ -60,6 +60,8 @@ set_idxlist
 setup_for
 for
 
+funcdef
+classdef
 push_env
 
 hasarg
@@ -70,8 +72,6 @@ push
 pushc
 pushn
 pop
-funcdef
-classdef
 jump
 fjump
 tjump

@@ -466,16 +466,8 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                  */
             case OP_FUNCDEF:
                 v = POP(); // the func codeobject
-                w = newfuncobject(v, f->env);
-                if (w == NULL) {
-                    ex_mem("no memory for function object");
-                    ok = 0;
-                } else {
-                    u = GET_NAME(oparg);
-                    ok = env_set(f->env, u, w);
-                    DECREF(u);
-                    DECREF(w);
-                }
+                x = newfuncobject(v, f->env);
+                PUSH(x);
                 DECREF(v);
                 break;
 
@@ -494,11 +486,7 @@ run_codeobject(EmCodeObject *co, Environment *env, EmObject *args) {
                 if (v != NULL)
                     DECREF(v);
                 DECREF(w);
-
-                u = GET_NAME(oparg);
-                ok = env_set(f->env, u, x);
-                DECREF(u);
-                DECREF(x);
+                PUSH(x);
 
                 break;
 

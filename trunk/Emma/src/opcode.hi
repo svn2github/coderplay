@@ -44,17 +44,17 @@
 #define OP_SET_IDXLIST       43
 #define OP_SETUP_FOR         44
 #define OP_FOR               45
-#define OP_PUSH_ENV          46
+#define OP_FUNCDEF           46
+#define OP_CLASSDEF          47
+#define OP_PUSH_ENV          48
 
-#define OP_HASARG            47
+#define OP_HASARG            49
 
-#define OP_SET_ROW           48
-#define OP_PUSH              49
-#define OP_PUSHC             50
-#define OP_PUSHN             51
-#define OP_POP               52
-#define OP_FUNCDEF           53
-#define OP_CLASSDEF          54
+#define OP_SET_ROW           50
+#define OP_PUSH              51
+#define OP_PUSHC             52
+#define OP_PUSHN             53
+#define OP_POP               54
 #define OP_JUMP              55
 #define OP_FJUMP             56
 #define OP_TJUMP             57

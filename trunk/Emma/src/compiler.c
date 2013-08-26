@@ -778,8 +778,13 @@ static void compile_ast_node(AstNode *sn) {
         instr = next_instr(cu->curblock);
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
-        // function name
-        compile_identifier(AST_GET_MEMBER(sn,0), OP_FUNCDEF);
+
+        // build the function
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_FUNCDEF;
+
+        // store it to a variable name
+        compile_identifier(AST_GET_MEMBER(sn,0), OP_POP);
         break;
 
     case AST_RETURN:
@@ -884,8 +889,12 @@ static void compile_ast_node(AstNode *sn) {
         instr->opcode = OP_PUSHC;
         SET_I_ARG(instr, idx);
 
-        // class name
-        compile_identifier(AST_GET_MEMBER(sn,0), OP_CLASSDEF);
+        // Build the class now
+        instr = next_instr(cu->curblock);
+        instr->opcode = OP_CLASSDEF;
+
+        // store the class name
+        compile_identifier(AST_GET_MEMBER(sn,0), OP_POP);
 
         break;
 
